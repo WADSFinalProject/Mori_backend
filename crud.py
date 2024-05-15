@@ -77,7 +77,7 @@ def delete_processed_leaf(db: Session, product_id: int):
     return db_processed_leaf
 
 
-#WET LEAVES COLLECTION
+#WET LEAVES COLLECTIONS
 
 def create_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.WetLeavesCollectionCreate):
     db_wet_leaves_collection = models.WetLeavesCollection(
