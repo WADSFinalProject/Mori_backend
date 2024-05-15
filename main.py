@@ -5,7 +5,7 @@ from datetime import datetime
 
 app = FastAPI()
 
-# Mock database for the sake of the example
+# Mock database example
 batches = {}
 machines = {}
 shipments = {}
