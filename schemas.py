@@ -1,9 +1,9 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel
 
 # User schemas
 class UserBase(BaseModel):
-    IDORole: str
+    IDORole: int
     Email: str
     FullName: str
     Role: str
@@ -22,7 +22,7 @@ class UserUpdate(BaseModel):
     Role: Optional[str] = None
 
 class User(UserBase):
-    UserID: str
+    UserID: int
 
     class Config:
         orm_mode = True
@@ -49,7 +49,7 @@ class ProcessedLeaves(ProcessedLeavesBase):
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
-    UserID: str
+    UserID: int
     CentralID: int
     Date: str
     Time: str
@@ -61,7 +61,7 @@ class WetLeavesCollectionCreate(WetLeavesCollectionBase):
     pass
 
 class WetLeavesCollectionUpdate(BaseModel):
-    UserID: Optional[str] = None
+    UserID: Optional[int] = None
     CentralID: Optional[int] = None
     Date: Optional[str] = None
     Time: Optional[str] = None
@@ -93,7 +93,7 @@ class DryingMachine(DryingMachineBase):
 
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
-    UserID: str
+    UserID: int
     CentralID: int
     Date: str
     Weight: int
@@ -104,7 +104,7 @@ class DryingActivityCreate(DryingActivityBase):
     pass
 
 class DryingActivityUpdate(BaseModel):
-    UserID: Optional[str] = None
+    UserID: Optional[int] = None
     CentralID: Optional[int] = None
     Date: Optional[str] = None
     Weight: Optional[int] = None
@@ -135,7 +135,7 @@ class FlouringMachine(FlouringMachineBase):
 
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
-    UserID: str
+    UserID: int
     CentralID: int
     Date: str
     Weight: int
@@ -146,7 +146,7 @@ class FlouringActivityCreate(FlouringActivityBase):
     pass
 
 class FlouringActivityUpdate(BaseModel):
-    UserID: Optional[str] = None
+    UserID: Optional[int] = None
     CentralID: Optional[int] = None
     Date: Optional[str] = None
     Weight: Optional[int] = None
@@ -204,7 +204,7 @@ class Expedition(ExpeditionBase):
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
     ExpeditionID: int
-    UserID: str
+    UserID: int
     PackageType: str
     ReceivedDate: str
     WarehouseDestination: str
@@ -214,7 +214,7 @@ class ReceivedPackageCreate(ReceivedPackageBase):
 
 class ReceivedPackageUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
-    UserID: Optional[str] = None
+    UserID: Optional[int] = None
     PackageType: Optional[str] = None
     ReceivedDate: Optional[str] = None
     WarehouseDestination: Optional[str] = None
@@ -227,7 +227,7 @@ class ReceivedPackage(ReceivedPackageBase):
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
-    UserID: str
+    UserID: int
     PackageID: int
     TotalWeight: int
     TimeAccepted: str
@@ -238,7 +238,7 @@ class PackageReceiptCreate(PackageReceiptBase):
     pass
 
 class PackageReceiptUpdate(BaseModel):
-    UserID: Optional[str] = None
+    UserID: Optional[int] = None
     PackageID: Optional[int] = None
     TotalWeight: Optional[int] = None
     TimeAccepted: Optional[str] = None
