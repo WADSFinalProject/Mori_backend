@@ -1,25 +1,18 @@
 from fastapi import FastAPI, Path, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 from . import crud, models, schemas  
-from .database import SessionLocal  
+from .database import SessionLocal, engine 
+from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
+from .schemas import HarborGuardCreate, HarborGuardUpdate
+
+
+models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
-
-# Mock database example
-batches = {}
-machines = {}
-shipments = {}
-locations = {}
-users = {}
-centras = {}
-harbor_guards = {}
-warehouses = {}
-notifications = {}
-stocks = {}
-
 
 # Dependency
 def get_db():
@@ -116,24 +109,26 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = crud.authenticate_user(db, email=user.email, password=user.password) #authenticate user function nya gada
+    db_user = crud.authenticate_user(db, email=user.email, password=user.password)
     if db_user:
-        return {"jwt_token": "YourTokenHere"}  # Replace with actual JWT token generation
+        # Replace "YourTokenHere" with actual JWT token generation logic
+        return {"jwt_token": "YourTokenHere"}
     raise HTTPException(status_code=404, detail="User not authenticated")
 
 @app.post("/users/verify")
 async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
-    verified = crud.verify_user(db, verification.code) # verify user function nya gada
+    verified = crud.verify_user(db, verification.code)
     if verified:
         return {"message": "User verified successfully"}
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
 async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_db)):
-    resent = crud.resend_verification_code(db, email=user.email) #resend verification code function nya gada
+    resent = crud.resend_verification_code(db, email=user.email)
     if resent:
         return {"message": "Verification code resent"}
-    raise HTTPException(status_code=404, detail="Failed to resend code") 
+    raise HTTPException(status_code=404, detail="Failed to resend code")
+
 
 # Batches
 @app.get("/batches")
@@ -165,243 +160,253 @@ async def delete_batch(batch_id: int, db: Session = Depends(get_db)):
         return {"message": "Batch deleted successfully"}
     raise HTTPException(status_code=404, detail="Batch not found")
 
-@app.get("/batches/{batch_id}/dried_date") # ambil dari drying activity apa gimana nih?
-async def get_dried_date(batch_id: str):
-    if batch_id in batches:
-        return {"dried_date": batches[batch_id].get("dried_date")}
+@app.get("/batches/{batch_id}/dried_date")
+async def get_dried_date(batch_id: int, db: Session = Depends(get_db)):
+    dried_date = crud.get_dried_date(db, batch_id)
+    if dried_date:
+        return {"dried_date": dried_date}
     raise HTTPException(status_code=404, detail="Batch not found")
 
-@app.get("/batches/{batch_id}/floured_date") # ambil dari flouring activity atau yg mana? nama function tolong yg jelas
-async def get_floured_date(batch_id: str):
-    if batch_id in batches:
-        return {"floured_date": batches[batch_id].get("floured_date")}
+@app.get("/batches/{batch_id}/floured_date")
+async def get_floured_date(batch_id: int, db: Session = Depends(get_db)):
+    floured_date = crud.get_floured_date(db, batch_id)
+    if floured_date:
+        return {"floured_date": floured_date}
     raise HTTPException(status_code=404, detail="Batch not found")
 
 # Machines
-@app.get("/machines/{machine_id}") #ini machine ada 2 biji, machine flouring sama drying, jdi yg mana nih?
+@app.get("/machines/{machine_id}")
 async def get_machine_status(machine_id: int, db: Session = Depends(get_db)):
-    machine = crud.get_machine(db, machine_id=machine_id)
+    machine = crud.get_machine_status(db, machine_id=machine_id)
     if machine:
-        return {"status": machine.get("status")}
+        return {"status": machine.status}  # Assuming the Machine model has a 'status' attribute
     raise HTTPException(status_code=404, detail="Machine not found")
 
 @app.post("/machines/{machine_id}/start")
 async def start_machine(machine_id: int, db: Session = Depends(get_db)):
-    started = crud.start_machine(db, machine_id=machine_id)
-    if started:
+    if crud.start_machine(db, machine_id=machine_id):
         return {"message": "Machine started"}
     raise HTTPException(status_code=404, detail="Machine not found")
 
 @app.post("/machines/{machine_id}/stop")
 async def stop_machine(machine_id: int, db: Session = Depends(get_db)):
-    stopped = crud.stop_machine(db, machine_id=machine_id)
-    if stopped:
+    if crud.stop_machine(db, machine_id=machine_id):
         return {"message": "Machine stopped"}
     raise HTTPException(status_code=404, detail="Machine not found")
 
-@app.put("/shipments/{shipment_id}")
-async def add_shipment(shipment_id: str):
-    # Logic to add shipment
-    return {"message": "Shipment added"}
+# Shipments (Centra)
+@app.post("/shipments")
+async def add_shipment(shipment_data: schemas.ShipmentCreate, db: Session = Depends(get_db)):
+    added_shipment = crud.add_shipment(db, shipment_data)
+    return added_shipment
 
-@app.put("/shipments/{shipment_id}", response_model=ShipmentStatusUpdate)
-async def update_shipment(shipment_id: str, shipment_update: ShipmentStatusUpdate):
-    if shipment_id in shipments:
-        shipments[shipment_id].update(shipment_update.dict())
-        return shipments[shipment_id]
+@app.put("/shipments/{shipment_id}")
+async def update_shipment(shipment_id: str, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db)):
+    updated_shipment = crud.update_shipment(db, shipment_id, shipment_update)
+    if updated_shipment:
+        return updated_shipment
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.get("/notifications")
-async def show_notifications():
-    return notifications
+async def show_notifications(db: Session = Depends(get_db)):
+    notifications = crud.get_notifications(db)
+    return {"notifications": notifications}
 
 @app.get("/shipments")
-async def get_all_shipments():
-    return list(shipments.values())
+async def get_all_shipments(db: Session = Depends(get_db)):
+    shipments = crud.get_all_shipments(db)
+    return shipments
 
 @app.get("/shipments/{shipment_id}")
-async def get_shipment_details(shipment_id: str):
-    shipment = shipments.get(shipment_id)
+async def get_shipment_details(shipment_id: str, db: Session = Depends(get_db)):
+    shipment = crud.get_shipment_details(db, shipment_id)
     if shipment:
         return shipment
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.delete("/shipments/{shipment_id}")
-async def delete_shipment(shipment_id: str):
-    if shipment_id in shipments:
-        del shipments[shipment_id]
+async def delete_shipment(shipment_id: str, db: Session = Depends(get_db)):
+    if crud.delete_shipment(db, shipment_id):
         return {"message": "Shipment deleted"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.post("/shipments/{shipment_id}/confirm")
-async def confirm_shipment(confirmation: ShipmentConfirmation):
-    # Logic to confirm shipment
-    return {"message": "Shipment confirmed"}
+async def confirm_shipment(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db)):
+    if crud.confirm_shipment(db, shipment_id, confirmation.weight):
+        return {"message": "Shipment confirmed"}
+    raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.post("/shipments/{shipment_id}/report")
-async def report_shipment_issue(shipment_id: int, issue: ShipmentIssue):
-    # Add logic to handle reporting an issue with a shipment
-    if shipment_id in shipments:
-        shipments[shipment_id].update(issue.dict())
+async def report_shipment_issue(shipment_id: str, issue: schemas.ShipmentIssue, db: Session = Depends(get_db)):
+    if crud.report_shipment_issue(db, shipment_id, issue.description):
         return {"message": "Issue reported successfully"}
-    return {"error": "Shipment not found"}
+    raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.post("/shipments/{shipment_id}/confirm")
-async def confirm_shipment_arrival(shipment_id: int, confirmation: ShipmentConfirmation):
-    # Logic to confirm shipment arrival
-    if shipment_id in shipments:
-        shipments[shipment_id].update(confirmation.dict())
+async def confirm_shipment_arrival(shipment_id: str, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db)):
+    if crud.confirm_shipment(db, shipment_id, confirmation.weight):
         return {"message": "Shipment confirmed"}
-    return {"error": "Shipment not found"}
+    raise HTTPException(status_code=404, detail="Shipment not found")
 
 @app.put("/shipments/{shipment_id}/rescale")
-async def rescale_shipment(shipment_id: int, rescale: ShipmentRescale):
-    # Logic to update the weight of a shipment
-    if shipment_id in shipments:
-        shipments[shipment_id].update(rescale.dict())
-        return shipments[shipment_id]
-    return {"error": "Shipment not found"}
+async def rescale_shipment(shipment_id: str, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db)):
+    if crud.rescale_shipment(db, shipment_id, rescale.new_weight):
+        return {"message": "Shipment weight updated"}
+    raise HTTPException(status_code=404, detail="Shipment not found")
 
+
+# Stocks
 @app.get("/stocks")
-async def show_all_stock_details():
-    # Logic to retrieve stock details from all locations
+async def show_all_stock_details(db: Session = Depends(get_db)):
+    stocks = crud.get_all_stocks(db)
     return stocks
 
 @app.get("/stocks/{location_id}")
-async def show_stock_detail(location_id: int):
-    # Logic to retrieve stock details for a specific location
-    if location_id in stocks:
-        return stocks[location_id]
-    return {"error": "Location not found"}
+async def show_stock_detail(location_id: int, db: Session = Depends(get_db)):
+    stock = crud.get_stock_detail(db, location_id)
+    if stock:
+        return stock
+    raise HTTPException(status_code=404, detail="Location not found")
 
+
+# Locations
 @app.get("/location/{location_id}")
-async def show_location_details(location_id: int):
-    # Logic to retrieve details for a specific location
-    if location_id in locations:
-        return locations[location_id]
-    return {"error": "Location not found"}
+async def show_location_details(location_id: int, db: Session = Depends(get_db)):
+    location = crud.get_location_details(db, location_id)
+    if location:
+        return location
+    raise HTTPException(status_code=404, detail="Location not found")
 
+# Shipment History
 @app.get("/shipments/{location_id}/history")
-async def show_shipment_history(location_id: int):
-    # Logic to retrieve all shipment history for a specific location
-    if location_id in locations:
-        return locations[location_id].get('shipment_history', [])
-    return {"error": "Location not found"}
+async def show_shipment_history(location_id: int, db: Session = Depends(get_db)):
+    shipment_history = crud.get_shipment_history(db, location_id)
+    if shipment_history:
+        return shipment_history
+    raise HTTPException(status_code=404, detail="Location not found")
 
 @app.post("/shipments/schedule-pickup")
-async def schedule_pickup(pickup_data: ShipmentPickupSchedule):
-    # This assumes there is a mechanism to validate shipment_id
-    if pickup_data.shipment_id in shipments:
-        shipments[pickup_data.shipment_id]['pickup_details'] = pickup_data.dict()
-        return {"message": "Pickup scheduled successfully"}
-    return {"error": "Shipment not found"}
-
-@app.get("/centras")
-async def show_all_centras():
-    return list(centras.values())
-
-@app.post("/centras")
-async def add_new_centra(centra_data: CentraDetails):
-    centra_id = len(centras) + 1  # Simple ID generation strategy
-    centras[str(centra_id)] = centra_data.dict()
-    return centras[str(centra_id)]
-
-@app.put("/shipments/{shipment_id}")
-async def update_shipment(shipment_id: str, shipment_update: ShipmentUpdate):
-    if shipment_id in shipments:
-        shipments[shipment_id].update(shipment_update.dict())
-        return shipments[shipment_id]
+async def schedule_pickup(pickup_data: ShipmentPickupSchedule, db: Session = Depends(get_db)):
+    is_valid = crud.validate_shipment_id(db, pickup_data.shipment_id)
+    if is_valid:
+        result = crud.schedule_pickup(db, pickup_data)
+        if result:
+            return {"message": "Pickup scheduled successfully"}
+        return {"error": "Failed to schedule pickup"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
+# Centra
+@app.get("/centras")
+async def show_all_centras(db: Session = Depends(get_db)):
+    centras = get_all_centras(db)
+    return centras
+
+@app.post("/centras", response_model=CentraDetails)
+async def add_new_centra(centra_data: CentraDetails, db: Session = Depends(get_db)):
+    new_centra = add_new_centra(db, centra_data)
+    return new_centra
+
+# Shipment (XYZ)
+
+@app.put("/shipments/{shipment_id}")
+async def update_shipment_details(shipment_id: str, shipment_update: ShipmentUpdate, db: Session = Depends(get_db)):
+    updated = update_shipment(db, shipment_id, shipment_update)
+    if updated:
+        return updated
+    raise HTTPException(status_code=404, detail="Shipment not found")
+
+
 @app.delete("/shipments/{shipment_id}")
-async def delete_shipment(shipment_id: str):
-    if shipment_id in shipments:
-        del shipments[shipment_id]
+async def remove_shipment(shipment_id: str, db: Session = Depends(get_db)):
+    deleted = delete_shipment(db, shipment_id)
+    if deleted:
         return {"message": "Shipment deleted successfully"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
+# Harborguards
 @app.get("/harborguards")
-async def show_all_harbor_guards():
-    return list(harbor_guards.values())
+async def show_all_harbor_guards(db: Session = Depends(get_db)):
+    guards = get_all_harbor_guards(db)
+    return guards
 
 @app.get("/harborguards/{guard_id}")
-async def get_harbor_guard(guard_id: str):
-    guard = harbor_guards.get(guard_id)
-    if guard:
-        return guard
-    raise HTTPException(status_code=404, detail="Harbor guard not found")
+async def show_harbor_guard(guard_id: int, db: Session = Depends(get_db)):
+    guard = get_harbor_guard(db, guard_id)
+    return guard
 
-@app.post("/harborguards")
-async def create_harbor_guard(guard_data: HarborGuard):
-    guard_id = str(len(harbor_guards) + 1)
-    harbor_guards[guard_id] = guard_data.dict()
-    return harbor_guards[guard_id]
+@app.post("/harborguards", response_model=HarborGuardCreate)
+async def add_harbor_guard(guard_data: HarborGuardCreate, db: Session = Depends(get_db)):
+    new_guard = create_harbor_guard(db, guard_data)
+    return new_guard
 
-@app.put("/harborguards/{guard_id}")
-async def update_harbor_guard(guard_id: str, guard_data: HarborGuard):
-    if guard_id in harbor_guards:
-        harbor_guards[guard_id].update(guard_data.dict())
-        return harbor_guards[guard_id]
-    raise HTTPException(status_code=404, detail="Harbor guard not found")
+@app.put("/harborguards/{guard_id}", response_model=HarborGuardUpdate)
+async def modify_harbor_guard(guard_id: int, guard_data: HarborGuardUpdate, db: Session = Depends(get_db)):
+    updated_guard = update_harbor_guard(db, guard_id, guard_data)
+    return updated_guard
 
-@app.get("/warehouses")
-async def show_all_warehouses():
-    return list(warehouses.values())
+@app.delete("/harborguards/{guard_id}")
+async def remove_harbor_guard(guard_id: int, db: Session = Depends(get_db)):
+    result = delete_harbor_guard(db, guard_id)
+    return result
 
-@app.get("/warehouses/{warehouse_id}")
-async def get_warehouse(warehouse_id: str):
-    warehouse = warehouses.get(warehouse_id)
-    if warehouse:
-        return warehouse
-    raise HTTPException(status_code=404, detail="Warehouse not found")
+# Warehouses
+@app.get("/warehouses", response_model=List[schemas.Warehouse])
+async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
+    return warehouses
 
-@app.post("/warehouses")
-async def create_warehouse(warehouse_data: Warehouse):
-    warehouse_id = str(len(warehouses) + 1)  # Simple unique ID generation for example
-    warehouses[warehouse_id] = warehouse_data.dict()
-    return warehouses[warehouse_id]
+@app.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
+async def get_warehouse(warehouse_id: str, db: Session = Depends(get_db)):
+    warehouse = crud.get_warehouse(db, warehouse_id=warehouse_id)
+    if warehouse is None:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    return warehouse
 
-@app.put("/warehouses/{warehouse_id}")
-async def update_warehouse(warehouse_id: str, warehouse_data: Warehouse):
-    if warehouse_id in warehouses:
-        warehouses[warehouse_id].update(warehouse_data.dict())
-        return warehouses[warehouse_id]
-    raise HTTPException(status_code=404, detail="Warehouse not found")
+@app.post("/warehouses", response_model=schemas.Warehouse)
+async def create_warehouse(warehouse_data: schemas.WarehouseCreate, db: Session = Depends(get_db)):
+    return crud.create_warehouse(db=db, warehouse_data=warehouse_data)
 
-@app.delete("/warehouses/{warehouse_id}")
-async def delete_warehouse(warehouse_id: str):
-    if warehouse_id in warehouses:
-        del warehouses[warehouse_id]
-        return {"message": "Warehouse deleted successfully"}
-    raise HTTPException(status_code=404, detail="Warehouse not found")
+@app.put("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
+async def update_warehouse(warehouse_id: str, warehouse_data: schemas.WarehouseUpdate, db: Session = Depends(get_db)):
+    updated_warehouse = crud.update_warehouse(db, warehouse_id=warehouse_id, update_data=warehouse_data)
+    if updated_warehouse is None:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    return updated_warehouse
 
-@app.get("/users")
-async def show_all_users():
-    return list(users.values())
+@app.delete("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
+async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db)):
+    deleted_warehouse = crud.delete_warehouse(db, warehouse_id=warehouse_id)
+    if deleted_warehouse is None:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    return {"message": "Warehouse deleted successfully"}
 
-@app.get("/users/{user_id}")
-async def get_user(user_id: str):
-    user = users.get(user_id)
-    if user:
-        return user
-    raise HTTPException(status_code=404, detail="User not found")
+# User (Admin)
+@app.get("/users", response_model=List[schemas.User])
+async def show_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_all_users(db, skip=skip, limit=limit)
+    return users
 
-@app.post("/users")
-async def create_user(user_data: User):
-    user_id = str(len(users) + 1)  # Simple unique ID generation for example
-    users[user_id] = user_data.dict()
-    return users[user_id]
+@app.get("/users/{user_id}", response_model=schemas.User)
+async def get_user(user_id: str, db: Session = Depends(get_db)):
+    user = crud.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
-@app.put("/users/{user_id}")
-async def update_user(user_id: str, user_data: User):
-    if user_id in users:
-        users[user_id].update(user_data.dict())
-        return users[user_id]
-    raise HTTPException(status_code=404, detail="User not found")
+@app.post("/users", response_model=schemas.User)
+async def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    return crud.create_user(db=db, user=user_data)
 
-@app.delete("/users/{user_id}")
-async def delete_user(user_id: str):
-    if user_id in users:
-        del users[user_id]
-        return {"message": "User deleted successfully"}
-    raise HTTPException(status_code=404, detail="User not found")
+@app.put("/users/{user_id}", response_model=schemas.User)
+async def update_user(user_id: str, user_data: schemas.UserUpdate, db: Session = Depends(get_db)):
+    updated_user = crud.update_user(db, user_id=user_id, update_data=user_data)
+    if updated_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+@app.delete("/users/{user_id}", response_model=schemas.User)
+async def delete_user(user_id: str, db: Session = Depends(get_db)):
+    deleted_user = crud.delete_user(db, user_id=user_id)
+    if deleted_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted successfully"}
