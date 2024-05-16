@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from fastapi import HTTPException
 
-# USERS
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
         userID=user.userID,

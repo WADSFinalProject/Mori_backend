@@ -1,8 +1,9 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy.ext.declarative import declarative_base
 
-from .database import Base
+Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
@@ -12,7 +13,13 @@ class User(Base):
     Email = Column(String, unique=True, index=True)
     FullName = Column(String)
     Role = Column(String)
-    hashed_password = Column(String, nullable=True)  # Password can be nullable initially
+    hashed_password = Column(String, nullable=True)
+
+    wet_leaves_collections = relationship("WetLeavesCollection", back_populates="user")
+    drying_activities = relationship("DryingActivity", back_populates="user")
+    flouring_activities = relationship("FlouringActivity", back_populates="user")
+    received_packages = relationship("ReceivedPackage", back_populates="user")
+    package_receipts = relationship("PackageReceipt", back_populates="user")
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
@@ -21,19 +28,15 @@ class ProcessedLeaves(Base):
     FlouringID = Column(String(50), ForeignKey('FlouringActivity.FlouringID'))
     DryingID = Column(String(50), ForeignKey('DryingActivity.DryingID'))
 
-
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
     WetLeavesBatchID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('User.UserID'), nullable=False)    
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
     DateTime = Column(DateTime, default=datetime.now)
     Weight = Column(Integer)
     Expired = Column(Boolean)
     ExpirationTime = Column(String(50))
-
-    items = relationship("Item", back_populates="owner")
-    sessions = relationship("Session", back_populates="user")
 
     user = relationship("User", back_populates="wet_leaves_collections")
 
@@ -45,11 +48,13 @@ class DryingMachine(Base):
 class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
     DryingID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('User.UserID'), nullable=False)
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
     DateTime = Column(DateTime, default=datetime.now)
     Weight = Column(Integer)
     DryingMachineID = Column(String(50), ForeignKey('DryingMachine.MachineID'))
+
+    user = relationship("User", back_populates="drying_activities")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
@@ -59,12 +64,14 @@ class FlouringMachine(Base):
 class FlouringActivity(Base):
     __tablename__ = 'FlouringActivity'
     FlouringID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('User.UserID'), nullable=False)
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
     DateTime = Column(DateTime, default=datetime.now)
     Weight = Column(Integer)
     FlouringMachineID = Column(String(50), ForeignKey('FlouringMachine.MachineID'))
     DryingID = Column(String(50))
+
+    user = relationship("User", back_populates="flouring_activities")
 
 class Centra(Base):
     __tablename__ = 'Centra'
@@ -74,7 +81,7 @@ class Centra(Base):
 class Expedition(Base):
     __tablename__ = 'Expedition'
     ExpeditionID = Column(Integer, primary_key=True)
-    EstimatedArrival = Column(DateTime) 
+    EstimatedArrival = Column(DateTime)
     TotalPackages = Column(Integer)
     ExpeditionDate = Column(DateTime, default=datetime.now)
     ExpeditionServiceDetails = Column(String(100))
@@ -85,19 +92,23 @@ class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
     PackageID = Column(Integer, primary_key=True)
     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    UserID = Column(Integer, ForeignKey('User.UserID'), nullable=False)
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     PackageType = Column(String(100))
     ReceivedDate = Column(DateTime, default=datetime.now)
     WarehouseDestination = Column(String(100))
 
+    user = relationship("User", back_populates="received_packages")
+
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True)
-    UserID = Column(Integer, ForeignKey('User.UserID'), nullable=False)
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     PackageID = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
     DateTimeAccepted = Column(DateTime, default=datetime.now)
     Note = Column(String(100))
+
+    user = relationship("User", back_populates="package_receipts")
 
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
