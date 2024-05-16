@@ -1,16 +1,13 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
-import secrets
-import string
+from fastapi import HTTPException
 
-# USERS # INI FUNCTION BELOM LENGKAP
 def create_user(db: Session, user: schemas.UserCreate):
-    # fake_hashed_pass = user.password + "examplehash"
     db_user = models.User(
-        UserID=user.userID,
+        userID=user.userID,
         IDORole=user.IDORole, 
         Email=user.email, 
-        FullName=user.IDORole, 
+        FullName=user.FullName, 
         Role=user.Role)
     db.add(db_user)
     db.commit()
@@ -18,7 +15,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 def set_user_password(db: Session, user_id: str, password: str):
-    user = db.query(models.User).filter(models.User.UserID == user_id).first()
+    user = db.query(models.User).filter(models.User.userID == user_id).first()
     if user:
         fake_hashed_pass = password + "examplehash"
         user.hashed_password = fake_hashed_pass
@@ -30,54 +27,136 @@ def set_user_password(db: Session, user_id: str, password: str):
 def get_all_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_user(db: Session, user_id: str):
+    return db.query(models.User).filter(models.User.userID == user_id).first()
 
-def get_user_by_email(db:Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.Email == email).first()
 
-
-#PROCESSED LEAVES
-
-def create_processed_leaf(db: Session, processed_leaf: schemas.ProcessedLeavesCreate):
-    db_processed_leaf = models.ProcessedLeaves(
-        Description=processed_leaf.Description,
-        FlouringID=processed_leaf.FlouringID,
-        DryingID=processed_leaf.DryingID
-    )
-    db.add(db_processed_leaf)
-    db.commit()
-    db.refresh(db_processed_leaf)
-    return db_processed_leaf
-
-
-def get_all_processed_leaves(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.ProcessedLeaves).offset(skip).limit(limit).all()
-
-def get_processed_leaf(db: Session, product_id: int):
-    return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == product_id).first()
-
-
-def update_processed_leaf(db: Session, product_id: int, update_data: schemas.ProcessedLeavesUpdate):
-    db_processed_leaf = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == product_id).first()
-    if db_processed_leaf:
+def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate):
+    user = db.query(models.User).filter(models.User.userID == user_id).first()
+    if user:
         for key, value in update_data.dict().items():
-            setattr(db_processed_leaf, key, value)
+            setattr(user, key, value)
         db.commit()
-        db.refresh(db_processed_leaf)
-    return db_processed_leaf
+        db.refresh(user)
+    return user
 
-
-def delete_processed_leaf(db: Session, product_id: int):
-    db_processed_leaf = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == product_id).first()
-    if db_processed_leaf:
-        db.delete(db_processed_leaf)
+def delete_user(db: Session, user_id: str):
+    user = db.query(models.User).filter(models.User.userID == user_id).first()
+    if user:
+        db.delete(user)
         db.commit()
-    return db_processed_leaf
+    return user
 
+# BATCHES
+def create_batch(db: Session, batch: schemas.BatchCreate):
+    db_batch = models.Batch(
+        Description=batch.Description,
+        DriedDate=batch.DriedDate,
+        FlouredDate=batch.FlouredDate
+    )
+    db.add(db_batch)
+    db.commit()
+    db.refresh(db_batch)
+    return db_batch
 
-#WET LEAVES COLLECTIONS
+def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Batch).offset(skip).limit(limit).all()
 
+def get_batch_by_id(db: Session, batch_id: int):
+    return db.query(models.Batch).filter(models.Batch.id == batch_id).first()
+
+def update_batch(db: Session, batch_id: int, update_data: schemas.BatchUpdate):
+    batch = db.query(models.Batch).filter(models.Batch.id == batch_id).first()
+    if batch:
+        for key, value in update_data.dict().items():
+            setattr(batch, key, value)
+        db.commit()
+        db.refresh(batch)
+    return batch
+
+def delete_batch(db: Session, batch_id: int):
+    batch = db.query(models.Batch).filter(models.Batch.id == batch_id).first()
+    if batch:
+        db.delete(batch)
+        db.commit()
+    return batch
+
+# MACHINES
+def get_machine_status(db: Session, machine_id: int):
+    return db.query(models.Machine).filter(models.Machine.id == machine_id).first()
+
+def start_machine(db: Session, machine_id: int):
+    machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
+    if machine:
+        machine.status = 'running'
+        db.commit()
+        db.refresh(machine)
+        return machine
+    return None
+
+def stop_machine(db: Session, machine_id: int):
+    machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
+    if machine:
+        machine.status = 'stopped'
+        db.commit()
+        db.refresh(machine)
+        return machine
+    return None
+
+# SHIPMENTS
+def add_shipment(db: Session, shipment_id: str, shipment_data: schemas.ShipmentCreate):
+    db_shipment = models.Shipment(
+        id=shipment_id,
+        **shipment_data.dict()
+    )
+    db.add(db_shipment)
+    db.commit()
+    db.refresh(db_shipment)
+    return db_shipment
+
+def update_shipment(db: Session, shipment_id: str, shipment_update: schemas.ShipmentUpdate):
+    shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+    if shipment:
+        for key, value in shipment_update.dict().items():
+            setattr(shipment, key, value)
+        db.commit()
+        db.refresh(shipment)
+    return shipment
+
+def get_all_shipments(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Shipment).offset(skip).limit(limit).all()
+
+def get_shipment_details(db: Session, shipment_id: str):
+    return db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+
+def delete_shipment(db: Session, shipment_id: str):
+    shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+    if shipment:
+        db.delete(shipment)
+        db.commit()
+    return shipment
+
+# STOCKS
+def get_all_stocks(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Stock).offset(skip).limit(limit).all()
+
+def get_stock_detail(db: Session, location_id: int):
+    return db.query(models.Stock).filter(models.Stock.location_id == location_id).first()
+
+# LOCATIONS
+def get_location_details(db: Session, location_id: int):
+    return db.query(models.Location).filter(models.Location.id == location_id).first()
+
+# SHIPMENT HISTORY
+def get_shipment_history(db: Session, location_id: int):
+    location = db.query(models.Location).filter(models.Location.id == location_id).first()
+    if location:
+        return location.shipment_history
+    return []
+
+# WET LEAVES COLLECTIONS
 def create_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.WetLeavesCollectionCreate):
     db_wet_leaves_collection = models.WetLeavesCollection(
         WetLeavesBatchID=wet_leaves_collection.WetLeavesBatchID,
@@ -94,14 +173,11 @@ def create_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.Wet
     db.refresh(db_wet_leaves_collection)
     return db_wet_leaves_collection
 
-
 def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.WetLeavesCollection).offset(skip).limit(limit).all()
 
-
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
-
 
 def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
@@ -112,7 +188,6 @@ def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_d
         db.refresh(db_wet_leaves_collection)
     return db_wet_leaves_collection
 
-
 def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
     if db_wet_leaves_collection:
@@ -120,8 +195,7 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
         db.commit()
     return db_wet_leaves_collection
 
-#DRYING MACHINE
-
+# DRYING MACHINE
 def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
     db_drying_machine = models.DryingMachine(
         MachineID=drying_machine.MachineID,
@@ -135,10 +209,8 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
 def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.DryingMachine).offset(skip).limit(limit).all()
 
-
 def get_drying_machine(db: Session, machine_id: str):
     return db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
-
 
 def update_drying_machine(db: Session, machine_id: str, update_data: schemas.DryingMachineUpdate):
     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
@@ -149,7 +221,6 @@ def update_drying_machine(db: Session, machine_id: str, update_data: schemas.Dry
         db.refresh(db_drying_machine)
     return db_drying_machine
 
-
 def delete_drying_machine(db: Session, machine_id: str):
     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
     if db_drying_machine:
@@ -157,126 +228,76 @@ def delete_drying_machine(db: Session, machine_id: str):
         db.commit()
     return db_drying_machine
 
-
-#DRYING ACTIVITY
-
-def create_drying_activity(db: Session, drying_activity: schemas.DryingActivityCreate):
-    db_drying_activity = models.DryingActivity(
-        DryingID=drying_activity.DryingID,
-        UserID=drying_activity.UserID,
-        CentralID=drying_activity.CentralID,
-        Date=drying_activity.Date,
-        Weight=drying_activity.Weight,
-        DryingMachineID=drying_activity.DryingMachineID,
-        Time=drying_activity.Time
+# WAREHOUSE LOCATION
+def create_warehouse_location(db: Session, warehouse_location: schemas.WarehouseLocationCreate):
+    db_warehouse_location = models.WarehouseLocation(
+        LocationID=warehouse_location.LocationID,
+        Capacity=warehouse_location.Capacity
     )
-    db.add(db_drying_activity)
+    db.add(db_warehouse_location)
     db.commit()
-    db.refresh(db_drying_activity)
-    return db_drying_activity
+    db.refresh(db_warehouse_location)
+    return db_warehouse_location
 
+def get_all_warehouse_locations(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.WarehouseLocation).offset(skip).limit(limit).all()
 
-def get_all_drying_activities(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingActivity).offset(skip).limit(limit).all()
+def get_warehouse_location(db: Session, location_id: str):
+    return db.query(models.WarehouseLocation).filter(models.WarehouseLocation.LocationID == location_id).first()
 
-
-def get_drying_activity(db: Session, drying_id: str):
-    return db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
-
-
-def update_drying_activity(db: Session, drying_id: str, update_data: schemas.DryingActivityUpdate):
-    db_drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
-    if db_drying_activity:
+def update_warehouse_location(db: Session, location_id: str, update_data: schemas.WarehouseLocationUpdate):
+    db_warehouse_location = db.query(models.WarehouseLocation).filter(models.WarehouseLocation.LocationID == location_id).first()
+    if db_warehouse_location:
         for key, value in update_data.dict().items():
-            setattr(db_drying_activity, key, value)
+            setattr(db_warehouse_location, key, value)
         db.commit()
-        db.refresh(db_drying_activity)
-    return db_drying_activity
+        db.refresh(db_warehouse_location)
+    return db_warehouse_location
 
-
-def delete_drying_activity(db: Session, drying_id: str):
-    db_drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
-    if db_drying_activity:
-        db.delete(db_drying_activity)
+def delete_warehouse_location(db: Session, location_id: str):
+    db_warehouse_location = db.query(models.WarehouseLocation).filter(models.WarehouseLocation.LocationID == location_id).first()
+    if db_warehouse_location:
+        db.delete(db_warehouse_location)
         db.commit()
-    return db_drying_activity
+    return db_warehouse_location
 
-#FLOURING MACHINE
-def create_flouring_machine(db: Session, flouring_machine: schemas.FlouringMachineCreate):
-    db_flouring_machine = models.FlouringMachine(
-        MachineID=flouring_machine.MachineID,
-        Capacity=flouring_machine.Capacity
+
+#HARBOUR GUARD
+
+def get_all_harbor_guards(db: Session, skip: int = 0, limit: int = 100) -> List[models.HarborGuard]:
+    return db.query(models.HarborGuard).offset(skip).limit(limit).all()
+
+def get_harbor_guard(db: Session, guard_id: str) -> Optional[models.HarborGuard]:
+    guard = db.query(models.HarborGuard).filter(models.HarborGuard.id == guard_id).first()
+    if guard:
+        return guard
+    raise HTTPException(status_code=404, detail="Harbor guard not found")
+
+def create_harbor_guard(db: Session, guard_data: schemas.HarborGuardCreate) -> models.HarborGuard:
+    db_guard = models.HarborGuard(
+        name=guard_data.name,
+        rank=guard_data.rank,
+        station=guard_data.station
     )
-    db.add(db_flouring_machine)
+    db.add(db_guard)
     db.commit()
-    db.refresh(db_flouring_machine)
-    return db_flouring_machine
+    db.refresh(db_guard)
+    return db_guard
 
-# Get all flouring machines with optional pagination
-def get_all_flouring_machines(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringMachine).offset(skip).limit(limit).all()
-
-# Get a flouring machine by its MachineID
-def get_flouring_machine(db: Session, machine_id: str):
-    return db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
-
-# Update a flouring machine by its MachineID
-def update_flouring_machine(db: Session, machine_id: str, update_data: schemas.FlouringMachineUpdate):
-    db_flouring_machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
-    if db_flouring_machine:
-        for key, value in update_data.dict().items():
-            setattr(db_flouring_machine, key, value)
+def update_harbor_guard(db: Session, guard_id: str, guard_data: schemas.HarborGuardUpdate) -> Optional[models.HarborGuard]:
+    db_guard = db.query(models.HarborGuard).filter(models.HarborGuard.id == guard_id).first()
+    if db_guard:
+        for key, value in guard_data.dict().items():
+            setattr(db_guard, key, value)
         db.commit()
-        db.refresh(db_flouring_machine)
-    return db_flouring_machine
+        db.refresh(db_guard)
+        return db_guard
+    raise HTTPException(status_code=404, detail="Harbor guard not found")
 
-# Delete a flouring machine by its MachineID
-def delete_flouring_machine(db: Session, machine_id: str):
-    db_flouring_machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
-    if db_flouring_machine:
-        db.delete(db_flouring_machine)
+def delete_harbor_guard(db: Session, guard_id: str) -> Optional[models.HarborGuard]:
+    db_guard = db.query(models.HarborGuard).filter(models.HarborGuard.id == guard_id).first()
+    if db_guard:
+        db.delete(db_guard)
         db.commit()
-    return db_flouring_machine
-
-
-#FLOURING ACTIVITY
-def create_flouring_activity(db: Session, flouring_activity: schemas.FlouringActivityCreate):
-    db_flouring_activity = models.FlouringActivity(
-        FlouringID=flouring_activity.FlouringID,
-        UserID=flouring_activity.UserID,
-        CentralID=flouring_activity.CentralID,
-        Date=flouring_activity.Date,
-        Weight=flouring_activity.Weight,
-        FlouringMachineID=flouring_activity.FlouringMachineID,
-        DryingID=flouring_activity.DryingID
-    )
-    db.add(db_flouring_activity)
-    db.commit()
-    db.refresh(db_flouring_activity)
-    return db_flouring_activity
-
-# Get all flouring activities with optional pagination
-def get_all_flouring_activities(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringActivity).offset(skip).limit(limit).all()
-
-# Get a flouring activity by its FlouringID
-def get_flouring_activity(db: Session, flouring_id: str):
-    return db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
-
-# Update a flouring activity by its FlouringID
-def update_flouring_activity(db: Session, flouring_id: str, update_data: schemas.FlouringActivityUpdate):
-    db_flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
-    if db_flouring_activity:
-        for key, value in update_data.dict().items():
-            setattr(db_flouring_activity, key, value)
-        db.commit()
-        db.refresh(db_flouring_activity)
-    return db_flouring_activity
-
-# Delete a flouring activity by its FlouringID
-def delete_flouring_activity(db: Session, flouring_id: str):
-    db_flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
-    if db_flouring_activity:
-        db.delete(db_flouring_activity)
-        db.commit()
-    return db_flouring_activity
+        return db_guard
+    raise HTTPException(status_code=404, detail="Harbor guard not found")
