@@ -3,8 +3,7 @@ from . import models, schemas
 import secrets
 import string
 
-# USERS
-
+# USERS # INI FUNCTION BELOM LENGKAP
 def create_user(db: Session, user: schemas.UserCreate):
     # fake_hashed_pass = user.password + "examplehash"
     db_user = models.User(

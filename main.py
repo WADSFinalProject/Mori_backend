@@ -1,7 +1,10 @@
-from fastapi import FastAPI, Path, HTTPException
+from fastapi import FastAPI, Path, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
+from sqlalchemy.orm import Session
+from . import crud, models, schemas  
+from .database import SessionLocal  
 
 app = FastAPI()
 
@@ -15,7 +18,16 @@ centras = {}
 harbor_guards = {}
 warehouses = {}
 notifications = {}
-stocks ={}
+stocks = {}
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Models
 class UserRegistration(BaseModel):
@@ -92,90 +104,100 @@ class Warehouse(BaseModel):
     phone: str
 
 
-# Routes
 @app.get("/")
 async def welcome():
     return {"message": "Welcome to our API!"}
 
+# Users
 @app.post("/users/register")
-async def register_user(user: UserRegistration):
-    # Add registration logic here
+async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.create_user(db, user=user)
     return {"message": "User registered successfully"}
 
 @app.post("/users/login")
-async def login_user(user: UserLogin):
-    # Add login logic here
-    return {"jwt_token": "YourTokenHere"}
+async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = crud.authenticate_user(db, email=user.email, password=user.password) #authenticate user function nya gada
+    if db_user:
+        return {"jwt_token": "YourTokenHere"}  # Replace with actual JWT token generation
+    raise HTTPException(status_code=404, detail="User not authenticated")
 
 @app.post("/users/verify")
-async def verify_user(verification: UserVerification):
-    # Add verification logic here
-    return {"message": "User verified successfully"}
+async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
+    verified = crud.verify_user(db, verification.code) # verify user function nya gada
+    if verified:
+        return {"message": "User verified successfully"}
+    raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
-async def resend_code(user: UserRegistration):
-    # Add resend logic here
-    return {"message": "Verification code resent"}
+async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_db)):
+    resent = crud.resend_verification_code(db, email=user.email) #resend verification code function nya gada
+    if resent:
+        return {"message": "Verification code resent"}
+    raise HTTPException(status_code=404, detail="Failed to resend code") 
 
+# Batches
 @app.get("/batches")
-async def get_all_batches():
-    return list(batches.values())
+async def get_all_batches(db: Session = Depends(get_db)):
+    return crud.get_all_processed_leaves(db) # get_all_processed_leaves
 
 @app.get("/batches/{batch_id}")
-async def get_batch_by_id(batch_id: str):
-    batch = batches.get(batch_id)
+async def get_batch_by_id(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.get_processed_leaf(db, product_id=batch_id) # get_processed_leaf
     if batch:
         return batch
     raise HTTPException(status_code=404, detail="Batch not found")
 
 @app.post("/batches")
-async def create_batch(batch: Batch):
-    batch_id = len(batches) + 1
-    batches[str(batch_id)] = batch
-    return batches[str(batch_id)]
+async def create_batch(batch: schemas.Batch, db: Session = Depends(get_db)):
+    return crud.create_processed_leaf(db, batch=batch) # create_processed_leaf
 
 @app.put("/batches/{batch_id}")
-async def update_batch(batch_id: str, batch: Batch):
-    if batch_id not in batches:
-        raise HTTPException(status_code=404, detail="Batch not found")
-    batches[batch_id] = batch
-    return batches[batch_id]
+async def update_batch(batch_id: int, batch: schemas.Batch, db: Session = Depends(get_db)):
+    updated_batch = crud.update_processed_leaf(db, batch_id=batch_id, batch=batch) # update_processed_leaf
+    if updated_batch:
+        return updated_batch
+    raise HTTPException(status_code=404, detail="Batch not found")
 
 @app.delete("/batches/{batch_id}")
-async def delete_batch(batch_id: str):
-    if batch_id in batches:
-        del batches[batch_id]
+async def delete_batch(batch_id: int, db: Session = Depends(get_db)):
+    result = crud.delete_processed_leaf(db, batch_id=batch_id) # delete_processed_leaf
+    if result:
         return {"message": "Batch deleted successfully"}
     raise HTTPException(status_code=404, detail="Batch not found")
 
-@app.get("/batches/{batch_id}/dried_date")
+@app.get("/batches/{batch_id}/dried_date") # ambil dari drying activity apa gimana nih?
 async def get_dried_date(batch_id: str):
     if batch_id in batches:
         return {"dried_date": batches[batch_id].get("dried_date")}
     raise HTTPException(status_code=404, detail="Batch not found")
 
-@app.get("/batches/{batch_id}/floured_date")
+@app.get("/batches/{batch_id}/floured_date") # ambil dari flouring activity atau yg mana? nama function tolong yg jelas
 async def get_floured_date(batch_id: str):
     if batch_id in batches:
         return {"floured_date": batches[batch_id].get("floured_date")}
     raise HTTPException(status_code=404, detail="Batch not found")
 
-@app.get("/machines/{machine_id}")
-async def get_machine_status(machine_id: int):
-    machine = machines.get(machine_id)
+# Machines
+@app.get("/machines/{machine_id}") #ini machine ada 2 biji, machine flouring sama drying, jdi yg mana nih?
+async def get_machine_status(machine_id: int, db: Session = Depends(get_db)):
+    machine = crud.get_machine(db, machine_id=machine_id)
     if machine:
         return {"status": machine.get("status")}
     raise HTTPException(status_code=404, detail="Machine not found")
 
 @app.post("/machines/{machine_id}/start")
-async def start_machine(action: MachineAction):
-    # Logic to start machine
-    return {"message": "Machine started"}
+async def start_machine(machine_id: int, db: Session = Depends(get_db)):
+    started = crud.start_machine(db, machine_id=machine_id)
+    if started:
+        return {"message": "Machine started"}
+    raise HTTPException(status_code=404, detail="Machine not found")
 
 @app.post("/machines/{machine_id}/stop")
-async def stop_machine(action: MachineAction):
-    # Logic to stop machine
-    return {"message": "Machine stopped"}
+async def stop_machine(machine_id: int, db: Session = Depends(get_db)):
+    stopped = crud.stop_machine(db, machine_id=machine_id)
+    if stopped:
+        return {"message": "Machine stopped"}
+    raise HTTPException(status_code=404, detail="Machine not found")
 
 @app.put("/shipments/{shipment_id}")
 async def add_shipment(shipment_id: str):

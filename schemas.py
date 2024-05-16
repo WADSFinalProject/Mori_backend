@@ -9,7 +9,7 @@ class UserBase(BaseModel):
     Role: str
 
 class UserCreate(UserBase):
-    pass  
+    pass #ini harusnya ada password  
 
 class UserSetPassword(BaseModel):
     Password: str
