@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
-from .database import Base
+from database import Base
 from typing import Optional
 from datetime import datetime
 

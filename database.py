@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Get the database URL from environment variables
-SQLALCHEMY_DATABASE_URL = "postgres://default:3HiADe0lNWPZ@ep-spring-forest-a1pra2zp.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
+SQLALCHEMY_DATABASE_URL = "postgresql://default:3HiADe0lNWPZ@ep-spring-forest-a1pra2zp.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL

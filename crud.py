@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
+import models, schemas
 from fastapi import HTTPException
-from .schemas import ShipmentPickupSchedule, CentraDetails
-# from .schemas import 
-from .models import Centra 
+from schemas import ShipmentPickupSchedule, CentraDetails
+from models import Centra 
 from typing import List, Optional
 
 
