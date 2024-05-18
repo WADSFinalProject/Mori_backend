@@ -1,48 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime
+from pydantic import BaseModel, EmailStr, constr
 from typing_extensions import Annotated
-import re
 
-# class PhoneStr(str):
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield cls.validate
-
-#     @classmethod
-#     def validate(cls, v):
-#         if not (v.startswith('+') or v.startswith('1') or v.isdigit()):
-#             raise ValueError("Phone number must start with '+' or '1' or be all digits")
-#         if not (9 <= len(v) <= 15):
-#             raise ValueError("Phone number length must be between 9 and 15 digits")
-#         return v
-
-#     @classmethod
-#     def __get_pydantic_json_schema__(cls, core_schema, handler):
-#         json_schema = handler(core_schema)
-#         json_schema.update(
-#             type="string",
-#             pattern=r"^\+?[1-9]\d{8,14}$",
-#             examples=["+123456789", "123456789", "19876543210"]
-#         )
-#         return json_schema
-
-
-# # Define a custom validator for phone numbers
-# def validate_phone_number(cls, v):
-#     if not v.startswith('+'):
-#         raise ValueError('Phone number must start with +')
-#     if not 9 <= len(v) <= 15:
-#         raise ValueError('Phone number length must be between 9 and 15')
-#     if not v[1:].isdigit():
-#         raise ValueError('Phone number must contain only digits after +')
-#     return v
-
-# # Create a type alias for the constrained string
-# class PhoneStr(str):
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield validate_phone_number
+# Create a type alias for the constrained string
+PhoneStr = Annotated[str, constr(regex=r'^\+?1?\d{9,15}$')]
 
 # User schemas
 class UserBase(BaseModel):
@@ -50,10 +12,9 @@ class UserBase(BaseModel):
     Email: str
     FullName: str
     Role: str
-    Phone: str
 
 class UserCreate(UserBase):
-    pass
+    pass #ini harusnya ada password  
 
 class UserSetPassword(BaseModel):
     Password: str
@@ -64,7 +25,6 @@ class UserUpdate(BaseModel):
     Email: Optional[str] = None
     FullName: Optional[str] = None
     Role: Optional[str] = None
-    Phone: Optional[str] = None
 
 class User(UserBase):
     UserID: int
@@ -72,30 +32,14 @@ class User(UserBase):
     class Config:
         orm_mode = True
 
-class UserRegistration(BaseModel):
-    Email: str
-    Password: str
-
-class UserLogin(BaseModel):
-    Email: str
-    Password: str
-
-class UserVerification(BaseModel):
-    Code: int
-
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
-    ProductID: int
     Description: str
-    DryingID: Optional[str]
-    FlouringID: Optional[str]
-    DriedDate: Optional[datetime]
-    FlouredDate: Optional[datetime]
+    FlouringID: str
+    DryingID: str
 
 class ProcessedLeavesCreate(ProcessedLeavesBase):
-    Description: str
-    DryingID: Optional[str]
-    FlouringID: Optional[str]
+    pass
 
 class ProcessedLeavesUpdate(BaseModel):
     Description: Optional[str] = None
@@ -230,24 +174,6 @@ class FlouringActivity(FlouringActivityBase):
     class Config:
         orm_mode = True
 
-#stocks
-class StockBase(BaseModel):
-    product_id: int
-    weight: int
-
-class StockCreate(StockBase):
-    pass
-
-class StockUpdate(StockBase):
-    pass
-
-class Stock(StockBase):
-    id: int
-    location_id: Optional[int] = None
-
-    class Config:
-        orm_mode = True
-
 # Centra schemas
 class CentraBase(BaseModel):
     Address: str
@@ -346,40 +272,6 @@ class ShipmentPickupSchedule(BaseModel):
     pickup_time: datetime
     location: str
 
-class ShipmentBase(BaseModel):
-    batch_id: str
-    description: Optional[str] = None
-    status: Optional[str] = None
-    weight: Optional[float] = None
-    issue_description: Optional[str] = None
-
-class ShipmentCreate(ShipmentBase):
-    pass
-
-class ShipmentUpdate(BaseModel):
-    batch_id: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    weight: Optional[float] = None
-    issue_description: Optional[str] = None
-
-class Shipment(ShipmentBase):
-    id: str
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
-
-class ShipmentIssue(BaseModel):
-    description: str
-
-class ShipmentRescale(BaseModel):
-    new_weight: float
-
-class ShipmentConfirmation(BaseModel):
-    weight: float
-
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
     ProductID: str
@@ -416,10 +308,12 @@ class PackageType(PackageTypeBase):
     class Config:
         orm_mode = True
 
+from pydantic import BaseModel, EmailStr, constr
+
 class HarborGuardBase(BaseModel):
     PIC_name: str
     email: EmailStr
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class HarborGuardCreate(HarborGuardBase):
     """
@@ -433,7 +327,7 @@ class HarborGuardUpdate(HarborGuardBase):
     """
     PIC_name: str = None
     email: EmailStr = None
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class HarborGuard(HarborGuardBase):
     """
@@ -449,7 +343,7 @@ class HarborGuard(HarborGuardBase):
 class WarehouseBase(BaseModel):
     PIC_name: str
     email: EmailStr
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class WarehouseCreate(WarehouseBase):
     pass
@@ -457,7 +351,7 @@ class WarehouseCreate(WarehouseBase):
 class WarehouseUpdate(BaseModel):
     PIC_name: Optional[str] = None
     email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class Warehouse(WarehouseBase):
     id: int  # Assuming an 'id' field is automatically generated by the database
@@ -469,7 +363,7 @@ class Warehouse(WarehouseBase):
 class UserBase(BaseModel):
     PIC_name: str
     email: EmailStr
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class UserCreate(UserBase):
     pass
@@ -477,10 +371,11 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     PIC_name: Optional[str] = None
     email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+    phone: Optional[PhoneStr] = None
 
 class User(UserBase):
     id: int  # Assuming an 'id' field is automatically generated by the database
 
     class Config:
         orm_mode = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
+
