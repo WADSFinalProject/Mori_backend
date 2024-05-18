@@ -4,45 +4,6 @@ from datetime import datetime
 from typing_extensions import Annotated
 import re
 
-# class PhoneStr(str):
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield cls.validate
-
-#     @classmethod
-#     def validate(cls, v):
-#         if not (v.startswith('+') or v.startswith('1') or v.isdigit()):
-#             raise ValueError("Phone number must start with '+' or '1' or be all digits")
-#         if not (9 <= len(v) <= 15):
-#             raise ValueError("Phone number length must be between 9 and 15 digits")
-#         return v
-
-#     @classmethod
-#     def __get_pydantic_json_schema__(cls, core_schema, handler):
-#         json_schema = handler(core_schema)
-#         json_schema.update(
-#             type="string",
-#             pattern=r"^\+?[1-9]\d{8,14}$",
-#             examples=["+123456789", "123456789", "19876543210"]
-#         )
-#         return json_schema
-
-
-# # Define a custom validator for phone numbers
-# def validate_phone_number(cls, v):
-#     if not v.startswith('+'):
-#         raise ValueError('Phone number must start with +')
-#     if not 9 <= len(v) <= 15:
-#         raise ValueError('Phone number length must be between 9 and 15')
-#     if not v[1:].isdigit():
-#         raise ValueError('Phone number must contain only digits after +')
-#     return v
-
-# # Create a type alias for the constrained string
-# class PhoneStr(str):
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield validate_phone_number
 
 # User schemas
 class UserBase(BaseModel):
