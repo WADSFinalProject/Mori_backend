@@ -3,10 +3,10 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
-from . import crud, models, schemas  
-from .database import SessionLocal, engine 
-from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
-from .schemas import HarborGuardCreate, HarborGuardUpdate
+import crud, models, schemas  
+from database import SessionLocal, engine 
+# from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
+# from .schemas import HarborGuardCreate, HarborGuardUpdate
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -23,78 +23,78 @@ def get_db():
         db.close()
 
 # Models
-class UserRegistration(BaseModel):
-    email: str
-    password: str
+# class UserRegistration(BaseModel):
+#     email: str
+#     password: str
 
-class UserLogin(BaseModel):
-    email: str
-    password: str
+# class UserLogin(BaseModel):
+#     email: str
+#     password: str
 
-class UserVerification(BaseModel):
-    code: int
+# class UserVerification(BaseModel):
+#     code: int
 
-class User(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
+# class User(BaseModel):
+#     PIC_name: str
+#     email: EmailStr
+#     phone: str
 
-class Batch(BaseModel):
-    weight: float
-    collection_date: str
-    time: str
+# class Batch(BaseModel):
+#     weight: float
+#     collection_date: str
+#     time: str
 
-class MachineAction(BaseModel):
-    machine_id: int
+# class MachineAction(BaseModel):
+#     machine_id: int
 
-class ShipmentStatusUpdate(BaseModel):
-    status: str
+# class ShipmentStatusUpdate(BaseModel):
+#     status: str
 
-class ShipmentConfirmation(BaseModel):
-    shipment_id: int
-    weight: Optional[float] = None
+# class ShipmentConfirmation(BaseModel):
+#     shipment_id: int
+#     weight: Optional[float] = None
 
-class ShipmentSchedule(BaseModel):
-    shipment_id: int
-    pickup_time: str
-    location: str
+# class ShipmentSchedule(BaseModel):
+#     shipment_id: int
+#     pickup_time: str
+#     location: str
 
-class ShipmentIssue(BaseModel):
-    shipment_id: int
-    issue_description: str
+# class ShipmentIssue(BaseModel):
+#     shipment_id: int
+#     issue_description: str
 
-class ShipmentRescale(BaseModel):
-    shipment_id: int
-    new_weight: float
+# class ShipmentRescale(BaseModel):
+#     shipment_id: int
+#     new_weight: float
 
-class ShipmentPickupSchedule(BaseModel):
-    shipment_id: int
-    pickup_time: datetime
-    location: str
+# class ShipmentPickupSchedule(BaseModel):
+#     shipment_id: int
+#     pickup_time: datetime
+#     location: str
 
-class ShipmentUpdate(BaseModel):
-    status: str
-    checkpoint: str
-    action: str
+# class ShipmentUpdate(BaseModel):
+#     status: str
+#     checkpoint: str
+#     action: str
 
-class CentraDetails(BaseModel):
-    PIC_name: str
-    location: str
-    email: str
-    phone: int
-    drying_machine_status: str
-    flouring_machine_status: str
-    action: str
+# class CentraDetails(BaseModel):
+#     PIC_name: str
+#     location: str
+#     email: str
+#     phone: int
+#     drying_machine_status: str
+#     flouring_machine_status: str
+#     action: str
 
-class HarborGuard(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
+# class HarborGuard(BaseModel):
+#     PIC_name: str
+#     email: EmailStr
+#     phone: str
 
-class Warehouse(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
+# class Warehouse(BaseModel):
+#     PIC_name: str
+#     email: EmailStr
+#     phone: str
 
 
 @app.get("/")
@@ -131,68 +131,130 @@ async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_
 
 
 # Batches
-@app.get("/batches")
-async def get_all_batches(db: Session = Depends(get_db)):
-    return crud.get_all_processed_leaves(db) # get_all_processed_leaves
+@app.post("/batches/", response_model=schemas.ProcessedLeaves)
+def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends(get_db)):
+    return crud.create_batch(db=db, batch=batch)
 
-@app.get("/batches/{batch_id}")
-async def get_batch_by_id(batch_id: int, db: Session = Depends(get_db)):
-    batch = crud.get_processed_leaf(db, product_id=batch_id) # get_processed_leaf
-    if batch:
-        return batch
-    raise HTTPException(status_code=404, detail="Batch not found")
+@app.get("/batches/", response_model=List[schemas.ProcessedLeaves])
+def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
+    return batches
 
-@app.post("/batches")
-async def create_batch(batch: schemas.Batch, db: Session = Depends(get_db)):
-    return crud.create_processed_leaf(db, batch=batch) # create_processed_leaf
+@app.get("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
+def read_batch(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.get_batch_by_id(db=db, batch_id=batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return batch
 
-@app.put("/batches/{batch_id}")
-async def update_batch(batch_id: int, batch: schemas.Batch, db: Session = Depends(get_db)):
-    updated_batch = crud.update_processed_leaf(db, batch_id=batch_id, batch=batch) # update_processed_leaf
-    if updated_batch:
-        return updated_batch
-    raise HTTPException(status_code=404, detail="Batch not found")
+@app.put("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
+def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpdate, db: Session = Depends(get_db)):
+    batch = crud.update_batch(db=db, batch_id=batch_id, update_data=update_data)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return batch
 
-@app.delete("/batches/{batch_id}")
-async def delete_batch(batch_id: int, db: Session = Depends(get_db)):
-    result = crud.delete_processed_leaf(db, batch_id=batch_id) # delete_processed_leaf
-    if result:
-        return {"message": "Batch deleted successfully"}
-    raise HTTPException(status_code=404, detail="Batch not found")
+@app.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
+def delete_existing_batch(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.delete_batch(db=db, batch_id=batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return batch
 
-@app.get("/batches/{batch_id}/dried_date")
-async def get_dried_date(batch_id: int, db: Session = Depends(get_db)):
-    dried_date = crud.get_dried_date(db, batch_id)
-    if dried_date:
-        return {"dried_date": dried_date}
-    raise HTTPException(status_code=404, detail="Batch not found")
+@app.get("/drying-activities/{drying_id}/date", response_model=schemas.DryingActivityBase)
+def get_dried_date(drying_id: str, db: Session = Depends(get_db)):
+    date = crud.batch_get_dried_date(db=db, drying_id=drying_id)
+    if date is None:
+        raise HTTPException(status_code=404, detail="Drying activity not found")
+    return {"date": date}
 
-@app.get("/batches/{batch_id}/floured_date")
-async def get_floured_date(batch_id: int, db: Session = Depends(get_db)):
-    floured_date = crud.get_floured_date(db, batch_id)
-    if floured_date:
-        return {"floured_date": floured_date}
-    raise HTTPException(status_code=404, detail="Batch not found")
+@app.get("/flouring-activities/{flouring_id}/date", response_model=schemas.FlouringActivityBase)
+def get_floured_date(flouring_id: str, db: Session = Depends(get_db)):
+    date = crud.batch_get_floured_date(db=db, flouring_id=flouring_id)
+    if date is None:
+        raise HTTPException(status_code=404, detail="Flouring activity not found")
+    return {"date": date}
+
 
 # Machines
-@app.get("/machines/{machine_id}")
-async def get_machine_status(machine_id: int, db: Session = Depends(get_db)):
-    machine = crud.get_machine_status(db, machine_id=machine_id)
-    if machine:
-        return {"status": machine.status}  # Assuming the Machine model has a 'status' attribute
-    raise HTTPException(status_code=404, detail="Machine not found")
 
-@app.post("/machines/{machine_id}/start")
-async def start_machine(machine_id: int, db: Session = Depends(get_db)):
-    if crud.start_machine(db, machine_id=machine_id):
-        return {"message": "Machine started"}
-    raise HTTPException(status_code=404, detail="Machine not found")
+#DRYING
+@app.post("/drying_machines/{machine_id}/start", response_model=schemas.DryingMachine)
+def start_machine(machine_id: str, db: Session = Depends(get_db)):
+    success = crud.start_drying_machine(db, machine_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Machine could not be started")
+    machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    return machine
 
-@app.post("/machines/{machine_id}/stop")
-async def stop_machine(machine_id: int, db: Session = Depends(get_db)):
-    if crud.stop_machine(db, machine_id=machine_id):
-        return {"message": "Machine stopped"}
-    raise HTTPException(status_code=404, detail="Machine not found")
+@app.post("/drying_machines/{machine_id}/stop", response_model=schemas.DryingMachine)
+def stop_machine(machine_id: str, db: Session = Depends(get_db)):
+    success = crud.stop_drying_machine(db, machine_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Machine could not be stopped")
+    machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    return machine
+
+@app.get("/drying_machines/{machine_id}/status", response_model=str)
+def read_machine_status(machine_id: int, db: Session = Depends(get_db)):
+    status = crud.get_drying_machine_status(db, machine_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+    return status
+
+#FLOURING
+@app.get("/flouring_machines/{machine_id}/status", response_model=str)
+def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db)):
+    status = crud.get_flouring_machine_status(db, machine_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+    return status
+
+@app.post("/flouring_machines/{machine_id}/start")
+def start_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
+    success = crud.start_flouring_machine(db, machine_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to start the machine or machine already running")
+    return {"message": "Machine started successfully"}
+
+@app.post("/flouring_machines/{machine_id}/stop")
+def stop_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
+    success = crud.stop_flouring_machine(db, machine_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to stop the machine or machine already idle")
+    return {"message": "Machine stopped successfully"}
+
+
+
+#WET LEAVES COLLECTIONS
+@app.post("/wet-leaves-collections/", response_model=schemas.WetLeavesCollection)
+def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollectionCreate, db: Session = Depends(get_db)):
+    return crud.create_wet_leaves_collection(db=db, wet_leaves_collection=wet_leaves_collection)
+
+@app.get("/wet-leaves-collections/", response_model=list[schemas.WetLeavesCollection])
+def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
+
+@app.get("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db)):
+    db_wet_leaves_collection = crud.get_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
+    if db_wet_leaves_collection is None:
+        raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
+    return db_wet_leaves_collection
+
+@app.put("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db)):
+    db_wet_leaves_collection = crud.update_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id, update_data=update_data)
+    if db_wet_leaves_collection is None:
+        raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
+    return db_wet_leaves_collection
+
+@app.delete("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db)):
+    db_wet_leaves_collection = crud.delete_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
+    if db_wet_leaves_collection is None:
+        raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
+    return db_wet_leaves_collection
 
 # Shipments (Centra)
 @app.post("/shipments")
@@ -286,7 +348,7 @@ async def show_shipment_history(location_id: int, db: Session = Depends(get_db))
     raise HTTPException(status_code=404, detail="Location not found")
 
 @app.post("/shipments/schedule-pickup")
-async def schedule_pickup(pickup_data: ShipmentPickupSchedule, db: Session = Depends(get_db)):
+async def schedule_pickup(pickup_data: schemas.ShipmentPickupSchedule, db: Session = Depends(get_db)):
     is_valid = crud.validate_shipment_id(db, pickup_data.shipment_id)
     if is_valid:
         result = crud.schedule_pickup(db, pickup_data)
@@ -298,22 +360,22 @@ async def schedule_pickup(pickup_data: ShipmentPickupSchedule, db: Session = Dep
 # Centra
 @app.get("/centras")
 async def show_all_centras(db: Session = Depends(get_db)):
-    centras = get_all_centras(db)
+    centras = crud.get_all_centras(db)
     return centras
 
-@app.post("/centras", response_model=CentraDetails)
-async def add_new_centra(centra_data: CentraDetails, db: Session = Depends(get_db)):
+@app.post("/centras", response_model=schemas.CentraDetails)
+async def add_new_centra(centra_data: schemas.CentraDetails, db: Session = Depends(get_db)):
     new_centra = add_new_centra(db, centra_data)
     return new_centra
 
 # Shipment (XYZ)
 
-@app.put("/shipments/{shipment_id}")
-async def update_shipment_details(shipment_id: str, shipment_update: ShipmentUpdate, db: Session = Depends(get_db)):
-    updated = update_shipment(db, shipment_id, shipment_update)
-    if updated:
-        return updated
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @app.put("/shipments/{shipment_id}")
+# async def update_shipment_details(shipment_id: str, shipment_update: ShipmentUpdate, db: Session = Depends(get_db)):
+#     updated = update_shipment(db, shipment_id, shipment_update)
+#     if updated:
+#         return updated
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
 
 @app.delete("/shipments/{shipment_id}")
@@ -326,27 +388,27 @@ async def remove_shipment(shipment_id: str, db: Session = Depends(get_db)):
 # Harborguards
 @app.get("/harborguards")
 async def show_all_harbor_guards(db: Session = Depends(get_db)):
-    guards = get_all_harbor_guards(db)
+    guards = crud.get_all_harbor_guards(db)
     return guards
 
 @app.get("/harborguards/{guard_id}")
 async def show_harbor_guard(guard_id: int, db: Session = Depends(get_db)):
-    guard = get_harbor_guard(db, guard_id)
+    guard = crud.get_harbor_guard(db, guard_id)
     return guard
 
-@app.post("/harborguards", response_model=HarborGuardCreate)
-async def add_harbor_guard(guard_data: HarborGuardCreate, db: Session = Depends(get_db)):
-    new_guard = create_harbor_guard(db, guard_data)
+@app.post("/harborguards", response_model=schemas.HarborGuardCreate)
+async def add_harbor_guard(guard_data: schemas.HarborGuardCreate, db: Session = Depends(get_db)):
+    new_guard = crud.create_harbor_guard(db, guard_data)
     return new_guard
 
-@app.put("/harborguards/{guard_id}", response_model=HarborGuardUpdate)
-async def modify_harbor_guard(guard_id: int, guard_data: HarborGuardUpdate, db: Session = Depends(get_db)):
-    updated_guard = update_harbor_guard(db, guard_id, guard_data)
+@app.put("/harborguards/{guard_id}", response_model=schemas.HarborGuardUpdate)
+async def modify_harbor_guard(guard_id: int, guard_data: schemas.HarborGuardUpdate, db: Session = Depends(get_db)):
+    updated_guard = crud.update_harbor_guard(db, guard_id, guard_data)
     return updated_guard
 
 @app.delete("/harborguards/{guard_id}")
 async def remove_harbor_guard(guard_id: int, db: Session = Depends(get_db)):
-    result = delete_harbor_guard(db, guard_id)
+    result = crud.delete_harbor_guard(db, guard_id)
     return result
 
 # Warehouses
