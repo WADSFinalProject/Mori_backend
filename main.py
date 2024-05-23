@@ -7,7 +7,9 @@ import crud, models, schemas
 from database import SessionLocal, engine 
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
-
+import smtplib
+from email.message import EmailMessage
+import os 
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -21,6 +23,31 @@ def get_db():
         yield db
     finally:
         db.close()
+
+#sending SMTP
+
+USER_EMAIL = os.getenv("USER_EMAIL")
+USER_PASSWORD = os.getenv("USER_PASSWORD")
+
+def send_Email(recipientEmail:str, subject:str, message:str):
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg["From"] = USER_EMAIL
+        msg["To"] = recipientEmail
+        msg.set_content(message)
+
+
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(USER_EMAIL, USER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        print("Email sent successfully")
+
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email.")
 
 # Models
 # class UserRegistration(BaseModel):
