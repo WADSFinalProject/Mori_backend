@@ -33,6 +33,13 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
     db_user = crud.create_user(db, user=user)
     return {"message": "User registered successfully"}
 
+@app.post("/users/set_password")
+async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
+    db_user = crud.set_user_password(db, email=set_password_data.email, new_password=set_password_data.new_password)
+    if db_user:
+        return {"message": "Password set successfully"}
+    raise HTTPException(status_code=404, detail="User not found or error setting password")
+    
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.authenticate_user(db, email=user.email, password=user.password)

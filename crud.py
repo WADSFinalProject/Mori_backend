@@ -14,7 +14,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         Email=user.Email,
         FullName=user.FullName,
         Role=user.Role,
-        # Phone=user.Phone
+        Phone=user.Phone,
     )
     db.add(db_user)
     db.commit()
@@ -68,6 +68,16 @@ def authenticate_user(db: Session, email: str, password: str):
         return user
     return None
 
+def set_user_password(db: Session, email: str, new_password: str):
+    db_user = db.query(models.User).filter(models.User.Email == email).first()
+    if db_user:
+        db_user.hashed_password = get_password_hash(new_password)
+        db_user.is_password_set = True
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return None
+    
 def verify_user(db: Session, verification_code: int):
     user = db.query(models.User).filter(models.User.VerificationCode == verification_code).first()
     if user:

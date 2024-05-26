@@ -13,8 +13,9 @@ class User(Base):
     Email = Column(String, unique=True, index=True)
     FullName = Column(String)
     Role = Column(String)
-    # Phone = Column(String, nullable=True)
+    Phone = Column(String, nullable=True)
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
+    is_password_set = Column(Boolean, default=False) 
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
@@ -28,6 +29,8 @@ class ProcessedLeaves(Base):
     drying_activity = relationship("DryingActivity", backref="processed_leaves")
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
 
+    stocks = relationship("Stock", backref="processed_leaves")
+    
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
     WetLeavesBatchID = Column(String(50), primary_key=True)
@@ -84,13 +87,12 @@ class Centra(Base):
 
 class Stock(Base):
     __tablename__ = 'stocks'
-
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
     weight = Column(Integer)
     # location_id = Column(Integer, ForeignKey('locations.id'))
 
-    product = relationship("processed_leaves", backref="stock")
+    # product = relationship("processed_leaves", backref="stock")
     # location = relationship("Location", back_populates="stocks")
 
 class Expedition(Base):
@@ -114,6 +116,7 @@ class ReceivedPackage(Base):
 
     user = relationship("User")
     expedition = relationship("Expedition")
+
 
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
@@ -141,6 +144,15 @@ class PackageType(Base):
     __tablename__ = 'PackageType'
     PackageTypeID = Column(Integer, primary_key=True)
     Description = Column(String(100))
+
+
+class Warehouse(Base):
+    __tablename__ = 'warehouses'
+
+    id = Column(Integer, primary_key=True, index=True)
+    PIC_name = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String, index=True)
 
 # # class User(BaseModel):
 # #     PIC_name: str
@@ -199,7 +211,3 @@ class PackageType(Base):
 # #     email: EmailStr
 # #     phone: str
 
-class Warehouse(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str

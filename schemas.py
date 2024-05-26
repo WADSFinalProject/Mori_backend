@@ -10,7 +10,7 @@ class UserBase(BaseModel):
     Email: str
     FullName: str
     Role: str
-    # Phone: str
+    Phone: Optional[str] = None
 
 class UserCreate(UserBase):
     pass
@@ -25,8 +25,11 @@ class UserUpdate(BaseModel):
     Email: Optional[str] = None
     FullName: Optional[str] = None
     Role: Optional[str] = None
-    # Phone: Optional[str] = None
+    Phone: Optional[str] = None
 
+class UserSetPassword(BaseModel):
+    email: EmailStr
+    new_password: str
 
 class User(UserBase):
     UserID: int
@@ -34,12 +37,10 @@ class User(UserBase):
     class Config:
         orm_mode = True
 
-
 class UserRegistration(BaseModel):
     Email: str
     FullName: str
     Role: str
-    # Phone: str
     Password: str
 
 
