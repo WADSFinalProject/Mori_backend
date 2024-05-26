@@ -10,11 +10,11 @@ from typing import List, Optional
 # USER
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
-        UserID=user.userID,
-        IDORole=user.IDORole, 
-        Email=user.email, 
-        FullName=user.IDORole, 
-        Role=user.Role
+        IDORole=user.IDORole,
+        Email=user.Email,
+        FullName=user.FullName,
+        Role=user.Role,
+        # Phone=user.Phone
     )
     db.add(db_user)
     db.commit()
@@ -420,35 +420,35 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
         db.commit()
     return db_wet_leaves_collection
 
-# # DRYING MACHINE
-# def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
-#     db_drying_machine = models.DryingMachine(
-#         MachineID=drying_machine.MachineID,
-#         Capacity=drying_machine.Capacity
-#     )
-#     db.add(db_drying_machine)
-#     db.commit()
-#     db.refresh(db_drying_machine)
-#     return db_drying_machine
+# DRYING MACHINE
+def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
+    db_drying_machine = models.DryingMachine(
+        MachineID=drying_machine.MachineID,
+        Capacity=drying_machine.Capacity
+    )
+    db.add(db_drying_machine)
+    db.commit()
+    db.refresh(db_drying_machine)
+    return db_drying_machine
 
-# def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
-#     return db.query(models.DryingMachine).offset(skip).limit(limit).all()
+def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.DryingMachine).offset(skip).limit(limit).all()
 
-# def get_drying_machine(db: Session, machine_id: str):
-#     return db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+def get_drying_machine(db: Session, machine_id: str):
+    return db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
 
-# def update_drying_machine(db: Session, machine_id: str, update_data: schemas.DryingMachineUpdate):
-#     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
-#     if db_drying_machine:
-#         for key, value in update_data.dict().items():
-#             setattr(db_drying_machine, key, value)
-#         db.commit()
-#         db.refresh(db_drying_machine)
-#     return db_drying_machine
+def update_drying_machine(db: Session, machine_id: str, update_data: schemas.DryingMachineUpdate):
+    db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    if db_drying_machine:
+        for key, value in update_data.dict().items():
+            setattr(db_drying_machine, key, value)
+        db.commit()
+        db.refresh(db_drying_machine)
+    return db_drying_machine
 
-# def delete_drying_machine(db: Session, machine_id: str):
-#     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
-#     if db_drying_machine:
-#         db.delete(db_drying_machine)
-#         db.commit()
-#     return db_drying_machine
+def delete_drying_machine(db: Session, machine_id: str):
+    db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    if db_drying_machine:
+        db.delete(db_drying_machine)
+        db.commit()
+    return db_drying_machine
