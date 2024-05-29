@@ -31,7 +31,10 @@ async def welcome():
 @app.post("/users/register")
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.create_user(db, user=user)
+    if db_user is None:
+        raise HTTPException(status_code=400, detail="User already registered or integrity error")
     return {"message": "User registered successfully"}
+    
 
 @app.post("/users/set_password")
 async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
@@ -42,7 +45,7 @@ async def set_password(set_password_data: schemas.UserSetPassword, db: Session =
     
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = crud.authenticate_user(db, email=user.email, password=user.password)
+    db_user = crud.authenticate_user(db, Email=user.Email, Password=user.Password)
     if db_user:
         # Replace "YourTokenHere" with actual JWT token generation logic
         return {"jwt_token": "YourTokenHere"}

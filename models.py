@@ -23,8 +23,8 @@ class ProcessedLeaves(Base):
     Description = Column(String(100))
     FlouringID = Column(String(50), ForeignKey('FlouringActivity.FlouringID'))
     DryingID = Column(String(50), ForeignKey('DryingActivity.DryingID'))
-    DriedDate = Column(DateTime)
-    FlouredDate = Column(DateTime)
+    DriedDate = Column(String)
+    FlouredDate = Column(String)
 
     drying_activity = relationship("DryingActivity", backref="processed_leaves")
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")

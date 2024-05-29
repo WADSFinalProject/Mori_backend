@@ -78,8 +78,8 @@ class ProcessedLeavesBase(BaseModel):
     Description: str
     DryingID: Optional[str]
     FlouringID: Optional[str]
-    DriedDate: Optional[datetime]
-    FlouredDate: Optional[datetime]
+    DriedDate: Optional[str]
+    FlouredDate: Optional[str]
 
 class ProcessedLeavesCreate(ProcessedLeavesBase):
     Description: str

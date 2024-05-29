@@ -5,21 +5,34 @@ from schemas import ShipmentPickupSchedule, CentraDetails
 # from .schemas import 
 from models import Centra 
 from typing import List, Optional
+import bcrypt
 
 
 # USER
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.Email == email).first()
+
 def create_user(db: Session, user: schemas.UserCreate):
-    db_user = models.User(
+    # Check if the email already exists
+    db_user = get_user_by_email(db, user.Email)
+    if db_user:
+        return None  # Indicate that the user already exists
+
+    new_user = models.User(
         IDORole=user.IDORole,
         Email=user.Email,
         FullName=user.FullName,
         Role=user.Role,
         Phone=user.Phone,
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except IntegrityError:
+        db.rollback()
+        return None  # Indicate that an integrity error occurred
 
 def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
@@ -62,9 +75,14 @@ def hash_password(password: str):
     # Placeholder for actual password hashing logic
     return password + "examplehash"
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = db.query(models.User).filter(models.User.Email == email).first()
-    if user and user.hashed_password == hash_password(password):
+def get_password_hash(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_password.decode('utf-8')
+
+def authenticate_user(db: Session, Email: str, Password: str):
+    user = db.query(models.User).filter(models.User.Email == Email).first()
+    if user and user.hashed_password == hash_password(Password):
         return user
     return None
 
