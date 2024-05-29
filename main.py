@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
+from security import create_access_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
 
@@ -38,18 +39,18 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
 
 @app.post("/users/set_password")
 async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
-    db_user = crud.set_user_password(db, email=set_password_data.email, new_password=set_password_data.new_password)
+    db_user = crud.set_user_password(db, Email=set_password_data.email, new_password=set_password_data.new_password)
     if db_user:
         return {"message": "Password set successfully"}
     raise HTTPException(status_code=404, detail="User not found or error setting password")
-    
+
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = crud.authenticate_user(db, Email=user.Email, Password=user.Password)
+    db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
     if db_user:
-        # Replace "YourTokenHere" with actual JWT token generation logic
-        return {"jwt_token": "YourTokenHere"}
-    raise HTTPException(status_code=404, detail="User not authenticated")
+        access_token = create_access_token(data={"sub": db_user.Email})
+        return {"access_token": access_token, "token_type": "bearer"}
+    raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
 async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
@@ -384,12 +385,12 @@ async def show_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(
     users = crud.get_all_users(db, skip=skip, limit=limit)
     return users
 
-@app.get("/users/{user_id}", response_model=schemas.User)
-async def get_user(user_id: str, db: Session = Depends(get_db)):
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: Session = Depends(get_db)):
     user = crud.get_user(db, user_id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    if user:
+        return user
+    raise HTTPException(status_code=404, detail="User not found")
 
 @app.post("/users", response_model=schemas.User)
 async def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):

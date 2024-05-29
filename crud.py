@@ -6,6 +6,8 @@ from schemas import ShipmentPickupSchedule, CentraDetails
 from models import Centra 
 from typing import List, Optional
 import bcrypt
+from passlib.context import CryptContext
+from security import get_password_hash 
 
 
 # USER
@@ -37,11 +39,11 @@ def create_user(db: Session, user: schemas.UserCreate):
 def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
 
-def get_user(db: Session, user_id: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.UserID == user_id).first()
 
 def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate) -> Optional[models.User]:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_user = db.query(models.User).filter(models.User.UserID == user_id).first()
     if db_user:
         for key, value in update_data.dict().items():
             setattr(db_user, key, value)
@@ -63,31 +65,21 @@ def delete_user(db: Session, user_id: str):
         db.commit()
     return user
 
-def create_user_with_password(db: Session, email: str, password: str):
-    hashed_password = hash_password(password)  # Placeholder for password hashing logic
-    new_user = models.User(Email=email, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-def hash_password(password: str):
-    # Placeholder for actual password hashing logic
-    return password + "examplehash"
-
 def get_password_hash(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password.decode('utf-8')
 
-def authenticate_user(db: Session, Email: str, Password: str):
-    user = db.query(models.User).filter(models.User.Email == Email).first()
-    if user and user.hashed_password == hash_password(Password):
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(models.User).filter(models.User.Email == email).first()
+    if user and pwd_context.verify(password, user.hashed_password):
         return user
     return None
 
-def set_user_password(db: Session, email: str, new_password: str):
-    db_user = db.query(models.User).filter(models.User.Email == email).first()
+def set_user_password(db: Session, Email: str, new_password: str):
+    db_user = db.query(models.User).filter(models.User.Email == Email).first()
     if db_user:
         db_user.hashed_password = get_password_hash(new_password)
         db_user.is_password_set = True
