@@ -10,6 +10,7 @@ from database import SessionLocal, engine
 import smtplib
 from email.message import EmailMessage
 import os 
+from dotenv import load_dotenv
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -25,17 +26,19 @@ def get_db():
         db.close()
 
 #sending SMTP
+load_dotenv()
 
 USER_EMAIL = os.getenv("USER_EMAIL")
 USER_PASSWORD = os.getenv("USER_PASSWORD")
 
 def send_Email(recipientEmail:str, subject:str, message:str):
+
     try:
         msg = EmailMessage()
         msg['Subject'] = subject
         msg["From"] = USER_EMAIL
         msg["To"] = recipientEmail
-        msg.set_content(message)
+        msg.set_content(message, subtype ="html")
 
 
         server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -48,6 +51,9 @@ def send_Email(recipientEmail:str, subject:str, message:str):
     except Exception as e:
         print(f"Failed to send email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email.")
+    
+
+
 
 # Models
 # class UserRegistration(BaseModel):
@@ -130,8 +136,37 @@ async def welcome():
 
 # Users
 @app.post("/users/register")
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.create_user(db, user=user)
+# async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+#     db_user = crud.create_user(db, user=user)
+async def register_user(email,name):
+    
+
+  
+    subject = " Welcome to the Mori Web App!"
+    setup_link = f" http://localhost:5174?email={email}"
+    message= f"""
+                 <html>
+        <body>
+    <div id="email">
+        
+        <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
+               
+       
+        <h1>Welcome to the Mori App!</h1>
+        <p>Hello {name},</p>
+        <p>To complete the registration process and ensure the security of your account, we kindly ask you to set up your password by clicking on the link below:</p>
+        <p><a href="{setup_link}">{setup_link}</a></p>
+        <p>Mori Team</p>
+             
+            </div>
+        </body>
+        </html>
+
+
+            """
+    
+    send_Email(email, subject, message)
+
     return {"message": "User registered successfully"}
 
 @app.post("/users/login")
