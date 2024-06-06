@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
+from security import create_access_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
 import smtplib
@@ -55,79 +56,6 @@ def send_Email(recipientEmail:str, subject:str, message:str):
 
 
 
-# Models
-# class UserRegistration(BaseModel):
-#     email: str
-#     password: str
-
-# class UserLogin(BaseModel):
-#     email: str
-#     password: str
-
-# class UserVerification(BaseModel):
-#     code: int
-
-# class User(BaseModel):
-#     PIC_name: str
-#     email: EmailStr
-#     phone: str
-
-# class Batch(BaseModel):
-#     weight: float
-#     collection_date: str
-#     time: str
-
-# class MachineAction(BaseModel):
-#     machine_id: int
-
-# class ShipmentStatusUpdate(BaseModel):
-#     status: str
-
-# class ShipmentConfirmation(BaseModel):
-#     shipment_id: int
-#     weight: Optional[float] = None
-
-# class ShipmentSchedule(BaseModel):
-#     shipment_id: int
-#     pickup_time: str
-#     location: str
-
-# class ShipmentIssue(BaseModel):
-#     shipment_id: int
-#     issue_description: str
-
-# class ShipmentRescale(BaseModel):
-#     shipment_id: int
-#     new_weight: float
-
-# class ShipmentPickupSchedule(BaseModel):
-#     shipment_id: int
-#     pickup_time: datetime
-#     location: str
-
-# class ShipmentUpdate(BaseModel):
-#     status: str
-#     checkpoint: str
-#     action: str
-
-# class CentraDetails(BaseModel):
-#     PIC_name: str
-#     location: str
-#     email: str
-#     phone: int
-#     drying_machine_status: str
-#     flouring_machine_status: str
-#     action: str
-
-# class HarborGuard(BaseModel):
-#     PIC_name: str
-#     email: EmailStr
-#     phone: str
-
-# class Warehouse(BaseModel):
-#     PIC_name: str
-#     email: EmailStr
-#     phone: str
 
 
 @app.get("/")
@@ -138,12 +66,12 @@ async def welcome():
 @app.post("/users/register")
 # async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 #     db_user = crud.create_user(db, user=user)
-async def register_user(email,name):
-    
 
-  
+
+async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.create_user(db, user=user)
     subject = " Welcome to the Mori Web App!"
-    setup_link = f" http://localhost:5174?email={email}"
+    setup_link = f" http://localhost:5174?email={user.email}"
     message= f"""
                  <html>
         <body>
@@ -153,7 +81,7 @@ async def register_user(email,name):
                
        
         <h1>Welcome to the Mori App!</h1>
-        <p>Hello {name},</p>
+        <p>Hello {user.PIC_name},</p>
         <p>To complete the registration process and ensure the security of your account, we kindly ask you to set up your password by clicking on the link below:</p>
         <p><a href="{setup_link}">{setup_link}</a></p>
         <p>Mori Team</p>
@@ -165,17 +93,26 @@ async def register_user(email,name):
 
             """
     
-    send_Email(email, subject, message)
-
+    send_Email(user.email, subject, message)
+    if db_user is None:
+        raise HTTPException(status_code=400, detail="User already registered or integrity error")
     return {"message": "User registered successfully"}
+    
+
+@app.post("/users/set_password")
+async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
+    db_user = crud.set_user_password(db, Email=set_password_data.email, new_password=set_password_data.new_password)
+    if db_user:
+        return {"message": "Password set successfully"}
+    raise HTTPException(status_code=404, detail="User not found or error setting password")
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = crud.authenticate_user(db, email=user.email, password=user.password)
+    db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
     if db_user:
-        # Replace "YourTokenHere" with actual JWT token generation logic
-        return {"jwt_token": "YourTokenHere"}
-    raise HTTPException(status_code=404, detail="User not authenticated")
+        access_token = create_access_token(data={"sub": db_user.Email})
+        return {"access_token": access_token, "token_type": "bearer"}
+    raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
 async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
@@ -510,12 +447,12 @@ async def show_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(
     users = crud.get_all_users(db, skip=skip, limit=limit)
     return users
 
-@app.get("/users/{user_id}", response_model=schemas.User)
-async def get_user(user_id: str, db: Session = Depends(get_db)):
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: Session = Depends(get_db)):
     user = crud.get_user(db, user_id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    if user:
+        return user
+    raise HTTPException(status_code=404, detail="User not found")
 
 @app.post("/users", response_model=schemas.User)
 async def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):

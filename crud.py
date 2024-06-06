@@ -5,30 +5,45 @@ from schemas import ShipmentPickupSchedule, CentraDetails
 # from .schemas import 
 from models import Centra 
 from typing import List, Optional
+import bcrypt
+from passlib.context import CryptContext
+from security import get_password_hash 
 
 
 # USER
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.Email == email).first()
+
 def create_user(db: Session, user: schemas.UserCreate):
-    db_user = models.User(
-        UserID=user.userID,
-        IDORole=user.IDORole, 
-        Email=user.email, 
-        FullName=user.IDORole, 
-        Role=user.Role
+    # Check if the email already exists
+    db_user = get_user_by_email(db, user.Email)
+    if db_user:
+        return None  # Indicate that the user already exists
+
+    new_user = models.User(
+        IDORole=user.IDORole,
+        Email=user.Email,
+        FullName=user.FullName,
+        Role=user.Role,
+        Phone=user.Phone,
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except IntegrityError:
+        db.rollback()
+        return None  # Indicate that an integrity error occurred
 
 def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
 
-def get_user(db: Session, user_id: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.UserID == user_id).first()
 
 def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate) -> Optional[models.User]:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_user = db.query(models.User).filter(models.User.UserID == user_id).first()
     if db_user:
         for key, value in update_data.dict().items():
             setattr(db_user, key, value)
@@ -50,24 +65,29 @@ def delete_user(db: Session, user_id: str):
         db.commit()
     return user
 
-def create_user_with_password(db: Session, email: str, password: str):
-    hashed_password = hash_password(password)  # Placeholder for password hashing logic
-    new_user = models.User(Email=email, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+def get_password_hash(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_password.decode('utf-8')
 
-def hash_password(password: str):
-    # Placeholder for actual password hashing logic
-    return password + "examplehash"
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def authenticate_user(db: Session, email: str, password: str):
     user = db.query(models.User).filter(models.User.Email == email).first()
-    if user and user.hashed_password == hash_password(password):
+    if user and pwd_context.verify(password, user.hashed_password):
         return user
     return None
 
+def set_user_password(db: Session, Email: str, new_password: str):
+    db_user = db.query(models.User).filter(models.User.Email == Email).first()
+    if db_user:
+        db_user.hashed_password = get_password_hash(new_password)
+        db_user.is_password_set = True
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return None
+    
 def verify_user(db: Session, verification_code: int):
     user = db.query(models.User).filter(models.User.VerificationCode == verification_code).first()
     if user:
@@ -420,35 +440,35 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
         db.commit()
     return db_wet_leaves_collection
 
-# # DRYING MACHINE
-# def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
-#     db_drying_machine = models.DryingMachine(
-#         MachineID=drying_machine.MachineID,
-#         Capacity=drying_machine.Capacity
-#     )
-#     db.add(db_drying_machine)
-#     db.commit()
-#     db.refresh(db_drying_machine)
-#     return db_drying_machine
+# DRYING MACHINE
+def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
+    db_drying_machine = models.DryingMachine(
+        MachineID=drying_machine.MachineID,
+        Capacity=drying_machine.Capacity
+    )
+    db.add(db_drying_machine)
+    db.commit()
+    db.refresh(db_drying_machine)
+    return db_drying_machine
 
-# def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
-#     return db.query(models.DryingMachine).offset(skip).limit(limit).all()
+def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.DryingMachine).offset(skip).limit(limit).all()
 
-# def get_drying_machine(db: Session, machine_id: str):
-#     return db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+def get_drying_machine(db: Session, machine_id: str):
+    return db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
 
-# def update_drying_machine(db: Session, machine_id: str, update_data: schemas.DryingMachineUpdate):
-#     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
-#     if db_drying_machine:
-#         for key, value in update_data.dict().items():
-#             setattr(db_drying_machine, key, value)
-#         db.commit()
-#         db.refresh(db_drying_machine)
-#     return db_drying_machine
+def update_drying_machine(db: Session, machine_id: str, update_data: schemas.DryingMachineUpdate):
+    db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    if db_drying_machine:
+        for key, value in update_data.dict().items():
+            setattr(db_drying_machine, key, value)
+        db.commit()
+        db.refresh(db_drying_machine)
+    return db_drying_machine
 
-# def delete_drying_machine(db: Session, machine_id: str):
-#     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
-#     if db_drying_machine:
-#         db.delete(db_drying_machine)
-#         db.commit()
-#     return db_drying_machine
+def delete_drying_machine(db: Session, machine_id: str):
+    db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    if db_drying_machine:
+        db.delete(db_drying_machine)
+        db.commit()
+    return db_drying_machine

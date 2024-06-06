@@ -8,12 +8,14 @@ from datetime import datetime
 class User(Base):
     __tablename__ = "users"
 
-    UserID = Column(Integer, primary_key=True, index=True)
+    UserID = Column(Integer, primary_key=True, index=True, autoincrement=True)
     IDORole = Column(String)
     Email = Column(String, unique=True, index=True)
     FullName = Column(String)
     Role = Column(String)
+    Phone = Column(String, nullable=True)
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
+    is_password_set = Column(Boolean, default=False) 
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
@@ -21,12 +23,14 @@ class ProcessedLeaves(Base):
     Description = Column(String(100))
     FlouringID = Column(String(50), ForeignKey('FlouringActivity.FlouringID'))
     DryingID = Column(String(50), ForeignKey('DryingActivity.DryingID'))
-    DriedDate = Column(DateTime)
-    FlouredDate = Column(DateTime)
+    DriedDate = Column(String)
+    FlouredDate = Column(String)
 
     drying_activity = relationship("DryingActivity", backref="processed_leaves")
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
 
+    stocks = relationship("Stock", backref="processed_leaves")
+    
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
     WetLeavesBatchID = Column(String(50), primary_key=True)
@@ -83,13 +87,12 @@ class Centra(Base):
 
 class Stock(Base):
     __tablename__ = 'stocks'
-
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
     weight = Column(Integer)
     # location_id = Column(Integer, ForeignKey('locations.id'))
 
-    product = relationship("processed_leaves", backref="stock")
+    # product = relationship("processed_leaves", backref="stock")
     # location = relationship("Location", back_populates="stocks")
 
 class Expedition(Base):
@@ -113,6 +116,7 @@ class ReceivedPackage(Base):
 
     user = relationship("User")
     expedition = relationship("Expedition")
+
 
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
@@ -141,75 +145,69 @@ class PackageType(Base):
     PackageTypeID = Column(Integer, primary_key=True)
     Description = Column(String(100))
 
-# class UserRegistration(BaseModel):
-#     email: str
-#     password: str
 
-# class UserLogin(BaseModel):
-#     email: str
-#     password: str
+class Warehouse(Base):
+    __tablename__ = 'warehouses'
 
-# class UserVerification(BaseModel):
-#     code: int
+    id = Column(Integer, primary_key=True, index=True)
+    PIC_name = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String, index=True)
 
-class User(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
+# # class User(BaseModel):
+# #     PIC_name: str
+# #     email: EmailStr
+# #     phone: str
 
-class Batch(BaseModel):
-    weight: float
-    collection_date: str
-    time: str
+# # class Batch(BaseModel):
+# #     weight: float
+# #     collection_date: str
+# #     time: str
 
-class MachineAction(BaseModel):
-    machine_id: int
+# # class MachineAction(BaseModel):
+# #     machine_id: int
 
-class ShipmentStatusUpdate(BaseModel):
-    status: str
+# # class ShipmentStatusUpdate(BaseModel):
+# #     status: str
 
-class ShipmentConfirmation(BaseModel):
-    shipment_id: int
-    weight: Optional[float] = None
+# # class ShipmentConfirmation(BaseModel):
+# #     shipment_id: int
+# #     weight: Optional[float] = None
 
-class ShipmentSchedule(BaseModel):
-    shipment_id: int
-    pickup_time: str
-    location: str
+# # class ShipmentSchedule(BaseModel):
+# #     shipment_id: int
+# #     pickup_time: str
+# #     location: str
 
-class ShipmentIssue(BaseModel):
-    shipment_id: int
-    issue_description: str
+# # class ShipmentIssue(BaseModel):
+# #     shipment_id: int
+# #     issue_description: str
 
-class ShipmentRescale(BaseModel):
-    shipment_id: int
-    new_weight: float
+# # class ShipmentRescale(BaseModel):
+# #     shipment_id: int
+# #     new_weight: float
 
-class ShipmentPickupSchedule(BaseModel):
-    shipment_id: int
-    pickup_time: datetime
-    location: str
+# # class ShipmentPickupSchedule(BaseModel):
+# #     shipment_id: int
+# #     pickup_time: datetime
+# #     location: str
 
-class ShipmentUpdate(BaseModel):
-    status: str
-    checkpoint: str
-    action: str
+# # class ShipmentUpdate(BaseModel):
+# #     status: str
+# #     checkpoint: str
+# #     action: str
 
-class CentraDetails(BaseModel):
-    PIC_name: str
-    location: str
-    email: str
-    phone: int
-    drying_machine_status: str
-    flouring_machine_status: str
-    action: str
+# # class CentraDetails(BaseModel):
+# #     PIC_name: str
+# #     location: str
+# #     email: str
+# #     phone: int
+# #     drying_machine_status: str
+# #     flouring_machine_status: str
+# #     action: str
 
-class HarborGuard(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
+# # class HarborGuard(BaseModel):
+# #     PIC_name: str
+# #     email: EmailStr
+# #     phone: str
 
-class Warehouse(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: str
