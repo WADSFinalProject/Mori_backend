@@ -17,6 +17,8 @@ class User(Base):
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
 
+
+
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True)

@@ -32,15 +32,21 @@ load_dotenv()
 USER_EMAIL = os.getenv("USER_EMAIL")
 USER_PASSWORD = os.getenv("USER_PASSWORD")
 
-def send_Email(recipientEmail:str, subject:str, message:str):
+print(USER_EMAIL)
+print(USER_PASSWORD)
 
+import smtplib
+from email.message import EmailMessage
+from fastapi import HTTPException
+
+def send_Email(recipientEmail:str, subject:str, message:str):
     try:
+
         msg = EmailMessage()
         msg['Subject'] = subject
         msg["From"] = USER_EMAIL
         msg["To"] = recipientEmail
         msg.set_content(message, subtype ="html")
-
 
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
@@ -52,6 +58,7 @@ def send_Email(recipientEmail:str, subject:str, message:str):
     except Exception as e:
         print(f"Failed to send email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email.")
+
     
 
 
@@ -64,14 +71,16 @@ async def welcome():
 
 # Users
 @app.post("/users/register")
-# async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-#     db_user = crud.create_user(db, user=user)
-
 
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.create_user(db, user=user)
+
+    db_user = crud.create_user(db, user)
+
+    if db_user is None:
+        raise HTTPException(status_code=400, detail="User already registered or integrity error")
+
     subject = " Welcome to the Mori Web App!"
-    setup_link = f" http://localhost:5174?email={user.email}"
+    setup_link = f" http://localhost:5174?email={db_user.Email}"
     message= f"""
                  <html>
         <body>
@@ -81,7 +90,7 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
                
        
         <h1>Welcome to the Mori App!</h1>
-        <p>Hello {user.PIC_name},</p>
+        <p>Hello {db_user.FullName},</p>
         <p>To complete the registration process and ensure the security of your account, we kindly ask you to set up your password by clicking on the link below:</p>
         <p><a href="{setup_link}">{setup_link}</a></p>
         <p>Mori Team</p>
@@ -92,10 +101,10 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
 
 
             """
+    print(db_user.Email)
+    send_Email(db_user.Email, subject, message)
     
-    send_Email(user.email, subject, message)
-    if db_user is None:
-        raise HTTPException(status_code=400, detail="User already registered or integrity error")
+
     return {"message": "User registered successfully"}
     
 
