@@ -69,9 +69,10 @@ def verify_otp(secret_key, user_otp):
     totp = pyotp.TOTP(decrypt_token(keyBytes))
     return totp.verify(user_otp)
 
-def create_access_token(user_id: int, role: str) -> tuple[str, str]:
+def create_access_token(user_id: int, role: str, name:str) -> tuple[str, str]:
     access_token_payload = {
         "sub": user_id,
+        "name": name,
         "role": role,
         "exp": datetime.now() + timedelta(minutes=30)
     }
@@ -79,9 +80,10 @@ def create_access_token(user_id: int, role: str) -> tuple[str, str]:
 
     return access_token
 
-def create_refresh_token(user_id: int, role: str) -> tuple[str, str]:
+def create_refresh_token(user_id: int, role: str, name:str) -> tuple[str, str,str]:
     refresh_token_payload = {
         "sub": user_id,
+        "name": name,
         "role": role,
         "exp": datetime.now() + timedelta(hours=12)
     }

@@ -66,8 +66,6 @@ async def validate_token(token:str, db: Session = Depends(get_db)):
     except HTTPException as e:
         return {"valid": False, "error": str(e)}
 
-
-
 @app.post("/users/setpassword")
 async def set_password(response_model: schemas.UserSetPassword, db: Session = Depends(get_db)):
     print(response_model.token)
@@ -118,8 +116,8 @@ async def verify_user(verification: schemas.UserVerification, OTPidentifier: Opt
     
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        access_token = create_access_token(db_user.UserID, db_user.IDORole)
-        refresh_token = create_refresh_token(db_user.UserID, db_user.IDORole)
+        access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
+        refresh_token = create_refresh_token(db_user.UserID,db_user.IDORole,db_user.FullName)
         response = JSONResponse(content={"message": "login successful"},  status_code=200)
         response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
         response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
