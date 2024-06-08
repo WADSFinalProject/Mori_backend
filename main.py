@@ -1,19 +1,16 @@
-from fastapi import FastAPI, Path, Depends, HTTPException
+from fastapi import FastAPI, Path, Depends, HTTPException, Cookie
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
-from security import create_access_token, encrypt_token, decrypt_token
+from security import create_access_token,verify_otp, encrypt_token, decrypt_token, create_refresh_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
 
-import smtplib
-from email.message import EmailMessage
-import os 
-from dotenv import load_dotenv
-import ast
+import SMTP
+from fastapi.responses import JSONResponse
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -43,31 +40,7 @@ def get_db():
     finally:
         db.close()
 
-#sending SMTP
-load_dotenv()
 
-USER_EMAIL = os.getenv("USER_EMAIL")
-USER_PASSWORD = os.getenv("USER_PASSWORD")
-
-def send_Email(recipientEmail:str, subject:str, message:str):
-    try:
-
-        msg = EmailMessage()
-        msg['Subject'] = subject
-        msg["From"] = USER_EMAIL
-        msg["To"] = recipientEmail
-        msg.set_content(message, subtype ="html")
-
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(USER_EMAIL, USER_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        print("Email sent successfully")
-
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send email.")
 
 @app.get("/")
 async def welcome():
@@ -81,38 +54,11 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
 
     if db_user is None:
         raise HTTPException(status_code=400, detail="User already registered or integrity error")
-   
-    url_token = crud.create_URLToken(db, userid=db_user.UserID, tokenType="setpass")
-    encrypted = encrypt_token(url_token.value)
-
-
-    subject = " Welcome to the Mori Web App!"
-    setup_link = f"http://localhost:5173/setpassword?token={encrypted}"
-    message= f"""
-                 <html>
-        <body>
-    <div id="email">
-        
-        <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
-               
-       
-        <h1>Welcome to the Mori App!</h1>
-        <p>Hello {db_user.FullName},</p>
-        <p>To complete the registration process and ensure the security of your account, we kindly ask you to set up your password by clicking on the link below:</p>
-        <p><a href="{setup_link}">{setup_link}</a></p>
-        <p>Mori Team</p>
-             
-            </div>
-        </body>
-        </html>
-
-            """
-    send_Email(db_user.Email, subject, message)
     
-
+    SMTP.send_setPassEmail(db_user,db)
     return {"message": "User registered successfully"}
     
-@app.get("/users/validate-link")
+@app.get("/users/validate-link") #for setpass
 async def validate_token(token:str, db: Session = Depends(get_db)):
     try:
         db_user = crud.get_user_by_token(db, token)
@@ -141,18 +87,44 @@ async def set_password(response_model: schemas.UserSetPassword, db: Session = De
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    
     db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
+    
     if db_user:
-   
-        access_token = create_access_token(data={"sub": db_user.Email})
-        return {"access_token": access_token, "token_type": "bearer"}
+
+        SMTP.send_OTP(db_user, db)
+        # Store the token in the database
+        OTPidentifier =  crud.create_URLToken(db, db_user.UserID, "OTP") #not actually URL token, but a token to temporarily maintain user state during OTP
+
+        response = JSONResponse(content={"message": "Login successful"}, status_code=200)
+        response.set_cookie(key="OTPidentifier", value=encrypt_token(OTPidentifier.value), secure=True, httponly=True, max_age=300)
+        return response
+      
+        
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
-    verified = crud.verify_user(db, verification.code)
+async def verify_user(verification: schemas.UserVerification, OTPidentifier: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
+
+  
+    if OTPidentifier is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    print(f" before: {OTPidentifier}")
+    print(decrypt_token(OTPidentifier))
+
+    db_user = crud.get_user_by_token(db, decrypt_token(OTPidentifier))
+    if db_user is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        return {"message": "User verified successfully"}
+        access_token = create_access_token(db_user.UserID, db_user.IDORole)
+        refresh_token = create_refresh_token(db_user.UserID, db_user.IDORole)
+        response = JSONResponse(content={"message": "login successful"},  status_code=200)
+        response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
+        response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
+        return response
+        
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
@@ -161,6 +133,10 @@ async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_
     if resent:
         return {"message": "Verification code resent"}
     raise HTTPException(status_code=404, detail="Failed to resend code")
+
+# @app.get("/users/validate-otp-access") #for access OTP page
+# async def validate_otp_access():
+
 
 
 # Batches

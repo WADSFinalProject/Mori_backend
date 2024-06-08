@@ -7,7 +7,7 @@ from schemas import ShipmentPickupSchedule, CentraDetails
 from typing import List, Optional
 import bcrypt
 from passlib.context import CryptContext
-from security import get_hash, generate_key,  decrypt_token
+from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
 import ast
@@ -28,7 +28,10 @@ def create_user(db: Session, user: schemas.UserCreate):
     db_user = get_user_by_email(db, user.Email)
     if db_user:
         return None  # Indicate that the user already exists
-    secretKey = generate_key()
+    secretKey = generate_key("OTP") #forOTP 
+    print(secretKey)
+    encryptedKey = encrypt_token(secretKey)
+    print(encryptedKey)
 
     new_user = models.User(
         IDORole=user.IDORole,
@@ -36,7 +39,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         FullName=user.FullName,
         Role=user.Role,
         Phone=user.Phone,
-        secret_key = secretKey
+        secret_key = str(encryptedKey)
     )
     try:
         db.add(new_user)
@@ -79,7 +82,7 @@ def delete_user(db: Session, user_id: str):
 
 def create_URLToken(db: Session, userid:int, tokenType: str):
     try:
-        token_value = generate_key()
+        token_value = generate_key("URL")
 
         one_day = datetime.now() + timedelta(hours=24)
 
@@ -168,6 +171,8 @@ def authenticate_user(db: Session, email: str, password: str):
     return None
 
 
+
+
 def set_user_password(db: Session, Email: str, new_password: str):
     try:
         db_user = db.query(models.User).filter(models.User.Email == Email).first()
@@ -183,13 +188,6 @@ def set_user_password(db: Session, Email: str, new_password: str):
         error(f"Error setting password: {e}")
         raise HTTPException(status_code=422, detail="Error setting password")
     
-# def verify_user(db: Session, verification_code: int):
-#     user = db.query(models.User).filter(models.User.VerificationCode == verification_code).first()
-#     if user:
-#         user.IsVerified = True
-#         db.commit()
-#         return user
-#     return None
 
 
 # BATCHES
