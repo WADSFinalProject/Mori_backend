@@ -7,7 +7,7 @@ from schemas import ShipmentPickupSchedule, CentraDetails
 from typing import List, Optional
 import bcrypt
 from passlib.context import CryptContext
-from security import get_hash, generate_URLtoken,  decrypt_token
+from security import get_hash, generate_key,  decrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
 import ast
@@ -28,6 +28,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db_user = get_user_by_email(db, user.Email)
     if db_user:
         return None  # Indicate that the user already exists
+    secretKey = generate_key()
 
     new_user = models.User(
         IDORole=user.IDORole,
@@ -35,6 +36,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         FullName=user.FullName,
         Role=user.Role,
         Phone=user.Phone,
+        secret_key = secretKey
     )
     try:
         db.add(new_user)
@@ -77,7 +79,7 @@ def delete_user(db: Session, user_id: str):
 
 def create_URLToken(db: Session, userid:int, tokenType: str):
     try:
-        token_value = generate_URLtoken()
+        token_value = generate_key()
 
         one_day = datetime.now() + timedelta(hours=24)
 

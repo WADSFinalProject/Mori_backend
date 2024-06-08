@@ -18,7 +18,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 
-def generate_URLtoken():
+def generate_key():
 
     token = secrets.token_urlsafe(32)
     return token
