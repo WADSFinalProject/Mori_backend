@@ -15,10 +15,6 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     pass
 
-class UserSetPassword(BaseModel):
-    UserID: int
-    Password: str
-
 class UserUpdate(BaseModel):
     IDORole: Optional[str] = None
     Password: Optional[str] = None
@@ -28,8 +24,9 @@ class UserUpdate(BaseModel):
     Phone: Optional[str] = None
 
 class UserSetPassword(BaseModel):
-    email: EmailStr
+    token: str
     new_password: str
+  
 
 class User(UserBase):
     UserID: int

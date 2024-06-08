@@ -5,18 +5,35 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
-from security import create_access_token
+from security import create_access_token, encrypt_token, decrypt_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
+
 import smtplib
 from email.message import EmailMessage
 import os 
 from dotenv import load_dotenv
+import ast
+
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+
+#Handling CORS
+origins = [
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency
 def get_db():
@@ -31,13 +48,6 @@ load_dotenv()
 
 USER_EMAIL = os.getenv("USER_EMAIL")
 USER_PASSWORD = os.getenv("USER_PASSWORD")
-
-print(USER_EMAIL)
-print(USER_PASSWORD)
-
-import smtplib
-from email.message import EmailMessage
-from fastapi import HTTPException
 
 def send_Email(recipientEmail:str, subject:str, message:str):
     try:
@@ -59,28 +69,25 @@ def send_Email(recipientEmail:str, subject:str, message:str):
         print(f"Failed to send email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email.")
 
-    
-
-
-
-
-
 @app.get("/")
 async def welcome():
     return {"message": "Welcome to our API!"}
 
 # Users
 @app.post("/users/register")
-
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     db_user = crud.create_user(db, user)
 
     if db_user is None:
         raise HTTPException(status_code=400, detail="User already registered or integrity error")
+   
+    url_token = crud.create_URLToken(db, userid=db_user.UserID, tokenType="setpass")
+    encrypted = encrypt_token(url_token.value)
+
 
     subject = " Welcome to the Mori Web App!"
-    setup_link = f" http://localhost:5174?email={db_user.Email}"
+    setup_link = f"http://localhost:5173/setpassword?token={encrypted}"
     message= f"""
                  <html>
         <body>
@@ -99,26 +106,44 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
         </body>
         </html>
 
-
             """
-    print(db_user.Email)
     send_Email(db_user.Email, subject, message)
     
 
     return {"message": "User registered successfully"}
     
+@app.get("/users/validate-link")
+async def validate_token(token:str, db: Session = Depends(get_db)):
+    try:
+        db_user = crud.get_user_by_token(db, token)
+        return {"valid": True}
+    except HTTPException as e:
+        return {"valid": False, "error": str(e)}
 
-@app.post("/users/set_password")
-async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
-    db_user = crud.set_user_password(db, Email=set_password_data.email, new_password=set_password_data.new_password)
-    if db_user:
-        return {"message": "Password set successfully"}
-    raise HTTPException(status_code=404, detail="User not found or error setting password")
+
+
+@app.post("/users/setpassword")
+async def set_password(response_model: schemas.UserSetPassword, db: Session = Depends(get_db)):
+    print(response_model.token)
+    print(response_model.new_password)
+    try:
+        db_user = crud.get_user_by_token(db,response_model.token)
+        pass_user =crud.set_user_password(db,Email= db_user.Email, new_password= response_model.new_password)
+
+        if pass_user:
+            crud.delete_token(db, response_model.token)
+            return {"message": "Password set successfully"}
+        raise HTTPException(status_code=404, detail="User not found or error setting password")
+    
+    except HTTPException as e:
+        return { "error": str(e)}
+
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
     if db_user:
+   
         access_token = create_access_token(data={"sub": db_user.Email})
         return {"access_token": access_token, "token_type": "bearer"}
     raise HTTPException(status_code=401, detail="Invalid email or password")
