@@ -4,6 +4,19 @@ from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 import jwt,pyotp,secrets,ast
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# USER_EMAIL = os.getenv("USER_EMAIL")
+# USER_PASSWORD = os.getenv("USER_PASSWORD")
+
+KEY = ast.literal_eval(os.getenv("KEY")) #for encrypting URL tokens
+
+SECRET_KEY = os.getenv("SECRET_KEY") #for JWT 
+
+ALGORITHM = os.getenv("ALGORITHM")
 
 
 
@@ -28,7 +41,7 @@ def generate_key(type):
 
 from cryptography.fernet import Fernet
 
-KEY = b'cssm6qehboYVn3uhLnGQwoN4uVRnex3MFMK-NajYlfM='
+
 
 # Encrypt a token using the key
 def encrypt_token(token):
@@ -56,23 +69,13 @@ def verify_otp(secret_key, user_otp):
     totp = pyotp.TOTP(decrypt_token(keyBytes))
     return totp.verify(user_otp)
 
-
-
-
-
-SECRET_KEY = "3ERVV8WvtbAdV0kqoYrF2ABWnVR-9eUnekABwITaQJI0GBNu7BcfuXAnA9I__RAQAKtkUwvhmKPFYs2pNxEGfg" 
-ALGORITHM = "HS256"
-
 def create_access_token(user_id: int, role: str) -> tuple[str, str]:
     access_token_payload = {
         "user_id": user_id,
         "role": role,
-        "exp": datetime.utcnow() + timedelta(minutes=30)
+        "exp": datetime.now() + timedelta(minutes=30)
     }
     access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
-
-    
-
 
     return access_token
 
@@ -80,7 +83,7 @@ def create_refresh_token(user_id: int, role: str) -> tuple[str, str]:
     refresh_token_payload = {
         "user_id": user_id,
         "role": role,
-        "exp": datetime.utcnow() + timedelta(hours=12)
+        "exp": datetime.now() + timedelta(hours=12)
     }
     refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
