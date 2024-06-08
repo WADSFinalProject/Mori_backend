@@ -71,7 +71,7 @@ def verify_otp(secret_key, user_otp):
 
 def create_access_token(user_id: int, role: str) -> tuple[str, str]:
     access_token_payload = {
-        "user_id": user_id,
+        "sub": user_id,
         "role": role,
         "exp": datetime.now() + timedelta(minutes=30)
     }
@@ -81,7 +81,7 @@ def create_access_token(user_id: int, role: str) -> tuple[str, str]:
 
 def create_refresh_token(user_id: int, role: str) -> tuple[str, str]:
     refresh_token_payload = {
-        "user_id": user_id,
+        "sub": user_id,
         "role": role,
         "exp": datetime.now() + timedelta(hours=12)
     }
