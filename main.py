@@ -1,19 +1,36 @@
-from fastapi import FastAPI, Path, Depends, HTTPException
+from fastapi import FastAPI, Path, Depends, HTTPException, Cookie
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
-from security import create_access_token
+from security import create_access_token,verify_otp, encrypt_token, decrypt_token, create_refresh_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
 
+import SMTP
+from fastapi.responses import JSONResponse
+
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+
+#Handling CORS
+origins = [
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency
 def get_db():
@@ -24,6 +41,7 @@ def get_db():
         db.close()
 
 
+
 @app.get("/")
 async def welcome():
     return {"message": "Welcome to our API!"}
@@ -31,32 +49,80 @@ async def welcome():
 # Users
 @app.post("/users/register")
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.create_user(db, user=user)
+
+    db_user = crud.create_user(db, user)
+
     if db_user is None:
         raise HTTPException(status_code=400, detail="User already registered or integrity error")
+    
+    SMTP.send_setPassEmail(db_user,db)
     return {"message": "User registered successfully"}
     
+@app.get("/users/validate-link") #for setpass
+async def validate_token(token:str, db: Session = Depends(get_db)):
+    try:
+        db_user = crud.get_user_by_token(db, token)
+        return {"valid": True}
+    except HTTPException as e:
+        return {"valid": False, "error": str(e)}
 
-@app.post("/users/set_password")
-async def set_password(set_password_data: schemas.UserSetPassword, db: Session = Depends(get_db)):
-    db_user = crud.set_user_password(db, Email=set_password_data.email, new_password=set_password_data.new_password)
-    if db_user:
-        return {"message": "Password set successfully"}
-    raise HTTPException(status_code=404, detail="User not found or error setting password")
+@app.post("/users/setpassword")
+async def set_password(response_model: schemas.UserSetPassword, db: Session = Depends(get_db)):
+    print(response_model.token)
+    print(response_model.new_password)
+    try:
+        db_user = crud.get_user_by_token(db,response_model.token)
+        pass_user =crud.set_user_password(db,Email= db_user.Email, new_password= response_model.new_password)
+
+        if pass_user:
+            crud.delete_token(db, response_model.token)
+            return {"message": "Password set successfully"}
+        raise HTTPException(status_code=404, detail="User not found or error setting password")
+    
+    except HTTPException as e:
+        return { "error": str(e)}
+
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    
     db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
+    
     if db_user:
-        access_token = create_access_token(data={"sub": db_user.Email})
-        return {"access_token": access_token, "token_type": "bearer"}
+
+        SMTP.send_OTP(db_user, db)
+        # Store the token in the database
+        OTPidentifier =  crud.create_URLToken(db, db_user.UserID, "OTP") #not actually URL token, but a token to temporarily maintain user state during OTP
+
+        response = JSONResponse(content={"message": "Login successful"}, status_code=200)
+        response.set_cookie(key="OTPidentifier", value=encrypt_token(OTPidentifier.value), secure=True, httponly=True, max_age=300)
+        return response
+      
+        
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
-    verified = crud.verify_user(db, verification.code)
+async def verify_user(verification: schemas.UserVerification, OTPidentifier: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
+
+  
+    if OTPidentifier is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    print(f" before: {OTPidentifier}")
+    print(decrypt_token(OTPidentifier))
+
+    db_user = crud.get_user_by_token(db, decrypt_token(OTPidentifier))
+    if db_user is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        return {"message": "User verified successfully"}
+        access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
+        refresh_token = create_refresh_token(db_user.UserID,db_user.IDORole,db_user.FullName)
+        response = JSONResponse(content={"message": "login successful"},  status_code=200)
+        response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
+        response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
+        return response
+        
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
@@ -65,6 +131,10 @@ async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_
     if resent:
         return {"message": "Verification code resent"}
     raise HTTPException(status_code=404, detail="Failed to resend code")
+
+# @app.get("/users/validate-otp-access") #for access OTP page
+# async def validate_otp_access():
+
 
 
 # Batches

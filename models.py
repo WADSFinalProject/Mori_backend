@@ -5,6 +5,8 @@ from database import Base
 from typing import Optional
 from datetime import datetime
 
+from database import engine, Base
+
 class User(Base):
     __tablename__ = "users"
 
@@ -16,6 +18,16 @@ class User(Base):
     Phone = Column(String, nullable=True)
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
+    secret_key = Column(String, unique=True) #OTP Secret Key
+
+class URLToken(Base):
+    __tablename__ = "URLtoken"
+    value = Column(String, primary_key=True, unique=True)
+    UserID = Column(Integer, ForeignKey('users.UserID'))
+    type = Column(String)
+    exp = Column(DateTime)
+
+   
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
@@ -153,6 +165,7 @@ class Warehouse(Base):
     PIC_name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
+
 
 # # class User(BaseModel):
 # #     PIC_name: str
