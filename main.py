@@ -111,8 +111,9 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
-async def resend_code(verification: schemas.UserVerification, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db,verification.Email)
+async def resend_code(data: dict, db: Session = Depends(get_db)):
+    print(data.get("theEmail"))
+    db_user = crud.get_user_by_email(db,data.get("theEmail"))
     resent = SMTP.send_OTP(db_user, db)
     if resent:
         return {"message": "Verification code resent"}
