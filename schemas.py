@@ -44,10 +44,12 @@ class UserRegistration(BaseModel):
 class UserLogin(BaseModel):
     Email: str
     Password: str
+    
 
 
 class UserVerification(BaseModel):
-    Code: int
+    Email:str
+    Code: str
 
 # User (Admin)
 class AdminBase(BaseModel):
