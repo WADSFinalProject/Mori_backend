@@ -10,8 +10,6 @@ from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
-import ast
-
 
 
 from datetime import datetime, timedelta
@@ -80,7 +78,7 @@ def delete_user(db: Session, user_id: str):
     return user
 
 
-def create_URLToken(db: Session, userid:int, tokenType: str):
+def create_URLToken(db: Session, userid:int, tokenType: str): #to maintain security of the setpass URL
     try:
         token_value = generate_key("URL")
 
@@ -119,8 +117,7 @@ def create_URLToken(db: Session, userid:int, tokenType: str):
 def get_user_by_token(db:Session, token:str):
 
     try:
-        tokenBytes = ast.literal_eval(token)
-        decryptedToken = decrypt_token(tokenBytes)
+        decryptedToken = decrypt_token(token)
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid token")
 
@@ -139,8 +136,8 @@ def get_user_by_token(db:Session, token:str):
 
 def delete_token(db:Session, token:str):
     try:
-        tokenBytes = ast.literal_eval(token)
-        decryptedToken = decrypt_token(tokenBytes)
+        
+        decryptedToken = decrypt_token(token)
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid token")
 

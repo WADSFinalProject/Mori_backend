@@ -91,29 +91,13 @@ async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     if db_user:
 
         SMTP.send_OTP(db_user, db)
-        # Store the token in the database
-        OTPidentifier =  crud.create_URLToken(db, db_user.UserID, "OTP") #not actually URL token, but a token to temporarily maintain user state during OTP
-
-        response = JSONResponse(content={"message": "Login successful"}, status_code=200)
-        response.set_cookie(key="OTPidentifier", value=encrypt_token(OTPidentifier.value), secure=True, httponly=True, max_age=300)
-        return response
-      
-        
+        return {"message": "Credentials valid, OTP Sent!"}
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification, OTPidentifier: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
-
-  
-    if OTPidentifier is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    print(f" before: {OTPidentifier}")
-    print(decrypt_token(OTPidentifier))
-
-    db_user = crud.get_user_by_token(db, decrypt_token(OTPidentifier))
-    if db_user is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
+async def verify_user(verification: schemas.UserVerification,  db: Session = Depends(get_db)):
     
+    db_user = crud.get_user_by_email(db,verification.Email)
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
         access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
@@ -121,19 +105,19 @@ async def verify_user(verification: schemas.UserVerification, OTPidentifier: Opt
         response = JSONResponse(content={"message": "login successful"},  status_code=200)
         response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
         response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
+        response.headers["Set-cookie"] += "; SameSite=None"
         return response
         
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/users/resend_code")
-async def resend_code(user: schemas.UserRegistration, db: Session = Depends(get_db)):
-    resent = crud.resend_verification_code(db, email=user.email)
+async def resend_code(verification: schemas.UserVerification, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db,verification.Email)
+    resent = SMTP.send_OTP(db_user, db)
     if resent:
         return {"message": "Verification code resent"}
     raise HTTPException(status_code=404, detail="Failed to resend code")
 
-# @app.get("/users/validate-otp-access") #for access OTP page
-# async def validate_otp_access():
 
 
 

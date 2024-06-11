@@ -3,7 +3,8 @@
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
-import jwt,pyotp,secrets,ast
+import pyotp,secrets,ast
+from jose import jwt, JWTError
 import os
 from dotenv import load_dotenv
 
@@ -52,43 +53,48 @@ def encrypt_token(token):
 # Decrypt an encrypted token using the key
 def decrypt_token(encrypted_token):
     cipher_suite = Fernet(KEY)
-    decrypted_token = cipher_suite.decrypt(encrypted_token).decode()
+    decrypted_token = cipher_suite.decrypt(ast.literal_eval(encrypted_token)).decode()
     return decrypted_token
 
 
 
 def generate_otp(secret_key):
-    keyBytes = ast.literal_eval(secret_key)
-    print(keyBytes)
-    decyptedKey = decrypt_token(keyBytes)
+    decyptedKey = decrypt_token(secret_key)
     totp = pyotp.TOTP(decyptedKey,interval=120, digits=4)
+    print(f"TOTP {totp.now()}")
     return totp.now()
 
+
+
 def verify_otp(secret_key, user_otp):
-    keyBytes = ast.literal_eval(secret_key)
-    totp = pyotp.TOTP(decrypt_token(keyBytes))
+    decryptedToken = decrypt_token(secret_key)
+    totp = pyotp.TOTP(decryptedToken,interval=120, digits=4)
+    print(f"TOTPNOW:{totp.now()}")
     return totp.verify(user_otp)
 
-def create_access_token(user_id: int, role: str, name:str) -> tuple[str, str]:
-    access_token_payload = {
-        "sub": user_id,
-        "name": name,
-        "role": role,
-        "exp": datetime.now() + timedelta(minutes=30)
-    }
-    access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    return access_token
+def create_access_token(user_id: int, role: str, name:str) -> tuple[str, str]:
+    pass
+    # access_token_payload = {
+    #     "sub": user_id,
+    #     "name": name,
+    #     "role": role,
+    #     "exp": datetime.now() + timedelta(minutes=10)
+    # }
+    # access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    # return access_token
 
 def create_refresh_token(user_id: int, role: str, name:str) -> tuple[str, str,str]:
-    refresh_token_payload = {
-        "sub": user_id,
-        "name": name,
-        "role": role,
-        "exp": datetime.now() + timedelta(hours=12)
-    }
-    refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+    pass
+    # refresh_token_payload = {
+    #     "sub": user_id,
+    #     "name": name,
+    #     "role": role,
+    #     "exp": datetime.now() + timedelta(hours=12)
+    # }
+    # refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    return refresh_token
+    # return refresh_token
 
 
