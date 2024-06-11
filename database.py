@@ -5,8 +5,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 
 # Correct database URL with 'postgresql' dialect
-SQLALCHEMY_DATABASE_URL = "postgresql://default:3HiADe0lNWPZ@ep-spring-forest-a1pra2zp.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
-
+SQLALCHEMY_DATABASE_URL = "postgresql://default:i14qYZSsmfld@ep-icy-dawn-a1xdt1o8.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
 # Create the SQLAlchemy engine
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
