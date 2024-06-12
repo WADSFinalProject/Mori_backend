@@ -80,7 +80,7 @@ def create_access_token(user_id: int, role: str, name:str) -> tuple[str, str]:
         "sub": user_id,
         "name": name,
         "role": role,
-        "exp": datetime.now() + timedelta(minutes=10)
+        "exp": datetime.now() + timedelta(minutes=5)
     }
     access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
