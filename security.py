@@ -4,9 +4,10 @@ from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 import pyotp,secrets,ast
-from jose import jwt, JWTError
+from jose import jwt
 import os
 from dotenv import load_dotenv
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -74,27 +75,36 @@ def verify_otp(secret_key, user_otp):
 
 
 def create_access_token(user_id: int, role: str, name:str) -> tuple[str, str]:
-    pass
-    # access_token_payload = {
-    #     "sub": user_id,
-    #     "name": name,
-    #     "role": role,
-    #     "exp": datetime.now() + timedelta(minutes=10)
-    # }
-    # access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    # return access_token
+    access_token_payload = {
+        "sub": user_id,
+        "name": name,
+        "role": role,
+        "exp": datetime.now() + timedelta(minutes=10)
+    }
+    access_token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    return access_token
 
 def create_refresh_token(user_id: int, role: str, name:str) -> tuple[str, str,str]:
-    pass
-    # refresh_token_payload = {
-    #     "sub": user_id,
-    #     "name": name,
-    #     "role": role,
-    #     "exp": datetime.now() + timedelta(hours=12)
-    # }
-    # refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+    
+    refresh_token_payload = {
+        "sub": user_id,
+        "name": name,
+        "role": role,
+        "exp": datetime.now() + timedelta(hours=12)
+    }
+    refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    # return refresh_token
+    return refresh_token
 
+
+def verify_token(token: str):
+    try:
+        decoded_jwt = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return decoded_jwt
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 

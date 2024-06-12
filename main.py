@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 import crud, models, schemas  
 from database import SessionLocal, engine 
-from security import create_access_token,verify_otp, encrypt_token, decrypt_token, create_refresh_token
+from security import create_access_token,verify_otp, create_refresh_token, verify_token
 # from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
 # from .schemas import HarborGuardCreate, HarborGuardUpdate
 
@@ -102,13 +102,31 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
     if verified:
         access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
         refresh_token = create_refresh_token(db_user.UserID,db_user.IDORole,db_user.FullName)
-        response = JSONResponse(content={"message": "login successful"},  status_code=200)
-        response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
-        response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
-        response.headers["Set-cookie"] += "; SameSite=None"
+        response = JSONResponse(content={"access_token": access_token})
+        response.set_cookie(key="refresh_token",max_age= 720, value=refresh_token, httponly=True, secure=False)
+        response.headers["Set-Cookie"] += "; SameSite=None"
+      
         return response
+        # response.headers["Set-cookie"] += "; SameSite=None"
+        # return response
         
     raise HTTPException(status_code=404, detail="Verification failed")
+
+@app.post("/token/refresh")
+async def refresh_token(refresh_token: str = Cookie(None)):
+    if refresh_token is None:
+        return HTTPException(status_code=401, detail="No refresh token found")
+    try:
+        payload = verify_token(refresh_token)
+        new_access_token = create_access_token(payload["sub"],payload["role"],payload["name"])
+        return {"access_token": new_access_token}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    
+@app.get("/protected-route")
+async def protected_route(access_token: str = Depends(verify_token)):
+    return {"message": "You are authenticated", "user": access_token["sub"]}
+
 
 @app.post("/users/resend_code")
 async def resend_code(data: dict, db: Session = Depends(get_db)):
