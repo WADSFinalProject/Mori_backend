@@ -258,9 +258,9 @@ class Centra(CentraBase):
 
 # Expedition schemas
 class ExpeditionBase(BaseModel):
-    EstimatedArrival: str
+    EstimatedArrival: datetime
     TotalPackages: int
-    ExpeditionDate: str
+    ExpeditionDate: datetime
     ExpeditionServiceDetails: str
     Destination: str
     CentralID: int
@@ -269,9 +269,9 @@ class ExpeditionCreate(ExpeditionBase):
     pass
 
 class ExpeditionUpdate(BaseModel):
-    EstimatedArrival: Optional[str] = None
+    EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
-    ExpeditionDate: Optional[str] = None
+    ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
     Destination: Optional[str] = None
     CentralID: Optional[int] = None
@@ -280,14 +280,14 @@ class Expedition(ExpeditionBase):
     ExpeditionID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
     ExpeditionID: int
     UserID: int
     PackageType: str
-    ReceivedDate: str
+    ReceivedDate: datetime
     WarehouseDestination: str
 
 class ReceivedPackageCreate(ReceivedPackageBase):
@@ -297,23 +297,23 @@ class ReceivedPackageUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
     UserID: Optional[int] = None
     PackageType: Optional[str] = None
-    ReceivedDate: Optional[str] = None
+    ReceivedDate: Optional[datetime] = None
     WarehouseDestination: Optional[str] = None
 
 class ReceivedPackage(ReceivedPackageBase):
     PackageID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
     UserID: int
     PackageID: int
     TotalWeight: int
-    TimeAccepted: str
+    TimeAccepted: datetime
     Note: str
-    Date: str
+    Date: datetime
 
 class PackageReceiptCreate(PackageReceiptBase):
     pass
@@ -322,15 +322,15 @@ class PackageReceiptUpdate(BaseModel):
     UserID: Optional[int] = None
     PackageID: Optional[int] = None
     TotalWeight: Optional[int] = None
-    TimeAccepted: Optional[str] = None
+    TimeAccepted: Optional[datetime] = None
     Note: Optional[str] = None
-    Date: Optional[str] = None
+    Date: Optional[datetime] = None
 
 class PackageReceipt(PackageReceiptBase):
     ReceiptID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # Shipment
 class ShipmentPickupSchedule(BaseModel):
@@ -375,7 +375,7 @@ class ShipmentConfirmation(BaseModel):
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
-    ProductID: str
+    ProductID: int
     ReceiptID: int
     RescaledWeight: int
 
@@ -383,7 +383,7 @@ class ProductReceiptCreate(ProductReceiptBase):
     pass
 
 class ProductReceiptUpdate(BaseModel):
-    ProductID: Optional[str] = None
+    ProductID: Optional[int] = None
     ReceiptID: Optional[int] = None
     RescaledWeight: Optional[int] = None
 
@@ -391,7 +391,7 @@ class ProductReceipt(ProductReceiptBase):
     ProductReceiptID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # PackageType schemas
 class PackageTypeBase(BaseModel):

@@ -416,15 +416,15 @@ def confirm_shipment(db: Session, shipment_id: int, weight: int):
 
 
 def report_shipment_issue(db: Session, shipment_id: int, description: str):
-    shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
     if shipment:
         shipment.issue_description = description
         db.commit()
         return shipment
     return None
 
-def rescale_shipment(db: Session, shipment_id: str, new_weight: float):
-    shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+def rescale_shipment(db: Session, shipment_id: int, new_weight: float):
+    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
     if shipment:
         shipment.weight = new_weight
         db.commit()
@@ -676,3 +676,135 @@ def stop_drying_machine(db: Session, machine_id: str) -> bool:
         db.refresh(machine)
         return True
     return False
+
+#expedition
+def get_expedition(db: Session, expedition_id: int):
+    return db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+
+def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Expedition).offset(skip).limit(limit).all()
+
+def create_expedition(db: Session, expedition: schemas.ExpeditionCreate):
+    db_expedition = models.Expedition(**expedition.dict())
+    db.add(db_expedition)
+    db.commit()
+    db.refresh(db_expedition)
+    return db_expedition
+
+def update_expedition(db: Session, expedition_id: int, expedition: schemas.ExpeditionUpdate):
+    db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if not db_expedition:
+        return None
+    for key, value in expedition.dict(exclude_unset=True).items():
+        setattr(db_expedition, key, value)
+    db.commit()
+    db.refresh(db_expedition)
+    return db_expedition
+
+def delete_expedition(db: Session, expedition_id: int):
+    db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if not db_expedition:
+        return None
+    db.delete(db_expedition)
+    db.commit()
+    return db_expedition
+
+
+#receveid packages
+def get_received_package(db: Session, package_id: int):
+    return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+
+def get_received_packages(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ReceivedPackage).offset(skip).limit(limit).all()
+
+def create_received_package(db: Session, received_package: schemas.ReceivedPackageCreate):
+    db_received_package = models.ReceivedPackage(**received_package.dict())
+    db.add(db_received_package)
+    db.commit()
+    db.refresh(db_received_package)
+    return db_received_package
+
+def update_received_package(db: Session, package_id: int, received_package: schemas.ReceivedPackageUpdate):
+    db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+    if not db_received_package:
+        return None
+    for key, value in received_package.dict(exclude_unset=True).items():
+        setattr(db_received_package, key, value)
+    db.commit()
+    db.refresh(db_received_package)
+    return db_received_package
+
+def delete_received_package(db: Session, package_id: int):
+    db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+    if not db_received_package:
+        return None
+    db.delete(db_received_package)
+    db.commit()
+    return db_received_package
+
+
+#package receipt
+
+def get_package_receipt(db: Session, receipt_id: int):
+    return db.query(models.PackageReceipt).filter(models.PackageReceipt.ReceiptID == receipt_id).first()
+
+def get_package_receipts(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.PackageReceipt).offset(skip).limit(limit).all()
+
+def create_package_receipt(db: Session, package_receipt: schemas.PackageReceiptCreate):
+    db_package_receipt = models.PackageReceipt(**package_receipt.dict())
+    db.add(db_package_receipt)
+    db.commit()
+    db.refresh(db_package_receipt)
+    return db_package_receipt
+
+def update_package_receipt(db: Session, receipt_id: int, package_receipt_update: schemas.PackageReceiptUpdate):
+    db_package_receipt = db.query(models.PackageReceipt).filter(models.PackageReceipt.ReceiptID == receipt_id).first()
+    if db_package_receipt:
+        update_data = package_receipt_update.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_package_receipt, key, value)
+        db.commit()
+        db.refresh(db_package_receipt)
+    return db_package_receipt
+
+def delete_package_receipt(db: Session, receipt_id: int):
+    db_package_receipt = db.query(models.PackageReceipt).filter(models.PackageReceipt.ReceiptID == receipt_id).first()
+    if db_package_receipt:
+        db.delete(db_package_receipt)
+        db.commit()
+    return db_package_receipt
+
+
+#product receipt
+
+def create_product_receipt(db: Session, product_receipt: schemas.ProductReceiptCreate):
+    db_product_receipt = models.ProductReceipt(**product_receipt.dict())
+    db.add(db_product_receipt)
+    db.commit()
+    db.refresh(db_product_receipt)
+    return db_product_receipt
+
+def get_product_receipt(db: Session, product_receipt_id: int):
+    return db.query(models.ProductReceipt).filter(models.ProductReceipt.ProductReceiptID == product_receipt_id).first()
+
+def get_product_receipts(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ProductReceipt).offset(skip).limit(limit).all()
+
+def update_product_receipt(db: Session, product_receipt_id: int, product_receipt_update: schemas.ProductReceiptUpdate):
+    db_product_receipt = db.query(models.ProductReceipt).filter(models.ProductReceipt.ProductReceiptID == product_receipt_id).first()
+    if db_product_receipt:
+        update_data = product_receipt_update.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_product_receipt, key, value)
+        db.commit()
+        db.refresh(db_product_receipt)
+    return db_product_receipt
+
+def delete_product_receipt(db: Session, product_receipt_id: int):
+    db_product_receipt = db.query(models.ProductReceipt).filter(models.ProductReceipt.ProductReceiptID == product_receipt_id).first()
+    if db_product_receipt:
+        db.delete(db_product_receipt)
+        db.commit()
+    return db_product_receipt
+

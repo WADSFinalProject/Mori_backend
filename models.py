@@ -128,6 +128,7 @@ class Expedition(Base):
     ExpeditionServiceDetails = Column(String(100))
     Destination = Column(String(100))
     CentralID = Column(Integer, nullable=False)
+    received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
 
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
@@ -139,7 +140,7 @@ class ReceivedPackage(Base):
     WarehouseDestination = Column(String(100))
 
     user = relationship("User")
-    expedition = relationship("Expedition")
+    expedition = relationship("Expedition", back_populates="received_packages")
 
 
 class PackageReceipt(Base):
@@ -158,7 +159,7 @@ class PackageReceipt(Base):
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
     ProductReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    ProductID = Column(String(1000))
+    ProductID = Column(Integer)
     ReceiptID = Column(Integer, ForeignKey('PackageReceipt.ReceiptID'))
     RescaledWeight = Column(Integer)
 

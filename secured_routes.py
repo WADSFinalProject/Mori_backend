@@ -43,24 +43,15 @@ def delete_existing_batch(batch_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
-@secured_router.get("/drying-activities/{drying_id}/date", response_model=schemas.DryingActivityBase)
-def get_dried_date(drying_id: str, db: Session = Depends(get_db)):
-    date = crud.batch_get_dried_date(db=db, drying_id=drying_id)
-    if date is None:
-        raise HTTPException(status_code=404, detail="Drying activity not found")
-    return {"date": date}
-
-@secured_router.get("/flouring-activities/{flouring_id}/date", response_model=schemas.FlouringActivityBase)
-def get_floured_date(flouring_id: str, db: Session = Depends(get_db)):
-    date = crud.batch_get_floured_date(db=db, flouring_id=flouring_id)
-    if date is None:
-        raise HTTPException(status_code=404, detail="Flouring activity not found")
-    return {"date": date}
-
-
-# Machines
-
 #DRYING
+@secured_router.post("/drying-machine/create/")
+def add_drying_machine(drying_machine: schemas.DryingMachineCreate, db: Session = Depends(get_db)):
+    new_machine = crud.create_drying_machine(db, drying_machine)
+    if new_machine:
+        return {"message": "Drying machine created successfully!"}
+    else:
+        raise HTTPException(status_code=400, detail="Drying machine with the same ID already exists!")
+
 @secured_router.post("/drying_machines/{machine_id}/start", response_model=schemas.DryingMachine)
 def start_machine(machine_id: str, db: Session = Depends(get_db)):
     success = crud.start_drying_machine(db, machine_id)
@@ -84,7 +75,44 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
+
+ #drying activity  
+@secured_router.post("/drying_activity/create")
+def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Session = Depends(get_db)):
+    dry_activity = crud.add_new_drying_activity(db, drying_activity)
+    if dry_activity:
+        return {"message": "Drying activity created successfully!"}
+    else:
+        raise HTTPException(status_code=400, detail="Drying machine with the same ID already exists!")
+
+@secured_router.get("/drying-activities/{drying_id}")
+def show_drying_activity(drying_id: int, db: Session = Depends(get_db)):
+    drying = crud.get_drying_activity(db, drying_id)
+    return drying
+
+@secured_router.put("/drying-activities/{drying_id}")
+def update_drying_activity(drying_id: int, drying_activity: schemas.DryingActivityUpdate, db: Session = Depends(get_db)):
+    db_drying_activity = crud.update_drying_activity(db, drying_id, drying_activity)
+    if db_drying_activity is None:
+        raise HTTPException(status_code=404, detail="Drying activity not found")
+    return db_drying_activity
+
+@secured_router.delete("/drying-activities/{drying_id}")
+def delete_drying_activity(drying_id: int, db: Session = Depends(get_db)):
+    db_drying_activity = crud.delete_drying_activity(db, drying_id)
+    if db_drying_activity is None:
+        raise HTTPException(status_code=404, detail="Drying activity not found")
+    return db_drying_activity
+
 #FLOURING
+@secured_router.post("/flouring-machine/create/")
+def add_flouring_machine(flouring_machine: schemas.FlouringMachineCreate, db: Session = Depends(get_db)):
+    new_machine = crud.add_new_flouring_machine(db, flouring_machine)
+    if new_machine:
+        return {"message": "Flouring machine created successfully!"}
+    else:
+        raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
+
 @secured_router.get("/flouring_machines/{machine_id}/status", response_model=str)
 def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db)):
     status = crud.get_flouring_machine_status(db, machine_id)
@@ -106,10 +134,49 @@ def stop_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Failed to stop the machine or machine already idle")
     return {"message": "Machine stopped successfully"}
 
+
+#flouring activity
+@secured_router.post("/flouring_activity/create")
+def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, db: Session = Depends(get_db)):
+    flour_activity = crud.add_new_flouring_activity(db, flouring_activity)
+    if flour_activity:
+        return {"message": "Flouring activity created successfully!"}
+    else:
+        raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
+
+    
+@secured_router.get("/flouring_activities", response_model=List[schemas.FlouringActivity])
+def read_flouring_activities(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    flouring_activities = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
+    return flouring_activities
+
+@secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
+def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db)):
+    flouring_activity = crud.get_flouring_activity(db=db, flouring_id=flouring_id)
+    if not flouring_activity:
+        raise HTTPException(status_code=404, detail="Flouring activity not found")
+    return flouring_activity
+
+@secured_router.put("/flouring_activity/update/{flouring_id}", response_model=schemas.FlouringActivity)
+def update_flouring_activity(flouring_id: int, flouring_activity: schemas.FlouringActivityUpdate, db: Session = Depends(get_db)):
+    updated_flouring = crud.update_flouring_activity(db, flouring_id, flouring_activity)
+    if not updated_flouring:
+        raise HTTPException(status_code=404, detail="Flouring activity not found")
+    return updated_flouring
+
+@secured_router.delete("/flouring_activity/delete/{flouring_id}", response_model=schemas.FlouringActivity)
+def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db)):
+    deleted_flouring_activity = crud.delete_flouring_activity(db=db, flouring_id=flouring_id)
+    if not deleted_flouring_activity:
+        raise HTTPException(status_code=404, detail="Flouring activity not found")
+    return deleted_flouring_activity
+
+
+
 #WET LEAVES COLLECTIONS
-@secured_router.post("/wet-leaves-collections/", response_model=schemas.WetLeavesCollection)
+@secured_router.post("/wet-leaves-collections/create")
 def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollectionCreate, db: Session = Depends(get_db)):
-    return crud.create_wet_leaves_collection(db=db, wet_leaves_collection=wet_leaves_collection)
+    return crud.add_new_wet_leaves_collection(db, wet_leaves_collection)
 
 @secured_router.get("/wet-leaves-collections/", response_model=list[schemas.WetLeavesCollection])
 def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -143,7 +210,7 @@ async def add_shipment(shipment_data: schemas.ShipmentCreate, db: Session = Depe
     return added_shipment
 
 @secured_router.put("/shipments/{shipment_id}")
-async def update_shipment(shipment_id: str, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db)):
+async def update_shipment(shipment_id: int, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db)):
     updated_shipment = crud.update_shipment(db, shipment_id, shipment_update)
     if updated_shipment:
         return updated_shipment
@@ -154,9 +221,9 @@ async def show_notifications(db: Session = Depends(get_db)):
     notifications = crud.get_notifications(db)
     return {"notifications": notifications}
 
-@secured_router.get("/shipments")
-async def get_all_shipments(db: Session = Depends(get_db)):
-    shipments = crud.get_all_shipments(db)
+@secured_router.get("/shipments", response_model=List[schemas.Shipment])
+def read_shipments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    shipments = crud.get_all_shipments(db=db, skip=skip, limit=limit)
     return shipments
 
 @secured_router.get("/shipments/{shipment_id}")
@@ -167,7 +234,7 @@ async def get_shipment_details(shipment_id: str, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @secured_router.delete("/shipments/{shipment_id}")
-async def delete_shipment(shipment_id: str, db: Session = Depends(get_db)):
+async def delete_shipment(shipment_id: int, db: Session = Depends(get_db)):
     if crud.delete_shipment(db, shipment_id):
         return {"message": "Shipment deleted"}
     raise HTTPException(status_code=404, detail="Shipment not found")
@@ -179,19 +246,19 @@ async def confirm_shipment(shipment_id: int, confirmation: schemas.ShipmentConfi
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @secured_router.post("/shipments/{shipment_id}/report")
-async def report_shipment_issue(shipment_id: str, issue: schemas.ShipmentIssue, db: Session = Depends(get_db)):
+async def report_shipment_issue(shipment_id: int, issue: schemas.ShipmentIssue, db: Session = Depends(get_db)):
     if crud.report_shipment_issue(db, shipment_id, issue.description):
         return {"message": "Issue reported successfully"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @secured_router.post("/shipments/{shipment_id}/confirm")
-async def confirm_shipment_arrival(shipment_id: str, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db)):
+async def confirm_shipment_arrival(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db)):
     if crud.confirm_shipment(db, shipment_id, confirmation.weight):
         return {"message": "Shipment confirmed"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
 @secured_router.put("/shipments/{shipment_id}/rescale")
-async def rescale_shipment(shipment_id: str, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db)):
+async def rescale_shipment(shipment_id: int, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db)):
     if crud.rescale_shipment(db, shipment_id, rescale.new_weight):
         return {"message": "Shipment weight updated"}
     raise HTTPException(status_code=404, detail="Shipment not found")
@@ -243,19 +310,33 @@ async def show_all_centras(db: Session = Depends(get_db)):
     centras = crud.get_all_centras(db)
     return centras
 
+@secured_router.get("/centras/{centra_id}", response_model=schemas.Centra)
+def read_centra(CentralID: int, db: Session = Depends(get_db)):
+    centra = crud.get_centra_by_id(db, CentralID)
+    return centra
+
 @secured_router.post("/centras", response_model=schemas.CentraDetails)
-async def add_new_centra(centra_data: schemas.CentraDetails, db: Session = Depends(get_db)):
-    new_centra = add_new_centra(db, centra_data)
+async def create_new_centra(centra_data: schemas.CentraCreate, db: Session = Depends(get_db)):
+    new_centra = crud.add_new_centra(db, centra_data)
     return new_centra
+
+@secured_router.put("/centras/{centra_id}", response_model=schemas.Centra)
+def update_centra(CentralID: int, centra_update: schemas.CentraUpdate, db: Session = Depends(get_db)):
+    return crud.update_centra(db, CentralID, centra_update)
+
+@secured_router.delete("/centras/{centra_id}", response_model=dict)
+def delete_centra(CentralID: int, db: Session = Depends(get_db)):
+    return crud.delete_centra(db, CentralID)
 
 # Shipment (XYZ)
 
-# @app.put("/shipments/{shipment_id}")
+# @secured_router.put("/shipments/{shipment_id}")
 # async def update_shipment_details(shipment_id: str, shipment_update: ShipmentUpdate, db: Session = Depends(get_db)):
 #     updated = update_shipment(db, shipment_id, shipment_update)
 #     if updated:
 #         return updated
 #     raise HTTPException(status_code=404, detail="Shipment not found")
+
 
 @secured_router.delete("/shipments/{shipment_id}")
 async def remove_shipment(shipment_id: str, db: Session = Depends(get_db)):
@@ -271,8 +352,8 @@ async def show_all_harbor_guards(db: Session = Depends(get_db)):
     return guards
 
 @secured_router.get("/harborguards/{guard_id}")
-async def show_harbor_guard(guard_id: int, db: Session = Depends(get_db)):
-    guard = crud.get_harbor_guard(db, guard_id)
+async def show_harbor_guard(HarborID: int, db: Session = Depends(get_db)):
+    guard = crud.get_harbor_guard(db, HarborID)
     return guard
 
 @secured_router.post("/harborguards", response_model=schemas.HarborGuardCreate)
@@ -281,8 +362,8 @@ async def add_harbor_guard(guard_data: schemas.HarborGuardCreate, db: Session = 
     return new_guard
 
 @secured_router.put("/harborguards/{guard_id}", response_model=schemas.HarborGuardUpdate)
-async def modify_harbor_guard(guard_id: int, guard_data: schemas.HarborGuardUpdate, db: Session = Depends(get_db)):
-    updated_guard = crud.update_harbor_guard(db, guard_id, guard_data)
+async def modify_harbor_guard(HarborID: int, guard_data: schemas.HarborGuardUpdate, db: Session = Depends(get_db)):
+    updated_guard = crud.update_harbor_guard(db, HarborID, guard_data)
     return updated_guard
 
 @secured_router.delete("/harborguards/{guard_id}")
@@ -314,7 +395,7 @@ async def update_warehouse(warehouse_id: str, warehouse_data: schemas.WarehouseU
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return updated_warehouse
 
-@secured_router.delete("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
+@secured_router.delete("/warehouses/{warehouse_id}")
 async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db)):
     deleted_warehouse = crud.delete_warehouse(db, warehouse_id=warehouse_id)
     if deleted_warehouse is None:
@@ -351,3 +432,128 @@ async def delete_user(user_id: str, db: Session = Depends(get_db)):
     if deleted_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}
+
+
+#expedition
+@secured_router.post("/expeditions/", response_model=schemas.Expedition)
+def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db)):
+    return crud.create_expedition(db, expedition)
+
+@secured_router.get("/expeditions/", response_model=List[schemas.Expedition])
+def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expeditions = crud.get_expeditions(db=db, skip=skip, limit=limit)
+    return expeditions
+
+@secured_router.get("/expeditions/{expedition_id}", response_model=schemas.Expedition)
+def read_expedition(expedition_id: int, db: Session = Depends(get_db)):
+    expedition = crud.get_expedition(db=db, expedition_id=expedition_id)
+    if expedition is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return expedition
+
+@secured_router.put("/expeditions/{expedition_id}", response_model=schemas.Expedition)
+def update_expedition(expedition_id: int, expedition: schemas.ExpeditionUpdate, db: Session = Depends(get_db)):
+    db_expedition = crud.update_expedition(db=db, expedition_id=expedition_id, expedition=expedition)
+    if db_expedition is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return db_expedition
+
+@secured_router.delete("/expeditions/{expedition_id}", response_model=schemas.Expedition)
+def delete_expedition(expedition_id: int, db: Session = Depends(get_db)):
+    db_expedition = crud.delete_expedition(db, expedition_id)
+    if db_expedition is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return db_expedition
+
+#received package
+@secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
+def create_received_package(received_package: schemas.ReceivedPackageCreate, db: Session = Depends(get_db)):
+    return crud.create_received_package(db=db, received_package=received_package)
+
+@secured_router.get("/received_packages/", response_model=List[schemas.ReceivedPackage])
+def read_received_packages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    received_packages = crud.get_received_packages(db=db, skip=skip, limit=limit)
+    return received_packages
+
+@secured_router.get("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+def read_received_package(package_id: int, db: Session = Depends(get_db)):
+    received_package = crud.get_received_package(db=db, package_id=package_id)
+    if received_package is None:
+        raise HTTPException(status_code=404, detail="Received package not found")
+    return received_package
+
+@secured_router.put("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+def update_received_package(package_id: int, received_package: schemas.ReceivedPackageUpdate, db: Session = Depends(get_db)):
+    db_received_package = crud.update_received_package(db=db, package_id=package_id, received_package=received_package)
+    if db_received_package is None:
+        raise HTTPException(status_code=404, detail="Received package not found")
+    return db_received_package
+
+@secured_router.delete("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+def delete_received_package(package_id: int, db: Session = Depends(get_db)):
+    db_received_package = crud.delete_received_package(db=db, package_id=package_id)
+    if db_received_package is None:
+        raise HTTPException(status_code=404, detail="Received package not found")
+    return db_received_package
+
+#package receipt
+@secured_router.post("/package_receipts/", response_model=schemas.PackageReceipt)
+def create_package_receipt(package_receipt: schemas.PackageReceiptCreate, db: Session = Depends(get_db)):
+    return crud.create_package_receipt(db, package_receipt)
+
+@secured_router.get("/package_receipts/{receipt_id}", response_model=schemas.PackageReceipt)
+def read_package_receipt(receipt_id: int, db: Session = Depends(get_db)):
+    db_package_receipt = crud.get_package_receipt(db, receipt_id)
+    if db_package_receipt is None:
+        raise HTTPException(status_code=404, detail="Package receipt not found")
+    return db_package_receipt
+
+@secured_router.get("/package_receipts/", response_model=List[schemas.PackageReceipt])
+def read_package_receipts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    package_receipts = crud.get_package_receipts(db, skip=skip, limit=limit)
+    return package_receipts
+
+@secured_router.put("/package_receipts/{receipt_id}", response_model=schemas.PackageReceipt)
+def update_package_receipt(receipt_id: int, package_receipt: schemas.PackageReceiptUpdate, db: Session = Depends(get_db)):
+    db_package_receipt = crud.update_package_receipt(db, receipt_id, package_receipt)
+    if db_package_receipt is None:
+        raise HTTPException(status_code=404, detail="Package receipt not found")
+    return db_package_receipt
+
+@secured_router.delete("/package_receipts/{receipt_id}", response_model=schemas.PackageReceipt)
+def delete_package_receipt(receipt_id: int, db: Session = Depends(get_db)):
+    db_package_receipt = crud.delete_package_receipt(db, receipt_id)
+    if db_package_receipt is None:
+        raise HTTPException(status_code=404, detail="Package receipt not found")
+    return db_package_receipt
+
+#product receipt
+@secured_router.post("/product_receipts/", response_model=schemas.ProductReceipt)
+def create_product_receipt(product_receipt: schemas.ProductReceiptCreate, db: Session = Depends(get_db)):
+    return crud.create_product_receipt(db, product_receipt)
+
+@secured_router.get("/product_receipts/{product_receipt_id}", response_model=schemas.ProductReceipt)
+def read_product_receipt(product_receipt_id: int, db: Session = Depends(get_db)):
+    db_product_receipt = crud.get_product_receipt(db, product_receipt_id)
+    if db_product_receipt is None:
+        raise HTTPException(status_code=404, detail="Product receipt not found")
+    return db_product_receipt
+
+@secured_router.get("/product_receipts/", response_model=List[schemas.ProductReceipt])
+def read_product_receipts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    product_receipts = crud.get_product_receipts(db, skip=skip, limit=limit)
+    return product_receipts
+
+@secured_router.put("/product_receipts/{product_receipt_id}", response_model=schemas.ProductReceipt)
+def update_product_receipt(product_receipt_id: int, product_receipt: schemas.ProductReceiptUpdate, db: Session = Depends(get_db)):
+    db_product_receipt = crud.update_product_receipt(db, product_receipt_id, product_receipt)
+    if db_product_receipt is None:
+        raise HTTPException(status_code=404, detail="Product receipt not found")
+    return db_product_receipt
+
+@secured_router.delete("/product_receipts/{product_receipt_id}", response_model=schemas.ProductReceipt)
+def delete_product_receipt(product_receipt_id: int, db: Session = Depends(get_db)):
+    db_product_receipt = crud.delete_product_receipt(db, product_receipt_id)
+    if db_product_receipt is None:
+        raise HTTPException(status_code=404, detail="Product receipt not found")
+    return db_product_receipt
