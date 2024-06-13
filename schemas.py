@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
-from datetime import datetime
+from datetime import datetime, date, time
 from typing_extensions import Annotated
 import re
 
@@ -42,16 +42,14 @@ class UserRegistration(BaseModel):
 
 
 class UserLogin(BaseModel):
-    Email: EmailStr
+    Email: str
     Password: str
     
 
 
 class UserVerification(BaseModel):
-    Email:EmailStr
+    Email:str
     Code: str
-
-
 
 # User (Admin)
 class AdminBase(BaseModel):
@@ -75,17 +73,15 @@ class Admin(AdminBase):
 
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
-    ProductID: int
-    Description: str
-    DryingID: Optional[str]
-    FlouringID: Optional[str]
-    DriedDate: Optional[str]
-    FlouredDate: Optional[str]
+    # ProductID: int
+    Description: Optional[str] = None
+    DryingID: Optional[int] = None
+    FlouringID: Optional[int] = None
+    DriedDate: date
+    FlouredDate: date
 
 class ProcessedLeavesCreate(ProcessedLeavesBase):
-    Description: str
-    DryingID: Optional[str]
-    FlouringID: Optional[str]
+    pass
 
 class ProcessedLeavesUpdate(BaseModel):
     Description: Optional[str] = None
@@ -96,49 +92,53 @@ class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
-    UserID: int
+    
+    # UserID: int
     CentralID: int
-    Date: str
-    Time: str
+    Date: datetime
     Weight: int
     Expired: bool
-    ExpirationTime: str
+    ExpirationTime: time
 
 class WetLeavesCollectionCreate(WetLeavesCollectionBase):
     pass
 
 class WetLeavesCollectionUpdate(BaseModel):
-    UserID: Optional[int] = None
-    CentralID: Optional[int] = None
-    Date: Optional[str] = None
-    Time: Optional[str] = None
+    # UserID: Optional[int] = None
+    # CentralID: Optional[int] = None
+    # WetLeavesBatchID: Optional[str] = None
+    Date: Optional[datetime] = None
     Weight: Optional[int] = None
     Expired: Optional[bool] = None
-    ExpirationTime: Optional[str] = None
+    ExpirationTime: Optional[time] = None
 
 class WetLeavesCollection(WetLeavesCollectionBase):
-    WetLeavesBatchID: str
+    WetLeavesBatchID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # Centra Details
-class CentraDetails(BaseModel):
-    PIC_name: str
-    location: str
-    email: str
-    phone: int
-    drying_machine_status: str = None
-    flouring_machine_status: str = None
-    action: str = None
+class CentraBase(BaseModel):
+    Address: str
+
+class CentraCreate(CentraBase):
+    pass
+
+class CentraDetails(CentraBase):
+    CentralID: int
+
+    class Config: 
+        orm_mode = True
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
     Capacity: str
+    Status: str
 
 class DryingMachineCreate(DryingMachineBase):
     pass
@@ -147,40 +147,41 @@ class DryingMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
 
 class DryingMachine(DryingMachineBase):
-    MachineID: str
+    MachineID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
-    UserID: int
     CentralID: int
-    Date: str
+    Date: date
     Weight: int
-    DryingMachineID: str
-    Time: str
+    DryingMachineID: int
+    Time: time
 
 class DryingActivityCreate(DryingActivityBase):
     pass
 
 class DryingActivityUpdate(BaseModel):
+    DryingID: Optional[int] = None
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
-    Date: Optional[str] = None
+    Date: Optional[date] = None
     Weight: Optional[int] = None
     DryingMachineID: Optional[str] = None
-    Time: Optional[str] = None
+    Time: Optional[time] = None
 
 class DryingActivity(DryingActivityBase):
-    DryingID: str
+    DryingID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
     Capacity: str
+    Status: str
 
 class FlouringMachineCreate(FlouringMachineBase):
     pass
@@ -189,36 +190,37 @@ class FlouringMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
 
 class FlouringMachine(FlouringMachineBase):
-    MachineID: str
+    MachineID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
-    UserID: int
-    CentralID: int
-    Date: str
-    Weight: int
-    FlouringMachineID: str
-    DryingID: str
+    CentralID: Optional[int] = None
+    Date: Optional[date] = None
+    Weight: Optional[int] = None
+    FlouringMachineID: Optional[int] = None
+    Time: Optional[time] = None
 
 class FlouringActivityCreate(FlouringActivityBase):
     pass
 
 class FlouringActivityUpdate(BaseModel):
+    FlouringID: Optional[int] = None
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
-    Date: Optional[str] = None
+    Date: Optional[date] = None
     Weight: Optional[int] = None
-    FlouringMachineID: Optional[str] = None
-    DryingID: Optional[str] = None
+    FlouringMachineID: Optional[int] = None
+    # DryingID: Optional[str] = None
+    Time: Optional[time] = None
 
 class FlouringActivity(FlouringActivityBase):
-    FlouringID: str
+    FlouringID: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 #stocks
 class StockBase(BaseModel):
@@ -332,12 +334,12 @@ class PackageReceipt(PackageReceiptBase):
 
 # Shipment
 class ShipmentPickupSchedule(BaseModel):
-    shipment_id: int
+    # shipment_id: int
     pickup_time: datetime
     location: str
 
 class ShipmentBase(BaseModel):
-    batch_id: str
+    batch_id: Optional[int] = None
     description: Optional[str] = None
     status: Optional[str] = None
     weight: Optional[float] = None
@@ -347,19 +349,20 @@ class ShipmentCreate(ShipmentBase):
     pass
 
 class ShipmentUpdate(BaseModel):
-    batch_id: Optional[str] = None
+    shipment_id: Optional[int] = None
+    batch_id: Optional[int] = None
     description: Optional[str] = None
     status: Optional[str] = None
-    weight: Optional[float] = None
+    weight: Optional[int] = None
     issue_description: Optional[str] = None
 
 class Shipment(ShipmentBase):
-    id: str
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    shipment_id: int
+    # created_at: Optional[datetime] = None
+    # updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class ShipmentIssue(BaseModel):
     description: str
@@ -412,28 +415,19 @@ class HarborGuardBase(BaseModel):
     phone: Optional[str] = None
 
 class HarborGuardCreate(HarborGuardBase):
-    """
-    All fields are required when creating a new harbor guard.
-    """
     pass
 
 class HarborGuardUpdate(HarborGuardBase):
-    """
-    All fields are optional for update operations.
-    """
+
     PIC_name: str = None
     email: EmailStr = None
     phone: Optional[str] = None
 
 class HarborGuard(HarborGuardBase):
-    """
-    This class can be used to represent the harbor guard with additional fields if necessary,
-    such as an internal ID or other attributes that are generated by the database.
-    """
-    id: int  # Assuming an 'id' field is automatically generated by the database
+    HarborID: int  
 
     class Config:
-        from_attributes = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
+        orm_mode = True  
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
