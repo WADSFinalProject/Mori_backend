@@ -1,21 +1,15 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, HTTPException
+# dependencies.py
+from fastapi import Depends, HTTPException, Request
 from security import verify_token
-from jose import JWTError
 
-class JWTMiddleware(BaseHTTPMiddleware): 
-    async def dispatch(self, request: Request, call_next):
-        token = request.cookies.get("refresh")
-        if not token: 
-            raise HTTPException(status_code=401, detail="Not Authenticated")
-        
-        try: 
-            payload = verify_token(token)
-            request.state.user = payload
-        except JWTError as e: 
-            raise HTTPException(status_code=401, detail="Invalid Token")
-        
-        response = await call_next(request)
-        return response
-        
-        
+def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        payload = verify_token(token)
+        request.state.user = payload  # Attach user payload to request state
+        return payload
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))

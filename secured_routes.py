@@ -3,13 +3,13 @@ from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
 import schemas, crud, models
+from middleware import get_current_user
 
 secured_router = APIRouter()
 
 # test protected route
 @secured_router.get("/protected-route")
-async def protected_route(request: Request): 
-    user = request.state.user
+async def protected_route(user: dict = Depends(get_current_user)):
     return {"message": "You are authenticated", "user": user["sub"]}
 
 # Batches
