@@ -138,7 +138,11 @@ async def resend_code(data: dict, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Failed to resend code")
 
 
-
+@app.post("/users/logout")
+async def logout():
+    response = JSONResponse(content={"message": "Logout successful"}, status_code=200)
+    response.delete_cookie(key="refresh_token")
+    return response
 
 # Batches
 @app.post("/batches/", response_model=schemas.ProcessedLeaves)
