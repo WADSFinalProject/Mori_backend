@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from database import Base
@@ -31,12 +31,12 @@ class URLToken(Base):
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
-    ProductID = Column(Integer, primary_key=True)
+    ProductID = Column(Integer, primary_key=True, autoincrement=True)
     Description = Column(String(100))
-    FlouringID = Column(String(50), ForeignKey('FlouringActivity.FlouringID'))
-    DryingID = Column(String(50), ForeignKey('DryingActivity.DryingID'))
-    DriedDate = Column(String)
-    FlouredDate = Column(String)
+    FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
+    DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
+    DriedDate = Column(Date)
+    FlouredDate = Column(Date)
 
     drying_activity = relationship("DryingActivity", backref="processed_leaves")
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
@@ -45,51 +45,55 @@ class ProcessedLeaves(Base):
     
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
-    WetLeavesBatchID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    CentralID = Column(Integer, nullable=False)
+    WetLeavesBatchID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Date = Column(DateTime)
-    Time = Column(DateTime)
+    # Time = Column(Time)
     Weight = Column(Integer)
     Expired = Column(Boolean)
-    ExpirationTime = Column(String(50))
+    ExpirationTime = Column(Time, name="ExpirationTime")
 
-    user = relationship("User")
+    centra = relationship("Centra")
 
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'
-    MachineID = Column(String(50), primary_key=True)
+    MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     Capacity = Column(String(100))
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
 
 class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
-    DryingID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    CentralID = Column(Integer, nullable=False)
-    Date = Column(DateTime)
+    DryingID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
+    Date = Column(Date)
     Weight = Column(Integer)
-    DryingMachineID = Column(String(50), ForeignKey('DryingMachine.MachineID'))
-    Time = Column(DateTime)
-    user = relationship("User")
+    DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
+    Time = Column(Time)
+    
+    centra = relationship("Centra")
     drying_machine = relationship("DryingMachine")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
-    MachineID = Column(String(50), primary_key=True)
+    MachineID = Column(Integer, primary_key=True, nullable=True,autoincrement=True)
     Capacity = Column(String(100))
+    Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
+
 
 class FlouringActivity(Base):
     __tablename__ = 'FlouringActivity'
-    FlouringID = Column(String(50), primary_key=True)
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    CentralID = Column(Integer, nullable=False)
-    Date = Column(DateTime) 
+    FlouringID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
+    Date = Column(Date) 
     Weight = Column(Integer)
-    FlouringMachineID = Column(String(50), ForeignKey('FlouringMachine.MachineID'))
-    DryingID = Column(String(50))
-
-    user = relationship("User")
+    FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
+    DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
+    Time = Column(Time)
+    centra = relationship("Centra")
+    # user = relationship("User")
+    drying_activity = relationship("DryingActivity")
     flouring_machine = relationship("FlouringMachine")
 
 class Centra(Base):
@@ -97,9 +101,17 @@ class Centra(Base):
     CentralID = Column(Integer, primary_key=True)
     Address = Column(String(100))
 
+class HarborGuard(Base):
+    __tablename__ = 'HarborGuard'
+
+    HarborID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    PIC_name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    phone = Column(String, nullable=True)
+
 class Stock(Base):
     __tablename__ = 'stocks'
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     product_id = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
     weight = Column(Integer)
     # location_id = Column(Integer, ForeignKey('locations.id'))
@@ -109,7 +121,7 @@ class Stock(Base):
 
 class Expedition(Base):
     __tablename__ = 'Expedition'
-    ExpeditionID = Column(Integer, primary_key=True)
+    ExpeditionID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     EstimatedArrival = Column(DateTime) 
     TotalPackages = Column(Integer)
     ExpeditionDate = Column(DateTime) 
@@ -119,7 +131,7 @@ class Expedition(Base):
 
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
-    PackageID = Column(Integer, primary_key=True)
+    PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     PackageType = Column(String(100))
@@ -132,7 +144,7 @@ class ReceivedPackage(Base):
 
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
-    ReceiptID = Column(Integer, primary_key=True)
+    ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     PackageID = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
@@ -145,7 +157,7 @@ class PackageReceipt(Base):
 
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
-    ProductReceiptID = Column(Integer, primary_key=True)
+    ProductReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     ProductID = Column(String(1000))
     ReceiptID = Column(Integer, ForeignKey('PackageReceipt.ReceiptID'))
     RescaledWeight = Column(Integer)
@@ -154,73 +166,26 @@ class ProductReceipt(Base):
 
 class PackageType(Base):
     __tablename__ = 'PackageType'
-    PackageTypeID = Column(Integer, primary_key=True)
+    PackageTypeID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     Description = Column(String(100))
 
 
 class Warehouse(Base):
     __tablename__ = 'warehouses'
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     PIC_name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
 
+class Shipment(Base):
+    __tablename__ = 'shipments'
 
-# # class User(BaseModel):
-# #     PIC_name: str
-# #     email: EmailStr
-# #     phone: str
-
-# # class Batch(BaseModel):
-# #     weight: float
-# #     collection_date: str
-# #     time: str
-
-# # class MachineAction(BaseModel):
-# #     machine_id: int
-
-# # class ShipmentStatusUpdate(BaseModel):
-# #     status: str
-
-# # class ShipmentConfirmation(BaseModel):
-# #     shipment_id: int
-# #     weight: Optional[float] = None
-
-# # class ShipmentSchedule(BaseModel):
-# #     shipment_id: int
-# #     pickup_time: str
-# #     location: str
-
-# # class ShipmentIssue(BaseModel):
-# #     shipment_id: int
-# #     issue_description: str
-
-# # class ShipmentRescale(BaseModel):
-# #     shipment_id: int
-# #     new_weight: float
-
-# # class ShipmentPickupSchedule(BaseModel):
-# #     shipment_id: int
-# #     pickup_time: datetime
-# #     location: str
-
-# # class ShipmentUpdate(BaseModel):
-# #     status: str
-# #     checkpoint: str
-# #     action: str
-
-# # class CentraDetails(BaseModel):
-# #     PIC_name: str
-# #     location: str
-# #     email: str
-# #     phone: int
-# #     drying_machine_status: str
-# #     flouring_machine_status: str
-# #     action: str
-
-# # class HarborGuard(BaseModel):
-# #     PIC_name: str
-# #     email: EmailStr
-# #     phone: str
-
+    shipment_id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    batch_id = Column(Integer, index=True)
+    description = Column(String, nullable=True)
+    status = Column(String, nullable=True)
+    weight = Column(Integer, nullable=True)
+    issue_description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
