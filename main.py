@@ -16,7 +16,8 @@ app = FastAPI()
 
 #Handling CORS
 origins = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://mori-frontend.vercel.app"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -84,7 +85,7 @@ async def verify_reset(verification: schemas.UserVerification,  db: Session = De
   
     raise HTTPException(status_code=401, detail="Invalid OTP!")
 
-@app.put("users/resetpassword")
+@app.put("/users/resetpassword")
 async def reset_password(response_model: schemas.UserResetPassword, db: Session = Depends(get_db)):
    try:
         crud.set_user_password(db,response_model.Email, response_model.new_password)
