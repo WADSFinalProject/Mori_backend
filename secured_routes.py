@@ -17,11 +17,21 @@ async def protected_route(user: dict = Depends(get_current_user)):
 def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.create_batch(db=db, batch=batch)
 
+# @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
+# def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
+#     return batches
+
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
+    if user["role"] == "admin":
+        batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
+    elif user["role"] == "centra":
+        batches = crud.get_batches_by_user(db=db, user_id=user["id"], skip=skip, limit=limit)
+    else:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     return batches
-
+    
 @secured_router.get("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
 def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     batch = crud.get_batch_by_id(db=db, batch_id=batch_id)

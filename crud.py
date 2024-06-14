@@ -208,6 +208,9 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
 def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ProcessedLeaves).offset(skip).limit(limit).all()
 
+def get_batches_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.user_id == user_id).offset(skip).limit(limit).all()
+    
 def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
