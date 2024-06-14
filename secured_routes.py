@@ -403,35 +403,38 @@ async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db)):
     return {"message": "Warehouse deleted successfully"}
 
 # User (Admin)
-@secured_router.get("/users", response_model=List[schemas.User])
-async def show_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_all_users(db, skip=skip, limit=limit)
-    return users
+# @secured_router.post("/admins/", response_model=schemas.Admin)
+# def create_admin(admin: schemas.AdminCreate, db: Session = Depends(get_db)):
+#     db_admin = crud.get_admin_by_email(db, email=admin.email)
+#     if db_admin:
+#         raise HTTPException(status_code=400, detail="Email already registered")
+#     return crud.create_admin(db=db, admin=admin)
 
-@secured_router.get("/users/{user_id}")
-async def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = crud.get_user(db, user_id=user_id)
-    if user:
-        return user
-    raise HTTPException(status_code=404, detail="User not found")
+# @secured_router.get("/admins/", response_model=List[schemas.Admin])
+# def read_admins(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     admins = crud.get_admins(db, skip=skip, limit=limit)
+#     return admins
 
-@secured_router.post("/users", response_model=schemas.User)
-async def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
-    return crud.create_user(db=db, user=user_data)
+# @secured_router.get("/admins/{admin_id}", response_model=schemas.Admin)
+# def read_admin(admin_id: int, db: Session = Depends(get_db)):
+#     db_admin = crud.get_admin(db, admin_id=admin_id)
+#     if db_admin is None:
+#         raise HTTPException(status_code=404, detail="Admin not found")
+#     return db_admin
 
-@secured_router.put("/users/{user_id}", response_model=schemas.User)
-async def update_user(user_id: str, user_data: schemas.UserUpdate, db: Session = Depends(get_db)):
-    updated_user = crud.update_user(db, user_id=user_id, update_data=user_data)
-    if updated_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return updated_user
+# @secured_router.put("/admins/{admin_id}", response_model=schemas.Admin)
+# def update_admin(admin_id: int, admin: schemas.AdminUpdate, db: Session = Depends(get_db)):
+#     db_admin = crud.update_admin(db, admin_id=admin_id, admin=admin)
+#     if db_admin is None:
+#         raise HTTPException(status_code=404, detail="Admin not found")
+#     return db_admin
 
-@secured_router.delete("/users/{user_id}", response_model=schemas.User)
-async def delete_user(user_id: str, db: Session = Depends(get_db)):
-    deleted_user = crud.delete_user(db, user_id=user_id)
-    if deleted_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "User deleted successfully"}
+# @secured_router.delete("/admins/{admin_id}", response_model=schemas.Admin)
+# def delete_admin(admin_id: int, db: Session = Depends(get_db)):
+#     db_admin = crud.delete_admin(db, admin_id=admin_id)
+#     if db_admin is None:
+#         raise HTTPException(status_code=404, detail="Admin not found")
+#     return db_admin
 
 
 #expedition

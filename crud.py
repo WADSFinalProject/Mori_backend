@@ -808,3 +808,36 @@ def delete_product_receipt(db: Session, product_receipt_id: int):
         db.commit()
     return db_product_receipt
 
+#admin
+def get_admin(db: Session, admin_id: int):
+    return db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+
+def get_admin_by_email(db: Session, email: str):
+    return db.query(models.Admin).filter(models.Admin.email == email).first()
+
+def get_admins(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Admin).offset(skip).limit(limit).all()
+
+def create_admin(db: Session, admin: schemas.AdminCreate):
+    db_admin = models.Admin(**admin.dict())
+    db.add(db_admin)
+    db.commit()
+    db.refresh(db_admin)
+    return db_admin
+
+def update_admin(db: Session, admin_id: int, admin: schemas.AdminUpdate):
+    db_admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+    if db_admin:
+        update_data = admin.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_admin, key, value)
+        db.commit()
+        db.refresh(db_admin)
+    return db_admin
+
+def delete_admin(db: Session, admin_id: int):
+    db_admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+    if db_admin:
+        db.delete(db_admin)
+        db.commit()
+    return db_admin

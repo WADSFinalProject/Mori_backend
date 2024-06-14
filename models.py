@@ -190,3 +190,11 @@ class Shipment(Base):
     issue_description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Admin(Base):
+    __tablename__ = 'admins'
+
+    id = Column(Integer, primary_key=True, index=True)
+    PIC_name = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String, index=True)
