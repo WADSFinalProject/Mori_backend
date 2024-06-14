@@ -24,7 +24,6 @@ class URLToken(Base):
     __tablename__ = "URLtoken"
     value = Column(String, primary_key=True, unique=True)
     UserID = Column(Integer, ForeignKey('users.UserID'))
-    type = Column(String)
     exp = Column(DateTime)
 
    

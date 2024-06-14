@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from secured_routes import secured_router
 import crud, models, schemas  
-import SMTP
+import SMTP, security
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -65,7 +65,37 @@ async def set_password(response_model: schemas.UserSetPassword, db: Session = De
     
     except HTTPException as e:
         return { "error": str(e)}
+    
+@app.post("/users/resetpassword-OTP")
+async def reset_password_OTP(email: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db,email)
+    if db_user:
+        SMTP.send_resetPassword_OTP(db_user)
+        return {"message" : "Email is a valid user, OTP Sent!"}
+  
+    raise HTTPException(status_code=401, detail="Invalid email")
 
+@app.post("/users/verify-reset")
+async def verify_reset(verification: schemas.UserVerification,  db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db,verification.Email)
+    verified = verify_otp(db_user.secret_key, verification.Code)
+    if verified:
+         return {"message": "Valid OTP!"}
+  
+    raise HTTPException(status_code=401, detail="Invalid OTP!")
+
+@app.put("users/resetpassword")
+async def reset_password(response_model: schemas.UserResetPassword, db: Session = Depends(get_db)):
+   try:
+        crud.set_user_password(db,response_model.Email, response_model.new_password)
+
+        return {"message": "Password reset successfully!"}
+   
+   except Exception as e:
+        db.rollback()  # Rollback in case of any exception
+        raise HTTPException(status_code=500, detail=f"An error occurred during password reset: {str(e)}")
+ 
+ 
 
 @app.post("/users/login")
 async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
@@ -73,8 +103,7 @@ async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
     
     if db_user:
-
-        SMTP.send_OTP(db_user, db)
+        SMTP.send_OTP(db_user)
         return {"message": "Credentials valid, OTP Sent!"}
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
