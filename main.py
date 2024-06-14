@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, Cookie
 from sqlalchemy.orm import Session
 from database import get_db, engine 
+from typing import Optional, List
+from datetime import datetime
 from security import create_access_token,verify_otp, create_refresh_token, verify_token
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from middleware import JWTMiddleware
 from secured_routes import secured_router
 import crud, models, schemas  
 import SMTP, security
@@ -151,6 +152,4 @@ async def logout():
     response.delete_cookie(key="refresh_token")
     return response
 
-# add secured router and apply middleware
-secured_router.add_middleware(JWTMiddleware)
 app.include_router(secured_router, prefix="/secured")
