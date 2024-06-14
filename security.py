@@ -14,7 +14,8 @@ load_dotenv()
 # USER_EMAIL = os.getenv("USER_EMAIL")
 # USER_PASSWORD = os.getenv("USER_PASSWORD")
 
-KEY = ast.literal_eval(os.getenv("KEY")) #for encrypting URL tokens
+# KEY = ast.literal_eval(os.getenv("KEY")) #for encrypting URL tokens
+KEY = os.getenv("KEY").encode()
 
 SECRET_KEY = os.getenv("SECRET_KEY") #for JWT 
 
@@ -52,11 +53,15 @@ def encrypt_token(token):
     return encrypted_token
 
 # Decrypt an encrypted token using the key
+# def decrypt_token(encrypted_token):
+#     cipher_suite = Fernet(KEY)
+#     decrypted_token = cipher_suite.decrypt(ast.literal_eval(encrypted_token)).decode()
+#     return decrypted_token
+
 def decrypt_token(encrypted_token):
     cipher_suite = Fernet(KEY)
-    decrypted_token = cipher_suite.decrypt(ast.literal_eval(encrypted_token)).decode()
+    decrypted_token = cipher_suite.decrypt(encrypted_token.encode()).decode()
     return decrypted_token
-
 
 
 def generate_otp(secret_key):
