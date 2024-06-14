@@ -51,6 +51,9 @@ class UserVerification(BaseModel):
     Email:EmailStr
     Code: str
 
+class UserResetPassword(BaseModel):
+    Email: EmailStr
+    new_password : str
 
 
 # User (Admin)

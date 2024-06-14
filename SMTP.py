@@ -38,7 +38,7 @@ def send_Email(recipientEmail:str, subject:str, message:str):
     
 def send_setPassEmail(user: models.User, db:Session):
 
-    url_token = crud.create_URLToken(db, userid=user.UserID, tokenType="setpass")
+    url_token = crud.create_URLToken(db, userid=user.UserID) #24 hrs
     encrypted = encrypt_token(url_token.value)
 
 
@@ -65,7 +65,7 @@ def send_setPassEmail(user: models.User, db:Session):
             """
     send_Email(user.Email, subject, message)
     
-def send_OTP(user: models.User, db:Session):
+def send_OTP(user: models.User):
     key = user.secret_key
     print(key)
  
@@ -82,6 +82,36 @@ def send_OTP(user: models.User, db:Session):
         <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
         <p>Hello {user.FullName},</p>
         <p>We have received a request to log in to your account. Use the OTP code below to enter:</p>
+        <h1 style="text-align:center; font-weight: bold;">{otp}</h1>
+        <p>If you did not make any request, you can kindly ignore this email. <b>This code will expire in 2 minutes!</b></p>
+        
+        <p>Mori Team</p>
+             
+            </div>
+        </body>
+        </html>
+
+            """
+    send_Email(user.Email, subject, message)
+
+
+def send_resetPassword_OTP(user: models.User):
+    key = user.secret_key
+    print(key)
+ 
+    otp = generate_otp(key)
+
+
+    subject = f" Reset Password Request"
+   
+    message= f"""
+                 <html>
+        <body>
+    <div id="email">
+        
+        <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
+        <p>Hello {user.FullName},</p>
+        <p>We've received a request to reset your password. Please use the OTP code provided below to continue with the process.</p>
         <h1 style="text-align:center; font-weight: bold;">{otp}</h1>
         <p>If you did not make any request, you can kindly ignore this email. <b>This code will expire in 2 minutes!</b></p>
         
