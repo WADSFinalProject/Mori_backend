@@ -78,7 +78,7 @@ def delete_user(db: Session, user_id: str):
     return user
 
 
-def create_URLToken(db: Session, userid:int, tokenType: str): #to maintain security of the setpass URL
+def create_URLToken(db: Session, userid:int): #to maintain security of the setpass URL
     try:
         token_value = generate_key("URL")
 
@@ -87,7 +87,6 @@ def create_URLToken(db: Session, userid:int, tokenType: str): #to maintain secur
         new_token = models.URLToken(
             value=token_value,
             UserID=userid,
-            type= tokenType,
             exp=one_day
         )
 
@@ -184,6 +183,8 @@ def set_user_password(db: Session, Email: str, new_password: str):
     except Exception as e:
         error(f"Error setting password: {e}")
         raise HTTPException(status_code=422, detail="Error setting password")
+    
+
     
 
 
