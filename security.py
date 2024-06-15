@@ -20,8 +20,6 @@ SECRET_KEY = os.getenv("SECRET_KEY") #for JWT
 
 ALGORITHM = os.getenv("ALGORITHM")
 
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_hash(password: str) -> str:
@@ -104,6 +102,6 @@ def verify_token(token: str):
         return decoded_jwt
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+    except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
