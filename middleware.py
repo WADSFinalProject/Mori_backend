@@ -1,5 +1,5 @@
 # dependencies.py
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, status
 from security import verify_token
 
 # def get_current_user(request: Request):
@@ -41,3 +41,13 @@ def get_current_user(request: Request):
     token_data = {"id": 1, "role": "centra", "name": "test_user"}  # Mock user data
     request.state.user = token_data  # Attach user payload to request state
     return token_data
+
+def role_required(required_roles: list):
+    def role_dependency(user: dict = Depends(get_current_user)):
+        if user["role"] not in required_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return user
+    return role_dependency
