@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import  HTTPException
 from crud import create_URLToken
-from security import encrypt_token, generate_otp
+from utils.security import encrypt_token, generate_otp
 import models, crud
 import pyotp, time
 
@@ -36,10 +36,10 @@ def send_Email(recipientEmail:str, subject:str, message:str):
         print(f"Failed to send email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email.")
     
-def send_setPassEmail(user: models.User, db:Session):
+def send_setPassEmail(user: models.User, db:Session, URLToken:str):
 
-    url_token = crud.create_URLToken(db, userid=user.UserID) #24 hrs
-    encrypted = encrypt_token(url_token.value)
+
+    encrypted = encrypt_token(URLToken.value)
 
 
     subject = " Welcome to the Mori Web App!"
