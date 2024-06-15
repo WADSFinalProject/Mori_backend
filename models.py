@@ -11,11 +11,13 @@ class User(Base):
     __tablename__ = "users"
 
     UserID = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    IDORole = Column(String)
+    FirstName = Column(String)
+    LastName = Column(String)
     Email = Column(String, unique=True, index=True)
-    FullName = Column(String)
-    Role = Column(String)
     Phone = Column(String, nullable=True)
+    Role = Column(String)
+    BirthDate = Column(Date, nullable=True)
+    Address = Column(String, nullable=True)
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
     secret_key = Column(String, unique=True) #OTP Secret Key
@@ -38,8 +40,9 @@ class URLToken(Base):
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
     Description = Column(String(100))
+    Weight = Column(Integer)
     FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
     DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
     DriedDate = Column(Date)
@@ -65,6 +68,7 @@ class WetLeavesCollection(Base):
 
     centra = relationship("Centra")
     creator = relationship("User", back_populates="WetLeavesCollection")
+    
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -121,6 +125,17 @@ class Centra(Base):
     CentralID = Column(Integer, primary_key=True)
     Address = Column(String(100))
 
+
+    usercentra = relationship("UserCentra", back_populates="centra")
+
+class UserCentra(Base):
+    __tablename__ = 'UserCentra'
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
+
+    centra = relationship("Centra", back_populates="usercentra")
+
+
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
 
@@ -144,13 +159,18 @@ class Stock(Base):
 class Expedition(Base):
     __tablename__ = 'Expedition'
     ExpeditionID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    AirwayBill = Column(String)
     EstimatedArrival = Column(DateTime) 
     TotalPackages = Column(Integer)
+    TotalWeight = Column(Integer)
+    Status = Column(Enum('Shipped', 'To deliver', 'Completed', 'Missing', name='expedition_status'), default='To deliver')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     Destination = Column(String(100))
     CentralID = Column(Integer, nullable=False)
+
     received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
+    pickup = relationship("Pickup", back_populates="expedition")
 
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
@@ -197,13 +217,15 @@ class Warehouse(Base):
     __tablename__ = 'warehouses'
 
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    PIC_name = Column(String, index=True)
+    warehouseName = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
+    location = Column(String, index=True)
+
+    xyzuser = relationship("XYZuser", back_populates="warehouse")
 
 class Shipment(Base):
     __tablename__ = 'shipments'
-
     ID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
     batch_id = Column(String, index=True)  
     shipmentId = Column(String, nullable=False) 
@@ -212,6 +234,38 @@ class Shipment(Base):
     weight = Column(String, nullable=True)  
     status = Column(String, nullable=True)
     checkpoint = Column(String, nullable=True) 
+
+class XYZuser(Base):
+    __tablename__ = 'XYZuser'
+
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    WarehouseID = Column(Integer, ForeignKey('warehouses.id'))
+
+    warehouse = relationship("Warehouse", back_populates="xyzuser")
+
+# class Shipment(Base):
+#     __tablename__ = 'shipments'
+
+#     shipment_id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+#     batch_id = Column(Integer, index=True)
+#     description = Column(String, nullable=True)
+#     status = Column(String, nullable=True)
+#     weight = Column(Integer, nullable=True)
+#     issue_description = Column(String, nullable=True)
+#     created_at = Column(DateTime, default=datetime.utcnow)
+#     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Pickup(Base):
+    __tablename__ = 'pickup'
+
+    id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    PIC_name = Column(String, index=True)
+    expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    destination = Column(String)
+    pickup_time = Column(Time)
+
+
+    expedition = relationship("Expedition", back_populates="pickup")
 
 class Admin(Base):
     __tablename__ = 'admins'

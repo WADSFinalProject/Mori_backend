@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 import models, schemas
 from fastapi import HTTPException
-from schemas import ShipmentPickupSchedule, CentraDetails
+from schemas import CentraDetails
 # from .schemas import 
 
 from typing import List, Optional
@@ -32,11 +32,13 @@ def create_user(db: Session, user: schemas.UserCreate):
     print(encryptedKey)
 
     new_user = models.User(
-        IDORole=user.IDORole,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
         Email=user.Email,
-        FullName=user.FullName,
-        Role=user.Role,
         Phone=user.Phone,
+        Role=user.Role,
+        BirthDate=user.BirthDate,
+        Address=user.Address,
         secret_key = str(encryptedKey)
     )
     try:
@@ -187,6 +189,7 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     
     db_batch = models.ProcessedLeaves(
         Description=batch.Description,
+        Weight=batch.Weight,
         DryingID=batch.DryingID,
         FlouringID=batch.FlouringID,
         DriedDate=drying_activity.Date if drying_activity else None,
@@ -450,72 +453,103 @@ def delete_flouring_activity(db: Session, flouring_id: int):
     return db_flouring_activity
 
 # SHIPMENTS
-def add_shipment(db: Session, shipment_data: schemas.ShipmentCreate):
-    db_shipment_data = models.Shipment(
-        batch_id=shipment_data.batch_id,
-        description=shipment_data.description,
-        status=shipment_data.status,
-        weight=shipment_data.weight,
-        issue_description=shipment_data.issue_description
+# def add_shipment(db: Session, shipment_data: schemas.ShipmentCreate):
+#     db_shipment_data = models.Shipment(
+#         batch_id=shipment_data.batch_id,
+#         description=shipment_data.description,
+#         status=shipment_data.status,
+#         weight=shipment_data.weight,
+#         issue_description=shipment_data.issue_description
         
-    )
-    db.add(db_shipment_data)
+#     )
+#     db.add(db_shipment_data)
+#     db.commit()
+#     db.refresh(db_shipment_data)
+#     return db_shipment_data
+
+# def update_shipment(db: Session, shipment_id: int, shipment_update: schemas.ShipmentUpdate):
+#     db_shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+#     if db_shipment:
+#         update_data = shipment_update.dict(exclude_unset=True)
+#         for key, value in update_data.items():
+#             setattr(db_shipment, key, value)
+#         db.commit()
+#         db.refresh(db_shipment)
+#     else:
+#         raise HTTPException(status_code=404, detail="Shipment not found")
+#     return db_shipment
+
+
+# def get_all_shipments(db: Session, skip: int = 0, limit: int = 100):
+#     return db.query(models.Shipment).offset(skip).limit(limit).all()
+
+# def get_shipment_details(db: Session, shipment_id: str):
+#     return db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+
+# def delete_shipment(db: Session, shipment_id: str):
+#     shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+#     if shipment:
+#         db.delete(shipment)
+#         db.commit()
+#     return shipment
+
+# def confirm_shipment(db: Session, shipment_id: int, weight: int):
+#     shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+#     if shipment:
+#         shipment.status = 'Confirmed'
+#         shipment.weight = weight
+#         db.commit()
+#         return shipment
+#     return None
+
+
+# def report_shipment_issue(db: Session, shipment_id: int, description: str):
+#     shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+#     if shipment:
+#         shipment.issue_description = description
+#         db.commit()
+#         return shipment
+#     return None
+
+# def rescale_shipment(db: Session, shipment_id: int, new_weight: float):
+#     shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
+#     if shipment:
+#         shipment.weight = new_weight
+#         db.commit()
+#         db.refresh(shipment)
+#         return True
+#     return False
+
+#pickup
+def get_pickup(db: Session, pickup_id: int):
+    return db.query(models.Pickup).filter(models.Pickup.id == pickup_id).first()
+
+def get_all_pickups(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Pickup).offset(skip).limit(limit).all()
+
+def create_pickup(db: Session, pickup: schemas.PickupCreate):
+    db_pickup = models.Pickup(**pickup.dict())
+    db.add(db_pickup)
     db.commit()
-    db.refresh(db_shipment_data)
-    return db_shipment_data
+    db.refresh(db_pickup)
+    return db_pickup
 
-def update_shipment(db: Session, shipment_id: int, shipment_update: schemas.ShipmentUpdate):
-    db_shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-    if db_shipment:
-        update_data = shipment_update.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(db_shipment, key, value)
+def update_pickup(db: Session, pickup_id: int, pickup: schemas.PickupBase):
+    db_pickup = db.query(models.Pickup).filter(models.Pickup.id == pickup_id).first()
+    if db_pickup:
+        for key, value in pickup.dict(exclude_unset=True).items():
+            setattr(db_pickup, key, value)
         db.commit()
-        db.refresh(db_shipment)
-    else:
-        raise HTTPException(status_code=404, detail="Shipment not found")
-    return db_shipment
+        db.refresh(db_pickup)
+    return db_pickup
 
-
-def get_all_shipments(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Shipment).offset(skip).limit(limit).all()
-
-def get_shipment_details(db: Session, shipment_id: str):
-    return db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-
-def delete_shipment(db: Session, shipment_id: str):
-    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-    if shipment:
-        db.delete(shipment)
+def delete_pickup(db: Session, pickup_id: int):
+    db_pickup = db.query(models.Pickup).filter(models.Pickup.id == pickup_id).first()
+    if db_pickup:
+        db.delete(db_pickup)
         db.commit()
-    return shipment
+    return db_pickup
 
-def confirm_shipment(db: Session, shipment_id: int, weight: int):
-    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-    if shipment:
-        shipment.status = 'Confirmed'
-        shipment.weight = weight
-        db.commit()
-        return shipment
-    return None
-
-
-def report_shipment_issue(db: Session, shipment_id: int, description: str):
-    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-    if shipment:
-        shipment.issue_description = description
-        db.commit()
-        return shipment
-    return None
-
-def rescale_shipment(db: Session, shipment_id: int, new_weight: float):
-    shipment = db.query(models.Shipment).filter(models.Shipment.shipment_id == shipment_id).first()
-    if shipment:
-        shipment.weight = new_weight
-        db.commit()
-        db.refresh(shipment)
-        return True
-    return False
 
 # STOCKS
 def get_all_stocks(db: Session, skip: int = 0, limit: int = 100):
@@ -529,25 +563,25 @@ def get_location_details(db: Session, location_id: int):
     return db.query(models.Location).filter(models.Location.id == location_id).first()
 
 # SHIPMENT HISTORY
-def get_shipment_history(db: Session, location_id: int):
-    location = db.query(models.Location).filter(models.Location.id == location_id).first()
-    if location:
-        return location.shipment_history  # Make sure 'shipment_history' is correctly modeled
-    return []
+# def get_shipment_history(db: Session, location_id: int):
+#     location = db.query(models.Location).filter(models.Location.id == location_id).first()
+#     if location:
+#         return location.shipment_history  # Make sure 'shipment_history' is correctly modeled
+#     return []
 
-def validate_shipment_id(db: Session, shipment_id: int):
-    shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
-    return bool(shipment)
+# def validate_shipment_id(db: Session, shipment_id: int):
+#     shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+#     return bool(shipment)
 
-def schedule_pickup(db: Session, pickup_data: ShipmentPickupSchedule):
-    pickup = models.PickupDetails(
-        shipment_id=pickup_data.shipment_id,
-        pickup_time=pickup_data.pickup_time,
-        location=pickup_data.location
-    )
-    db.add(pickup)
-    db.commit()
-    return True
+# def schedule_pickup(db: Session, pickup_data: ShipmentPickupSchedule):
+#     pickup = models.PickupDetails(
+#         shipment_id=pickup_data.shipment_id,
+#         pickup_time=pickup_data.pickup_time,
+#         location=pickup_data.location
+#     )
+#     db.add(pickup)
+#     db.commit()
+#     return True
 
 # CENTRA 
 def get_all_centras(db: Session):
@@ -588,6 +622,38 @@ def delete_centra(db: Session, CentralID: int):
     else:
         raise HTTPException(status_code=404, detail="Centra not found")
     return {"message": "Centra deleted successfully"}
+
+
+#userCentra
+
+def get_user_centra(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.UserCentra).offset(skip).limit(limit).all()
+
+def get_user_centra_by_id(db: Session, user_centra_id: int):
+    return db.query(models.UserCentra).filter(models.UserCentra.id == user_centra_id).first()
+
+def create_user_centra(db: Session, user_centra: schemas.UserCentraCreate):
+    db_user_centra = models.UserCentra(**user_centra.dict())
+    db.add(db_user_centra)
+    db.commit()
+    db.refresh(db_user_centra)
+    return db_user_centra
+
+def update_user_centra(db: Session, user_centra_id: int, user_centra: schemas.UserCentraUpdate):
+    db_user_centra = db.query(models.UserCentra).filter(models.UserCentra.id == user_centra_id).first()
+    if db_user_centra:
+        for key, value in user_centra.dict(exclude_unset=True).items():
+            setattr(db_user_centra, key, value)
+        db.commit()
+        db.refresh(db_user_centra)
+    return db_user_centra
+
+def delete_user_centra(db: Session, user_centra_id: int):
+    db_user_centra = db.query(models.UserCentra).filter(models.UserCentra.id == user_centra_id).first()
+    if db_user_centra:
+        db.delete(db_user_centra)
+        db.commit()
+    return db_user_centra
 
 #HARBOUR GUARD
 
@@ -631,9 +697,10 @@ def delete_harbor_guard(db: Session, guard_id: int):
 # WAREHOUSE LOCATION
 def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
     db_warehouse = models.Warehouse(
-        PIC_name=warehouse_data.PIC_name,
+        warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
-        phone=warehouse_data.phone
+        phone=warehouse_data.phone,
+        location=warehouse_data.location
     )
     db.add(db_warehouse)
     db.commit()
@@ -662,6 +729,38 @@ def delete_warehouse(db: Session, warehouse_id: str) -> Optional[models.Warehous
         db.commit()
     return db_warehouse
 
+#xyzuser
+
+def get_xyzusers(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.XYZuser).offset(skip).limit(limit).all()
+
+def get_xyzuser_by_id(db: Session, xyzuser_id: int):
+    return db.query(models.XYZuser).filter(models.XYZuser.id == xyzuser_id).first()
+
+def create_xyzuser(db: Session, xyzuser: schemas.XYZuserCreate):
+    db_xyzuser = models.XYZuser(**xyzuser.dict())
+    db.add(db_xyzuser)
+    db.commit()
+    db.refresh(db_xyzuser)
+    return db_xyzuser
+
+def update_xyzuser(db: Session, xyzuser_id: int, xyzuser: schemas.XYZuserUpdate):
+    db_xyzuser = db.query(models.XYZuser).filter(models.XYZuser.id == xyzuser_id).first()
+    if db_xyzuser is None:
+        return None
+    for key, value in xyzuser.dict().items():
+        setattr(db_xyzuser, key, value)
+    db.commit()
+    db.refresh(db_xyzuser)
+    return db_xyzuser
+
+def delete_xyzuser(db: Session, xyzuser_id: int):
+    db_xyzuser = db.query(models.XYZuser).filter(models.XYZuser.id == xyzuser_id).first()
+    if db_xyzuser is None:
+        return None
+    db.delete(db_xyzuser)
+    db.commit()
+    return db_xyzuser
 
 # WET LEAVES COLLECTIONS
 def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.WetLeavesCollectionCreate):
@@ -738,7 +837,22 @@ def delete_expedition(db: Session, expedition_id: int):
     db.commit()
     return db_expedition
 
+def change_expedition_status(db: Session, expedition_id: int, new_status: str):
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if expedition:
+        expedition.Status = new_status
+        db.commit()
+        return expedition
+    return None
 
+def confirm_expedition(db: Session, expedition_id: int, TotalWeight: int):
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if expedition:
+        expedition.Status = 'Completed'
+        expedition.TotalWeight = TotalWeight 
+        db.commit()
+        return expedition
+    return None
 #receveid packages
 def get_received_package(db: Session, package_id: int):
     return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
