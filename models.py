@@ -11,11 +11,13 @@ class User(Base):
     __tablename__ = "users"
 
     UserID = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    IDORole = Column(String)
+    FirstName = Column(String)
+    LastName = Column(String)
     Email = Column(String, unique=True, index=True)
-    FullName = Column(String)
-    Role = Column(String)
     Phone = Column(String, nullable=True)
+    Role = Column(String)
+    BirthDate = Column(Date, nullable=True)
+    Address = Column(String, nullable=True)
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
     secret_key = Column(String, unique=True) #OTP Secret Key
@@ -213,7 +215,7 @@ class Warehouse(Base):
     __tablename__ = 'warehouses'
 
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    PIC_name = Column(String, index=True)
+    warehouseName = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
     location = Column(String, index=True)

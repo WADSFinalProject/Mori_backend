@@ -32,11 +32,13 @@ def create_user(db: Session, user: schemas.UserCreate):
     print(encryptedKey)
 
     new_user = models.User(
-        IDORole=user.IDORole,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
         Email=user.Email,
-        FullName=user.FullName,
-        Role=user.Role,
         Phone=user.Phone,
+        Role=user.Role,
+        BirthDate=user.BirthDate,
+        Address=user.Address,
         secret_key = str(encryptedKey)
     )
     try:
@@ -695,7 +697,7 @@ def delete_harbor_guard(db: Session, guard_id: int):
 # WAREHOUSE LOCATION
 def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
     db_warehouse = models.Warehouse(
-        PIC_name=warehouse_data.PIC_name,
+        warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
         phone=warehouse_data.phone,
         location=warehouse_data.location

@@ -6,22 +6,26 @@ import re
 
 # user schemas
 class UserBase(BaseModel):
-    IDORole: Optional[int] = None
+    FirstName: str
+    LastName: str
     Email: EmailStr
-    FullName: str
-    Role: str
     Phone: Optional[str] = None
+    Role: str
+    BirthDate: Optional[date] = None
+    Address: Optional[str] = None
 
 class UserCreate(UserBase):
     pass
 
 class UserUpdate(BaseModel):
-    IDORole: Optional[str] = None
     Password: Optional[str] = None
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
     Email: Optional[str] = None
-    FullName: Optional[str] = None
-    Role: Optional[str] = None
     Phone: Optional[str] = None
+    Role: Optional[str] = None
+    BirthDate: Optional[date] = None
+    Address: Optional[str] = None
 
 class UserSetPassword(BaseModel):
     token: str
@@ -485,7 +489,7 @@ class HarborGuard(HarborGuardBase):
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
-    PIC_name: str
+    warehouseName: str
     email: EmailStr
     phone: Optional[str] = None
     location: Optional[str] = None
@@ -494,7 +498,7 @@ class WarehouseCreate(WarehouseBase):
     pass
 
 class WarehouseUpdate(BaseModel):
-    PIC_name: Optional[str] = None
+    warehouseName: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     location: Optional[str] = None
