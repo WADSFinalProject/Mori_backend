@@ -141,7 +141,7 @@ async def refresh_token(refresh_token: str = Cookie(None)):
 async def resend_code(data: dict, db: Session = Depends(get_db)):
     print(data.get("theEmail"))
     db_user = crud.get_user_by_email(db,data.get("theEmail"))
-    resent = SMTP.send_OTP(db_user, db)
+    resent = SMTP.send_OTP(db_user)
     if resent:
         return {"message": "Verification code resent"}
     raise HTTPException(status_code=404, detail="Failed to resend code")
