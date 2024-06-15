@@ -95,9 +95,10 @@ class ProcessedLeavesUpdate(BaseModel):
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
+    creator_id: Optional[int]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
@@ -123,6 +124,7 @@ class WetLeavesCollectionUpdate(BaseModel):
 
 class WetLeavesCollection(WetLeavesCollectionBase):
     WetLeavesBatchID: int
+    creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -153,9 +155,10 @@ class DryingMachineUpdate(BaseModel):
 
 class DryingMachine(DryingMachineBase):
     MachineID: int
+    creator_id: Optional[int]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
@@ -179,6 +182,7 @@ class DryingActivityUpdate(BaseModel):
 
 class DryingActivity(DryingActivityBase):
     DryingID: int
+    creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -196,6 +200,7 @@ class FlouringMachineUpdate(BaseModel):
 
 class FlouringMachine(FlouringMachineBase):
     MachineID: int
+    creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -223,6 +228,7 @@ class FlouringActivityUpdate(BaseModel):
 
 class FlouringActivity(FlouringActivityBase):
     FlouringID: int
+    creator_id: Optional[int]
 
     class Config:
         from_attributes = True
