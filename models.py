@@ -221,6 +221,7 @@ class Warehouse(Base):
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
     location = Column(String, index=True)
+    createdDate = Column(DateTime, default=datetime.utcnow)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
 

@@ -700,7 +700,8 @@ def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
         warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
         phone=warehouse_data.phone,
-        location=warehouse_data.location
+        location=warehouse_data.location,
+        createdDate=warehouse_data.createdDate
     )
     db.add(db_warehouse)
     db.commit()
