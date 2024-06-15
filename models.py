@@ -20,6 +20,13 @@ class User(Base):
     is_password_set = Column(Boolean, default=False) 
     secret_key = Column(String, unique=True) #OTP Secret Key
 
+    processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
+    drying_machines = relationship("DryingMachine", back_populates="creator")
+    flouring_machines = relationship("FlouringMachine", back_populates="creator")
+    drying_activity = relationship("DryingActivity", back_populates="creator")
+    flouring_activity = relationship("FlouringActivity", back_populates="creator")
+    WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
+
 class URLToken(Base):
     __tablename__ = "URLtoken"
     value = Column(String, primary_key=True, unique=True)
@@ -31,6 +38,7 @@ class URLToken(Base):
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
     Description = Column(String(100))
     FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
     DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
@@ -41,7 +49,8 @@ class ProcessedLeaves(Base):
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
 
     stocks = relationship("Stock", backref="processed_leaves")
-    
+    creator = relationship("User", back_populates="processed_leaves")
+
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
     WetLeavesBatchID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -52,14 +61,18 @@ class WetLeavesCollection(Base):
     Weight = Column(Integer)
     Expired = Column(Boolean)
     ExpirationTime = Column(Time, name="ExpirationTime")
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
     centra = relationship("Centra")
-
+    creator = relationship("User", back_populates="WetLeavesCollection")
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     Capacity = Column(String(100))
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+
+    creator = relationship("User", back_populates="drying_machines")
 
 class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
@@ -69,15 +82,20 @@ class DryingActivity(Base):
     Weight = Column(Integer)
     DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
     Time = Column(Time)
-    
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+
     centra = relationship("Centra")
     drying_machine = relationship("DryingMachine")
+    creator = relationship("User", back_populates="drying_activity")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
     MachineID = Column(Integer, primary_key=True, nullable=True,autoincrement=True)
     Capacity = Column(String(100))
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+
+    creator = relationship("User", back_populates="flouring_machines")
 
 
 class FlouringActivity(Base):
@@ -90,10 +108,13 @@ class FlouringActivity(Base):
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
     DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
     Time = Column(Time)
+    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+
     centra = relationship("Centra")
     # user = relationship("User")
     drying_activity = relationship("DryingActivity")
     flouring_machine = relationship("FlouringMachine")
+    creator = relationship("User", back_populates="flouring_activity")
 
 class Centra(Base):
     __tablename__ = 'Centra'

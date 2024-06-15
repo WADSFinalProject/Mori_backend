@@ -35,3 +35,9 @@ def get_current_user(request: Request):
         return token_data
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+# def get_current_user(request: Request):
+#     # Temporarily bypass authentication
+#     token_data = {"id": 1, "role": "admin", "name": "test_user"}  # Mock user data
+#     request.state.user = token_data  # Attach user payload to request state
+#     return token_data
