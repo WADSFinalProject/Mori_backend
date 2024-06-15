@@ -279,66 +279,96 @@ def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
     return db_wet_leaves_collection
 
-# Shipments (Centra)
-@secured_router.post("/shipments")
-async def add_shipment(shipment_data: schemas.ShipmentCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    added_shipment = crud.add_shipment(db, shipment_data)
-    return added_shipment
+# # Shipments (Centra)
+# @secured_router.post("/shipments")
+# async def add_shipment(shipment_data: schemas.ShipmentCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     added_shipment = crud.add_shipment(db, shipment_data)
+#     return added_shipment
 
-@secured_router.put("/shipments/{shipment_id}")
-async def update_shipment(shipment_id: int, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    updated_shipment = crud.update_shipment(db, shipment_id, shipment_update)
-    if updated_shipment:
-        return updated_shipment
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.put("/shipments/{shipment_id}")
+# async def update_shipment(shipment_id: int, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     updated_shipment = crud.update_shipment(db, shipment_id, shipment_update)
+#     if updated_shipment:
+#         return updated_shipment
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.get("/notifications")
-async def show_notifications(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    notifications = crud.get_notifications(db)
-    return {"notifications": notifications}
+# @secured_router.get("/notifications")
+# async def show_notifications(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     notifications = crud.get_notifications(db)
+#     return {"notifications": notifications}
 
-@secured_router.get("/shipments", response_model=List[schemas.Shipment])
-def read_shipments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    shipments = crud.get_all_shipments(db=db, skip=skip, limit=limit)
-    return shipments
+# @secured_router.get("/shipments", response_model=List[schemas.Shipment])
+# def read_shipments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     shipments = crud.get_all_shipments(db=db, skip=skip, limit=limit)
+#     return shipments
 
-@secured_router.get("/shipments/{shipment_id}")
-async def get_shipment_details(shipment_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    shipment = crud.get_shipment_details(db, shipment_id)
-    if shipment:
-        return shipment
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.get("/shipments/{shipment_id}")
+# async def get_shipment_details(shipment_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     shipment = crud.get_shipment_details(db, shipment_id)
+#     if shipment:
+#         return shipment
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.delete("/shipments/{shipment_id}")
-async def delete_shipment(shipment_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if crud.delete_shipment(db, shipment_id):
-        return {"message": "Shipment deleted"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.delete("/shipments/{shipment_id}")
+# async def delete_shipment(shipment_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     if crud.delete_shipment(db, shipment_id):
+#         return {"message": "Shipment deleted"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.post("/shipments/{shipment_id}/confirm")
-async def confirm_shipment(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if crud.confirm_shipment(db, shipment_id, confirmation.weight):
-        return {"message": "Shipment confirmed"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.post("/shipments/{shipment_id}/confirm")
+# async def confirm_shipment(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     if crud.confirm_shipment(db, shipment_id, confirmation.weight):
+#         return {"message": "Shipment confirmed"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.post("/shipments/{shipment_id}/report")
-async def report_shipment_issue(shipment_id: int, issue: schemas.ShipmentIssue, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if crud.report_shipment_issue(db, shipment_id, issue.description):
-        return {"message": "Issue reported successfully"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.post("/shipments/{shipment_id}/report")
+# async def report_shipment_issue(shipment_id: int, issue: schemas.ShipmentIssue, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     if crud.report_shipment_issue(db, shipment_id, issue.description):
+#         return {"message": "Issue reported successfully"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.post("/shipments/{shipment_id}/confirm")
-async def confirm_shipment_arrival(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if crud.confirm_shipment(db, shipment_id, confirmation.weight):
-        return {"message": "Shipment confirmed"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.post("/shipments/{shipment_id}/confirm")
+# async def confirm_shipment_arrival(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     if crud.confirm_shipment(db, shipment_id, confirmation.weight):
+#         return {"message": "Shipment confirmed"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@secured_router.put("/shipments/{shipment_id}/rescale")
-async def rescale_shipment(shipment_id: int, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if crud.rescale_shipment(db, shipment_id, rescale.new_weight):
-        return {"message": "Shipment weight updated"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.put("/shipments/{shipment_id}/rescale")
+# async def rescale_shipment(shipment_id: int, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     if crud.rescale_shipment(db, shipment_id, rescale.new_weight):
+#         return {"message": "Shipment weight updated"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
+#pickup
+@secured_router.get("/pickup/{pickup_id}", response_model=schemas.Pickup)
+def read_pickup(pickup_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_pickup = crud.get_pickup(db, pickup_id)
+    if db_pickup is None:
+        raise HTTPException(status_code=404, detail="Pickup not found")
+    return db_pickup
+
+@secured_router.get("/pickup/", response_model=list[schemas.Pickup])
+def read_pickups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    pick_list = crud.get_all_pickups(db, skip=skip, limit=limit)
+    return pick_list
+
+@secured_router.post("/pickup/", response_model=schemas.Pickup)
+def create_pickup(pickup: schemas.PickupCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.create_pickup(db=db, pickup=pickup)
+
+@secured_router.put("/pickup/{pickup_id}", response_model=schemas.Pickup)
+def update_pickup(pickup_id: int, pickup: schemas.PickupBase, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_pickup = crud.update_pickup(db, pickup_id, pickup)
+    if db_pickup is None:
+        raise HTTPException(status_code=404, detail="Pickup not found")
+    return db_pickup
+
+@secured_router.delete("/pickup/{pickup_id}", response_model=schemas.Pickup)
+def delete_pickup(pickup_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_pickup = crud.delete_pickup(db, pickup_id)
+    if db_pickup is None:
+        raise HTTPException(status_code=404, detail="Pickup not found")
+    return db_pickup
 
 # Stocks
 @secured_router.get("/stocks")
@@ -363,22 +393,22 @@ async def show_location_details(location_id: int, db: Session = Depends(get_db),
     raise HTTPException(status_code=404, detail="Location not found")
 
 # Shipment History
-@secured_router.get("/shipments/{location_id}/history")
-async def show_shipment_history(location_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    shipment_history = crud.get_shipment_history(db, location_id)
-    if shipment_history:
-        return shipment_history
-    raise HTTPException(status_code=404, detail="Location not found")
+# @secured_router.get("/shipments/{location_id}/history")
+# async def show_shipment_history(location_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     shipment_history = crud.get_shipment_history(db, location_id)
+#     if shipment_history:
+#         return shipment_history
+#     raise HTTPException(status_code=404, detail="Location not found")
 
-@secured_router.post("/shipments/schedule-pickup")
-async def schedule_pickup(pickup_data: schemas.ShipmentPickupSchedule, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    is_valid = crud.validate_shipment_id(db, pickup_data.shipment_id)
-    if is_valid:
-        result = crud.schedule_pickup(db, pickup_data)
-        if result:
-            return {"message": "Pickup scheduled successfully"}
-        return {"error": "Failed to schedule pickup"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.post("/shipments/schedule-pickup")
+# async def schedule_pickup(pickup_data: schemas.ShipmentPickupSchedule, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     is_valid = crud.validate_shipment_id(db, pickup_data.shipment_id)
+#     if is_valid:
+#         result = crud.schedule_pickup(db, pickup_data)
+#         if result:
+#             return {"message": "Pickup scheduled successfully"}
+#         return {"error": "Failed to schedule pickup"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
 # Centra
 @secured_router.get("/centras")
@@ -404,6 +434,37 @@ def update_centra(CentralID: int, centra_update: schemas.CentraUpdate, db: Sessi
 def delete_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.delete_centra(db, CentralID)
 
+#userCentra
+@secured_router.get("/usercentra/", response_model=List[schemas.UserCentra])
+def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    user_centra = crud.get_user_centra(db=db, skip=skip, limit=limit)
+    return user_centra
+
+@secured_router.get("/usercentra/{user_centra_id}", response_model=schemas.UserCentra)
+def read_user_centra_by_id(user_centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    user_centra = crud.get_user_centra_by_id(db=db, user_centra_id=user_centra_id)
+    if user_centra is None:
+        raise HTTPException(status_code=404, detail="UserCentra not found")
+    return user_centra
+
+@secured_router.post("/usercentra/", response_model=schemas.UserCentra)
+def create_user_centra(user_centra: schemas.UserCentraCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.create_user_centra(db=db, user_centra=user_centra)
+
+@secured_router.patch("/usercentra/{user_centra_id}", response_model=schemas.UserCentra)
+def update_user_centra(user_centra_id: int, user_centra: schemas.UserCentraUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_user_centra = crud.update_user_centra(db=db, user_centra_id=user_centra_id, user_centra=user_centra)
+    if db_user_centra is None:
+        raise HTTPException(status_code=404, detail="UserCentra not found")
+    return db_user_centra
+
+@secured_router.delete("/usercentra/{user_centra_id}", response_model=schemas.UserCentra)
+def delete_user_centra(user_centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_user_centra = crud.delete_user_centra(db=db, user_centra_id=user_centra_id)
+    if db_user_centra is None:
+        raise HTTPException(status_code=404, detail="UserCentra not found")
+    return db_user_centra
+
 # Shipment (XYZ)
 
 # @secured_router.put("/shipments/{shipment_id}")
@@ -414,12 +475,12 @@ def delete_centra(CentralID: int, db: Session = Depends(get_db), user: dict = De
 #     raise HTTPException(status_code=404, detail="Shipment not found")
 
 
-@secured_router.delete("/shipments/{shipment_id}")
-async def remove_shipment(shipment_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    deleted = delete_shipment(db, shipment_id)
-    if deleted:
-        return {"message": "Shipment deleted successfully"}
-    raise HTTPException(status_code=404, detail="Shipment not found")
+# @secured_router.delete("/shipments/{shipment_id}")
+# async def remove_shipment(shipment_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     deleted = delete_shipment(db, shipment_id)
+#     if deleted:
+#         return {"message": "Shipment deleted successfully"}
+#     raise HTTPException(status_code=404, detail="Shipment not found")
 
 # Harborguards
 @secured_router.get("/harborguards")
@@ -477,6 +538,37 @@ async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db), use
     if deleted_warehouse is None:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return {"message": "Warehouse deleted successfully"}
+
+#xyzuser
+@secured_router.get("/xyzusers/", response_model=List[schemas.XYZuser])
+def read_xyzusers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    xyzusers = crud.get_xyzusers(db=db, skip=skip, limit=limit)
+    return xyzusers
+
+@secured_router.get("/xyzusers/{xyzuser_id}", response_model=schemas.XYZuser)
+def read_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
+    xyzuser = crud.get_xyzuser_by_id(db=db, xyzuser_id=xyzuser_id)
+    if xyzuser is None:
+        raise HTTPException(status_code=404, detail="XYZuser not found")
+    return xyzuser
+
+@secured_router.post("/xyzusers/", response_model=schemas.XYZuser)
+def create_xyzuser(xyzuser: schemas.XYZuserCreate, db: Session = Depends(get_db)):
+    return crud.create_xyzuser(db=db, xyzuser=xyzuser)
+
+@secured_router.patch("/xyzusers/{xyzuser_id}", response_model=schemas.XYZuser)
+def update_xyzuser(xyzuser_id: int, xyzuser: schemas.XYZuserUpdate, db: Session = Depends(get_db)):
+    db_xyzuser = crud.update_xyzuser(db=db, xyzuser_id=xyzuser_id, xyzuser=xyzuser)
+    if db_xyzuser is None:
+        raise HTTPException(status_code=404, detail="XYZuser not found")
+    return db_xyzuser
+
+@secured_router.delete("/xyzusers/{xyzuser_id}", response_model=schemas.XYZuser)
+def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
+    db_xyzuser = crud.delete_xyzuser(db=db, xyzuser_id=xyzuser_id)
+    if db_xyzuser is None:
+        raise HTTPException(status_code=404, detail="XYZuser not found")
+    return db_xyzuser
 
 # User (Admin)
 # @secured_router.post("/admins/", response_model=schemas.Admin)
@@ -543,6 +635,21 @@ def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: d
     if db_expedition is None:
         raise HTTPException(status_code=404, detail="Expedition not found")
     return db_expedition
+
+@secured_router.put("/expeditions/{expedition_id}/change_status")
+def change_expedition_status_route(expedition_id: int, new_status: str, db: Session = Depends(get_db)):
+    expedition = crud.change_expedition_status(db, expedition_id, new_status)
+    if expedition is None:
+        raise HTTPException(status_code=404, detail=f"Expedition with id {expedition_id} not found")
+    return {"message": f"Status of Expedition {expedition_id} changed to {new_status}"}
+
+
+@secured_router.put("/expeditions/{expedition_id}/confirm", response_model=schemas.Expedition)
+def confirm_expedition_route(expedition_id: int, TotalWeight: int, db: Session = Depends(get_db)):
+    expedition = crud.confirm_expedition(db, expedition_id, TotalWeight)
+    if expedition is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return expedition
 
 #received package
 @secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
