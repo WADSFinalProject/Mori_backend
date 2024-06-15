@@ -70,14 +70,6 @@ def delete_user(db: Session, user_id: str) -> Optional[models.User]:
         db.commit()
     return db_user
 
-def delete_user(db: Session, user_id: str):
-    user = db.query(models.User).filter(models.User.userID == user_id).first()
-    if user:
-        db.delete(user)
-        db.commit()
-    return user
-
-
 def create_URLToken(db: Session, userid:int): #to maintain security of the setpass URL
     try:
         token_value = generate_key("URL")
