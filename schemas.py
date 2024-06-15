@@ -80,6 +80,7 @@ class Admin(AdminBase):
 class ProcessedLeavesBase(BaseModel):
     # ProductID: int
     Description: Optional[str] = None
+    Weight: Optional[int] = None
     DryingID: Optional[int] = None
     FlouringID: Optional[int] = None
     DriedDate: date
@@ -90,6 +91,7 @@ class ProcessedLeavesCreate(ProcessedLeavesBase):
 
 class ProcessedLeavesUpdate(BaseModel):
     Description: Optional[str] = None
+    Weight: Optional[int] = None
     FlouringID: Optional[str] = None
     DryingID: Optional[str] = None
 
@@ -141,6 +143,24 @@ class CentraDetails(CentraBase):
 
     class Config: 
         from_attributes = True
+
+#userCentra
+
+class UserCentraBase(BaseModel):
+    CentraID: int
+
+class UserCentraCreate(UserCentraBase):
+    pass
+
+class UserCentraUpdate(BaseModel):
+    CentraID: Optional[int] = None
+
+class UserCentra(UserCentraBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
@@ -269,8 +289,12 @@ class Centra(CentraBase):
 
 # Expedition schemas
 class ExpeditionBase(BaseModel):
+    # ExpeditionID: Optional[int] = None
+    AirwayBill: str
     EstimatedArrival: datetime
     TotalPackages: int
+    TotalWeight: int
+    Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
     Destination: str
@@ -280,15 +304,19 @@ class ExpeditionCreate(ExpeditionBase):
     pass
 
 class ExpeditionUpdate(BaseModel):
+    # ExpeditionID: Optional[int] = None
+    AirwayBill: Optional[str] = None
     EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
+    TotalWeight: Optional[int] = None
+    Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
     Destination: Optional[str] = None
     CentralID: Optional[int] = None
 
 class Expedition(ExpeditionBase):
-    ExpeditionID: int
+    ExpeditionID: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -344,45 +372,60 @@ class PackageReceipt(PackageReceiptBase):
         from_attributes = True
 
 # Shipment
-class ShipmentPickupSchedule(BaseModel):
-    # shipment_id: int
-    pickup_time: datetime
-    location: str
+# class ShipmentPickupSchedule(BaseModel):
+#     # shipment_id: int
+#     pickup_time: datetime
+#     location: str
 
-class ShipmentBase(BaseModel):
-    batch_id: Optional[int] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    weight: Optional[float] = None
-    issue_description: Optional[str] = None
+# class ShipmentBase(BaseModel):
+#     batch_id: Optional[int] = None
+#     description: Optional[str] = None
+#     status: Optional[str] = None
+#     weight: Optional[float] = None
+#     issue_description: Optional[str] = None
 
-class ShipmentCreate(ShipmentBase):
+# class ShipmentCreate(ShipmentBase):
+#     pass
+
+# class ShipmentUpdate(BaseModel):
+#     shipment_id: Optional[int] = None
+#     batch_id: Optional[int] = None
+#     description: Optional[str] = None
+#     status: Optional[str] = None
+#     weight: Optional[int] = None
+#     issue_description: Optional[str] = None
+
+# class Shipment(ShipmentBase):
+#     shipment_id: int
+#     # created_at: Optional[datetime] = None
+#     # updated_at: Optional[datetime] = None
+
+#     class Config:
+#         from_attributes = True
+
+# class ShipmentIssue(BaseModel):
+#     description: str
+
+# class ShipmentRescale(BaseModel):
+#     new_weight: float
+
+# class ShipmentConfirmation(BaseModel):
+#     weight: float
+
+class PickupBase(BaseModel):
+    PIC_name: str
+    expeditionID: int
+    destination: str
+    pickup_time: time
+
+class PickupCreate(PickupBase):
     pass
 
-class ShipmentUpdate(BaseModel):
-    shipment_id: Optional[int] = None
-    batch_id: Optional[int] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    weight: Optional[int] = None
-    issue_description: Optional[str] = None
-
-class Shipment(ShipmentBase):
-    shipment_id: int
-    # created_at: Optional[datetime] = None
-    # updated_at: Optional[datetime] = None
+class Pickup(PickupBase):
+    id: int
 
     class Config:
-        from_attributes = True
-
-class ShipmentIssue(BaseModel):
-    description: str
-
-class ShipmentRescale(BaseModel):
-    new_weight: float
-
-class ShipmentConfirmation(BaseModel):
-    weight: float
+        orm_mode = True
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -445,6 +488,7 @@ class WarehouseBase(BaseModel):
     PIC_name: str
     email: EmailStr
     phone: Optional[str] = None
+    location: Optional[str] = None
 
 class WarehouseCreate(WarehouseBase):
     pass
@@ -453,9 +497,27 @@ class WarehouseUpdate(BaseModel):
     PIC_name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    location: Optional[str] = None
 
 class Warehouse(WarehouseBase):
     id: int  # Assuming an 'id' field is automatically generated by the database
 
     class Config:
         from_attributes = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
+
+#xyzuser
+
+class XYZuserBase(BaseModel):
+    WarehouseID: int
+
+class XYZuserCreate(XYZuserBase):
+    pass
+
+class XYZuserUpdate(XYZuserBase):
+    pass
+
+class XYZuser(XYZuserBase):
+    id: int
+
+    class Config:
+        orm_mode = True
