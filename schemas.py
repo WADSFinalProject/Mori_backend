@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime, date, time
 from typing_extensions import Annotated
@@ -381,6 +381,14 @@ class PackageReceipt(PackageReceiptBase):
 #     pickup_time: datetime
 #     location: str
 
+class ShipmentBase(BaseModel):
+    batch_id: List[str]
+    shipmentId: str
+    driedDate: List[str]
+    flouredDate: List[str]
+    weight: List[str]
+    status: str
+    checkpoint: str
 # class ShipmentBase(BaseModel):
 #     batch_id: Optional[int] = None
 #     description: Optional[str] = None
@@ -425,6 +433,31 @@ class PickupBase(BaseModel):
 class PickupCreate(PickupBase):
     pass
 
+class ShipmentUpdate(BaseModel):
+    shipment_id: Optional[int] = None
+    batch_id: Optional[int] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    weight: Optional[int] = None
+    issue_description: Optional[str] = None
+
+class Shipment(ShipmentBase):
+    shipment_id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+class ShipmentIssue(BaseModel):
+    description: str
+
+class ShipmentRescale(BaseModel):
+    new_weight: float
+
+class ShipmentConfirmation(BaseModel):
+    weight: float
 class Pickup(PickupBase):
     id: int
 
@@ -468,9 +501,11 @@ class PackageType(PackageTypeBase):
         from_attributes = True
 
 class HarborGuardBase(BaseModel):
-    PIC_name: str
-    email: EmailStr
+    harbourName: str
+    location: str
     phone: Optional[str] = None
+    openingHour: time
+    closingHour: time
 
 class HarborGuardCreate(HarborGuardBase):
     pass
@@ -485,7 +520,8 @@ class HarborGuard(HarborGuardBase):
     HarborID: int  
 
     class Config:
-        from_attributes = True  
+        orm_mode = True
+        from_attributes = True
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):

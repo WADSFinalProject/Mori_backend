@@ -139,10 +139,12 @@ class UserCentra(Base):
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
 
-    HarborID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    PIC_name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    HarbourID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    harbourName = Column(String, nullable=False)
+    location = Column(String, nullable=False)
     phone = Column(String, nullable=True)
+    openingHour = Column(Time, nullable=False)
+    closingHour = Column(Time, nullable=False)
 
 class Stock(Base):
     __tablename__ = 'stocks'
@@ -221,6 +223,17 @@ class Warehouse(Base):
     location = Column(String, index=True)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
+
+class Shipment(Base):
+    __tablename__ = 'shipments'
+    ID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    batch_id = Column(String, index=True)  
+    shipmentId = Column(String, nullable=False) 
+    driedDate = Column(String, nullable=True)  
+    flouredDate = Column(String, nullable=True)  
+    weight = Column(String, nullable=True)  
+    status = Column(String, nullable=True)
+    checkpoint = Column(String, nullable=True) 
 
 class XYZuser(Base):
     __tablename__ = 'XYZuser'
