@@ -1,126 +1,3 @@
-from fastapi import FastAPI, Path, Depends, HTTPException, Cookie
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
-from datetime import datetime
-from sqlalchemy.orm import Session
-import crud, models, schemas  
-from database import SessionLocal, engine 
-from security import create_access_token,verify_otp, encrypt_token, decrypt_token, create_refresh_token
-# from .crud import (get_all_centras, add_new_centra, get_all_harbor_guards, get_harbor_guard, create_harbor_guard, update_harbor_guard, delete_harbor_guard)
-# from .schemas import HarborGuardCreate, HarborGuardUpdate
-
-import SMTP
-from fastapi.responses import JSONResponse
-
-from fastapi.middleware.cors import CORSMiddleware
-
-models.Base.metadata.create_all(bind=engine)
-
-
-app = FastAPI()
-
-#Handling CORS
-origins = [
-    "http://localhost:5173"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-
-@app.get("/")
-async def welcome():
-    return {"message": "Welcome to our API!"}
-
-# Users
-@app.post("/users/register")
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-
-    db_user = crud.create_user(db, user)
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail="User already registered or integrity error")
-    
-    SMTP.send_setPassEmail(db_user,db)
-    return {"message": "User registered successfully"}
-    
-@app.get("/users/validate-link") #for setpass
-async def validate_token(token:str, db: Session = Depends(get_db)):
-    try:
-        db_user = crud.get_user_by_token(db, token)
-        return {"valid": True}
-    except HTTPException as e:
-        return {"valid": False, "error": str(e)}
-
-@app.post("/users/setpassword")
-async def set_password(response_model: schemas.UserSetPassword, db: Session = Depends(get_db)):
-    print(response_model.token)
-    print(response_model.new_password)
-    try:
-        db_user = crud.get_user_by_token(db,response_model.token)
-        pass_user =crud.set_user_password(db,Email= db_user.Email, new_password= response_model.new_password)
-
-        if pass_user:
-            crud.delete_token(db, response_model.token)
-            return {"message": "Password set successfully"}
-        raise HTTPException(status_code=404, detail="User not found or error setting password")
-    
-    except HTTPException as e:
-        return { "error": str(e)}
-
-
-@app.post("/users/login")
-async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    
-    db_user = crud.authenticate_user(db, user.Email, user.Password)  # Call with positional arguments
-    
-    if db_user:
-
-        SMTP.send_OTP(db_user, db)
-        return {"message": "Credentials valid, OTP Sent!"}
-    raise HTTPException(status_code=401, detail="Invalid email or password")
-
-@app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification,  db: Session = Depends(get_db)):
-    
-    db_user = crud.get_user_by_email(db,verification.Email)
-    verified = verify_otp(db_user.secret_key, verification.Code)
-    if verified:
-        access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
-        refresh_token = create_refresh_token(db_user.UserID,db_user.IDORole,db_user.FullName)
-        response = JSONResponse(content={"message": "login successful"},  status_code=200)
-        response.set_cookie(key="access_token", value=access_token, secure=True, httponly=True)
-        response.set_cookie(key="refresh_token", value=refresh_token, secure=True, httponly=True)
-        response.headers["Set-cookie"] += "; SameSite=None"
-        return response
-        
-    raise HTTPException(status_code=404, detail="Verification failed")
-
-@app.post("/users/resend_code")
-async def resend_code(verification: schemas.UserVerification, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db,verification.Email)
-    resent = SMTP.send_OTP(db_user, db)
-    if resent:
-        return {"message": "Verification code resent"}
-    raise HTTPException(status_code=404, detail="Failed to resend code")
-
-
-
-
 from fastapi import APIRouter, Request, Depends, HTTPException
 from database import get_db
 from sqlalchemy.orm import Session
@@ -759,3 +636,36 @@ def delete_product_receipt(product_receipt_id: int, db: Session = Depends(get_db
     if db_product_receipt is None:
         raise HTTPException(status_code=404, detail="Product receipt not found")
     return db_product_receipt
+
+# Users in admin page
+@secured_router.post("/users", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    db_user = crud.create_user(db=db, user=user)
+    if db_user is None:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return db_user
+
+@secured_router.get("/users", response_model=List[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return crud.get_all_users(db=db, skip=skip, limit=limit)
+
+@secured_router.get("/users/{user_id}", response_model=schemas.User)
+def read_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    db_user = crud.get_user(db=db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@secured_router.put("/users/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, update_data: schemas.UserUpdate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    db_user = crud.update_user(db=db, user_id=user_id, update_data=update_data)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@secured_router.delete("/users/{user_id}", response_model=schemas.User)
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    db_user = crud.delete_user(db=db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user

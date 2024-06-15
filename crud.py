@@ -18,8 +18,6 @@ from logging import error
 
 
 
-
-
 # BATCHES
 def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == batch.DryingID).first()
