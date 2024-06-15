@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime, date, time
 from typing_extensions import Annotated
@@ -350,11 +350,13 @@ class ShipmentPickupSchedule(BaseModel):
     location: str
 
 class ShipmentBase(BaseModel):
-    batch_id: Optional[int] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    weight: Optional[float] = None
-    issue_description: Optional[str] = None
+    batch_id: List[str]
+    shipmentId: str
+    driedDate: List[str]
+    flouredDate: List[str]
+    weight: List[str]
+    status: str
+    checkpoint: str
 
 class ShipmentCreate(ShipmentBase):
     pass
@@ -369,10 +371,11 @@ class ShipmentUpdate(BaseModel):
 
 class Shipment(ShipmentBase):
     shipment_id: int
-    # created_at: Optional[datetime] = None
-    # updated_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
+        orm_mode = True
         from_attributes = True
 
 class ShipmentIssue(BaseModel):
@@ -421,9 +424,11 @@ class PackageType(PackageTypeBase):
         from_attributes = True
 
 class HarborGuardBase(BaseModel):
-    PIC_name: str
-    email: EmailStr
+    harbourName: str
+    location: str
     phone: Optional[str] = None
+    openingHour: time
+    closingHour: time
 
 class HarborGuardCreate(HarborGuardBase):
     pass
@@ -438,7 +443,8 @@ class HarborGuard(HarborGuardBase):
     HarborID: int  
 
     class Config:
-        from_attributes = True  
+        orm_mode = True
+        from_attributes = True
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
