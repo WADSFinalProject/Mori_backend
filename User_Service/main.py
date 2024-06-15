@@ -26,6 +26,17 @@ app.add_middleware(
 )
 
 
+# Initialize FastAPI app
+app = FastAPI()
+
+
+@app.get("/")
+async def welcome():
+    return {"message": "Welcome to the User Service API!"}
+
+app.include_router(user_router.router, prefix="/users")
+
+
 # Users
 @app.post("/users/register")
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
