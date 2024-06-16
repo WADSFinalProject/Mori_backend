@@ -49,8 +49,9 @@ class URLToken(Base):
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
-    creator_id = Column(Integer, ForeignKey("Centra.CentralID"), nullable=True)
+    # creator_id = Column(Integer, ForeignKey("Centra.CentralID"), nullable=True)
     # Description = Column(String(100)) #drop
+    CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
     Weight = Column(Integer)
     FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
     DryingID = DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
@@ -65,6 +66,7 @@ class ProcessedLeaves(Base):
     creator = relationship("Centra", back_populates="processed_leaves")
     date = relationship("DriedLeaves", back_populates="dried")
     expeditioncontent = relationship("ExpeditionContent", back_populates="batch")
+    centra = relationship("Centra", back_populates="batch")
     
 
 class WetLeavesCollection(Base):
@@ -157,6 +159,7 @@ class Centra(Base):
     driedleaves = relationship("DriedLeaves", back_populates="centra")
     wet = relationship("WetLeavesCollection", back_populates="centra")
     expedition = relationship("Expedition", back_populates="centra")
+    batch = relationship("ProcessedLeaves", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'

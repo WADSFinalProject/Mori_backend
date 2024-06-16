@@ -24,12 +24,7 @@ def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends
 
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        batches = crud.get_batches_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
     return batches
 
 @secured_router.get("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
