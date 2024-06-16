@@ -132,7 +132,7 @@ class WetLeavesCollectionBase(BaseModel):
     Time: time
     Weight: int
     Status: str
-    Duration: Optional[timedelta]
+    # Duration: Optional[timedelta]
     # ExpirationTime: Optional[time] = None
     # ExpiredTime: time
 
