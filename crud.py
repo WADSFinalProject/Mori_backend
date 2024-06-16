@@ -50,8 +50,22 @@ def create_user(db: Session, user: schemas.UserCreate):
         db.rollback()
         return None  # Indicate that an integrity error occurred
 
-def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
-    return db.query(models.User).offset(skip).limit(limit).all()
+def get_all_users(db: Session, skip: int = 0, limit: int = 100, sort_by: str = 'Name', sort_order: str = 'asc', role: str = None) -> List[models.User]:
+    query = db.query(models.User)
+    
+    if role:
+        query = query.filter(models.User.Role == role)
+    
+    if sort_by:
+        if sort_by == 'Name':
+            sort_column = models.User.FirstName
+        elif sort_by == 'Created Date':
+            sort_column = models.User.CreatedDate
+        if sort_order == 'desc':
+            sort_column = sort_column.desc()
+        query = query.order_by(sort_column)
+    
+    return query.offset(skip).limit(limit).all()
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.UserID == user_id).first()
