@@ -707,44 +707,35 @@ def delete_user_centra(db: Session, user_centra_id: int):
     return db_user_centra
 
 #HARBOUR GUARD
+def create_harbor_guard(db: Session, harbor_guard: schemas.HarborGuardCreate):
+    db_harbor_guard = models.HarborGuard(**harbor_guard.dict())
+    db.add(db_harbor_guard)
+    db.commit()
+    db.refresh(db_harbor_guard)
+    return db_harbor_guard
+
+def get_harbor_guard(db: Session, harbour_id: int):
+    return db.query(models.HarborGuard).filter(models.HarborGuard.HarbourID == harbour_id).first()
+
+def update_harbor_guard(db: Session, harbour_id: int, harbor_guard: schemas.HarborGuardUpdate):
+    db_harbor_guard = db.query(models.HarborGuard).filter(models.HarborGuard.HarbourID == harbour_id).first()
+    if db_harbor_guard:
+        for attr, value in harbor_guard.dict(exclude_unset=True).items():
+            setattr(db_harbor_guard, attr, value)
+        db.commit()
+        db.refresh(db_harbor_guard)
+    return db_harbor_guard
+
+def delete_harbor_guard(db: Session, harbour_id: int):
+    db_harbor_guard = db.query(models.HarborGuard).filter(models.HarborGuard.HarbourID == harbour_id).first()
+    if db_harbor_guard:
+        db.delete(db_harbor_guard)
+        db.commit()
+    return db_harbor_guard
 
 def get_all_harbor_guards(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.HarborGuard).offset(skip).limit(limit).all()
-
-def get_harbor_guard(db: Session, HarborID: int):
-    guard = db.query(models.HarborGuard).filter(models.HarborGuard.HarborID == HarborID).first()
-    if not guard:
-        raise HTTPException(status_code=404, detail="Harbor guard not found")
-    return guard
-
-def create_harbor_guard(db: Session, guard_data: schemas.HarborGuardCreate):
-    db_guard = models.HarborGuard(
-        PIC_name=guard_data.PIC_name,
-        email=guard_data.email,
-        phone=guard_data.phone
-    )
-    db.add(db_guard)
-    db.commit()
-    db.refresh(db_guard)
-    return db_guard
-
-def update_harbor_guard(db: Session, HarborID: int, guard_data: schemas.HarborGuardUpdate):
-    db_guard = db.query(models.HarborGuard).filter(models.HarborGuard.HarborID == HarborID).first()
-    if db_guard:
-        for key, value in guard_data.dict(exclude_unset=True).items():
-            setattr(db_guard, key, value)
-        db.commit()
-        return db_guard
-    raise HTTPException(status_code=404, detail="Harbor guard not found")
-
-def delete_harbor_guard(db: Session, guard_id: int):
-    db_guard = db.query(models.HarborGuard).filter(models.HarborGuard.id == guard_id).first()
-    if db_guard:
-        db.delete(db_guard)
-        db.commit()
-        return {"message": "Harbor guard deleted successfully"}
-    raise HTTPException(status_code=404, detail="Harbor guard not found")
-
+    
 # WAREHOUSE LOCATION
 def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
     db_warehouse = models.Warehouse(

@@ -536,24 +536,26 @@ class PackageType(PackageTypeBase):
         from_attributes = True
 
 class HarborGuardBase(BaseModel):
-    PIC_name: str
-    email: EmailStr
-    phone: Optional[str] = None
+    HarbourName: str
+    Location: str
+    phone: str = None
+    OpeningHour: time
+    ClosingHour: time
+
+    class Config:
+        orm_mode = True
 
 class HarborGuardCreate(HarborGuardBase):
     pass
 
 class HarborGuardUpdate(HarborGuardBase):
+    pass
 
-    PIC_name: str = None
-    email: EmailStr = None
-    phone: Optional[str] = None
-
-class HarborGuard(HarborGuardBase):
-    HarborID: int  
+class HarborGuardInDB(HarborGuardBase):
+    HarbourID: int
 
     class Config:
-        from_attributes = True  
+        orm_mode = True
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
