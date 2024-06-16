@@ -640,9 +640,16 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 #     return db_admin
 
 #CentraShipment
-@secured_router.post("/shipments/", response_model=schemas.CentraShipmentBase)
-def create_shipment(shipment: schemas.CentraShipmentCreate, db: Session = Depends(get_db)):
-    return crud.create_shipment(db, shipment)
+# @secured_router.post("/shipments/", response_model=schemas.CentraShipmentBase)
+# def create_shipment(shipment: schemas.CentraShipmentCreate, db: Session = Depends(get_db)):
+#     return crud.create_shipment(db, shipment)
+
+# @secured_router.delete("/shipments/{shipment_id}", response_model=schemas.CentraShipment)
+# def delete_shipment(shipment_id: int, db: Session = Depends(get_db)):
+#     deleted = crud.delete_shipment(db, shipment_id)
+#     if not deleted:
+#         raise HTTPException(status_code=404, detail="Shipment not found")
+#     return {"message": "Shipment deleted successfully"}
 
 #expedition
 @secured_router.post("/expeditions/", response_model=schemas.Expedition)

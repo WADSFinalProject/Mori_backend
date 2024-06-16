@@ -81,43 +81,45 @@ class Admin(AdminBase):
         from_attributes = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
 
 #CentraShipment
-class CentraShipmentBase(BaseModel):
-    ShippingMethod: str
-    AirwayBill: str
-    batch_ids: List[int] = []
+# class CentraShipmentBase(BaseModel):
+#     ShippingMethod: str
+#     AirwayBill: str
+#     batch_ids: List[int] = []
 
-class CentraShipmentCreate(CentraShipmentBase):
-    pass
+# class CentraShipmentCreate(CentraShipmentBase):
+#     pass
 
-class CentraShipment(CentraShipmentBase):
-    id: int
+# class CentraShipment(CentraShipmentBase):
+#     id: int
 
-    class Config:
-        orm_mode = True
+#     class Config:
+#         orm_mode = True
 
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
     # ProductID: int
-    Description: Optional[str] = None
+    # Description: Optional[str] = None
     Weight: Optional[int] = None
     DryingID: Optional[int] = None
     FlouringID: Optional[int] = None
     DriedDate: date
     FlouredDate: date
+    Shipped: Optional[bool] = False
 
 class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 
 class ProcessedLeavesUpdate(BaseModel):
-    Description: Optional[str] = None
+    # Description: Optional[str] = None
     Weight: Optional[int] = None
     FlouringID: Optional[str] = None
     DryingID: Optional[str] = None
+    Shipped: Optional[bool] = False
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
     creator_id: Optional[int]
-    shipments: Optional[List[CentraShipment]] = []
+    # shipments: Optional[List[CentraShipment]] = []
 
     class Config:
         orm_mode = True
@@ -130,7 +132,6 @@ class WetLeavesCollectionBase(BaseModel):
     Time: time
     Weight: int
     Status: str
-    Expired: Optional[bool] = False
     Duration: Optional[timedelta]
     # ExpirationTime: Optional[time] = None
     # ExpiredTime: time
@@ -143,7 +144,6 @@ class WetLeavesCollectionUpdate(BaseModel):
     Time: Optional[time] = None
     Weight: Optional[int] = None
     Status: Optional[str] = None
-    Expired: Optional[bool] = False
     
     # ExpiredTime: Optional[time] = None
     # ExpirationTime: Optional[time] = None
@@ -230,7 +230,7 @@ class DryingActivityUpdate(BaseModel):
 
 class DryingActivity(DryingActivityBase):
     DryingID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -561,6 +561,7 @@ class HarborGuardInDB(HarborGuardBase):
 class WarehouseBase(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
+    TotalStock: int
     location: Optional[str] = None
     created_at: Optional[date] = None
 
@@ -570,6 +571,7 @@ class WarehouseCreate(WarehouseBase):
 class WarehouseUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    TotalStock: Optional[int] = None
     location: Optional[str] = None
 
 class Warehouse(WarehouseBase):
