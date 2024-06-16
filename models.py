@@ -63,10 +63,10 @@ class ProcessedLeaves(Base):
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
 
     stocks = relationship("Stock", backref="processed_leaves")
-    creator = relationship("Centra", back_populates="processed_leaves")
+    creator = relationship("Centra", back_populates="processed_leaves", overlaps="centra,batch")
     date = relationship("DriedLeaves", back_populates="dried")
     expeditioncontent = relationship("ExpeditionContent", back_populates="batch")
-    centra = relationship("Centra", back_populates="batch")
+    centra = relationship("Centra", back_populates="batch", overlaps="creator,processed_leaves")
     
 
 class WetLeavesCollection(Base):
@@ -176,11 +176,11 @@ class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
 
     HarbourID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    harbourName = Column(String, nullable=False)
-    location = Column(String, nullable=False)
+    HarbourName = Column(String, nullable=False)
+    Location = Column(String, nullable=False)
     phone = Column(String, nullable=True)
-    openingHour = Column(Time, nullable=False)
-    closingHour = Column(Time, nullable=False)
+    OpeningHour = Column(Time, nullable=False)
+    ClosingHour = Column(Time, nullable=False)
     
 class Stock(Base):
     __tablename__ = 'stocks'
@@ -209,7 +209,7 @@ class Expedition(Base):
     EstimatedArrival = Column(DateTime) 
     TotalPackages = Column(Integer) 
     TotalWeight = Column(Integer)
-    Status = Column(Enum('Shipped', 'To deliver', 'Completed', 'Missing', name='expedition_status'), default='To deliver')
+    Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     Destination = Column(String(100))

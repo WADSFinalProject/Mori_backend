@@ -123,12 +123,7 @@ def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: di
 
 @secured_router.get("/drying_activity/", response_model=List[schemas.DryingActivity])
 def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-         drying_activity = crud.get_drying_activity_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
     return drying_activity
 
 @secured_router.put("/drying-activities/{drying_id}")
