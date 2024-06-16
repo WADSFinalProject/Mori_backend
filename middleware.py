@@ -38,6 +38,6 @@ from security import verify_token
 
 def get_current_user(request: Request):
     # Temporarily bypass authentication
-    token_data = {"id": 1, "role": "centra", "name": "test_user"}  # Mock user data
+    token_data = {"id": 1, "role": "admin", "name": "test_user"}  # Mock user data
     request.state.user = token_data  # Attach user payload to request state
     return token_data

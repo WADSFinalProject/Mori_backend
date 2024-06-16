@@ -141,7 +141,7 @@ class Centra(Base):
     __tablename__ = 'Centra'
     CentralID = Column(Integer, primary_key=True)
     Address = Column(String(100))
-    #FlouringSchedule: STR
+    FlouringSchedule = Column(String(100))
 
 
     usercentra = relationship("UserCentra", back_populates="centra")
@@ -167,6 +167,7 @@ class HarborGuard(Base):
     phone = Column(String, nullable=True)
     openingHour = Column(Time, nullable=False)
     closingHour = Column(Time, nullable=False)
+    
 class Stock(Base):
     __tablename__ = 'stocks'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -195,7 +196,6 @@ class Expedition(Base):
     content = relationship("ExpeditionContent", back_populates="expedition")
 
 #ExpeditionContent
-
 class ExpeditionContent(Base):
     __tablename__ = 'ExpeditionContent'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)

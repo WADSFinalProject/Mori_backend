@@ -48,10 +48,10 @@ def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpd
 
 @secured_router.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
 def delete_existing_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    batch = crud.delete_batch(db=db, batch_id=batch_id)
-    if batch is None:
+    result = crud.delete_batch(db=db, batch_id=batch_id)
+    if result is None:
         raise HTTPException(status_code=404, detail="Batch not found")
-    return batch
+    return result
 
 #DRYING
 @secured_router.post("/drying-machine/create/")
@@ -451,7 +451,7 @@ def read_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depe
     centra = crud.get_centra_by_id(db, CentralID)
     return centra
 
-@secured_router.post("/centras", response_model=schemas.CentraDetails)
+@secured_router.post("/centras", response_model=schemas.Centra)
 async def create_new_centra(centra_data: schemas.CentraCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     new_centra = crud.add_new_centra(db, centra_data)
     return new_centra

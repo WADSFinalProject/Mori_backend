@@ -242,7 +242,8 @@ def delete_batch(db: Session, batch_id: int):
     if batch:
         db.delete(batch)
         db.commit()
-    return batch
+        return {"message": "Batch successfully deleted"}
+    return None
 
 def batch_get_dried_date(db: Session, drying_id: str):
     activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
@@ -631,8 +632,8 @@ def get_centra_by_id(db: Session, CentralID: int):
 
 def add_new_centra(db: Session, centra: schemas.CentraCreate):
     db_centra = models.Centra(
-        # CentralID=centra.CentralID,
-        Address=centra.Address
+        Address=centra.Address,
+        FlouringSchedule=centra.FlouringSchedule
     )
     db.add(db_centra)
     db.commit()
@@ -869,11 +870,12 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
 
 def delete_expedition(db: Session, expedition_id: int):
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-    if not db_expedition:
-        return None
-    db.delete(db_expedition)
-    db.commit()
-    return db_expedition
+    if db_expedition:
+        db.delete(db_expedition)
+        db.commit()
+        return {"message": "Expedition deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Expedition not found")
 
 def change_expedition_status(db: Session, expedition_id: int, new_status: str):
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
