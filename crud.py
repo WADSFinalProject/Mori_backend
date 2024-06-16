@@ -684,7 +684,7 @@ def get_user_centra(db: Session, skip: int = 0, limit: int = 100):
 def get_user_centra_by_id(db: Session, user_centra_id: int):
     return db.query(models.UserCentra).filter(models.UserCentra.id == user_centra_id).first()
 
-def get_user_centra_by_user_id(db: Session, user_id: str): 
+def get_user_centra_by_user_id(db: Session, user_id: int): 
     return db.query(models.UserCentra).filter(models.UserCentra.userID == user_id).first()
 
 def create_user_centra(db: Session, user_centra: schemas.UserCentraCreate):
