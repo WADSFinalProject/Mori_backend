@@ -203,12 +203,13 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
     
     db_batch = models.ProcessedLeaves(
-        Description=batch.Description,
+        # Description=batch.Description,
         Weight=batch.Weight,
         DryingID=batch.DryingID,
         FlouringID=batch.FlouringID,
         DriedDate=dried_leaves.DriedDate if dried_leaves else None,
         FlouredDate=flouring_activity.Date if flouring_activity else None,
+        Shipped=batch.Shipped
         # dried_leaf=dried_leaves  # Assign the fetched DriedLeaves instance
     )
     db.add(db_batch)
@@ -742,6 +743,7 @@ def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
         # warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
         phone=warehouse_data.phone,
+        TotalStock=warehouse_data.TotalStock,
         location=warehouse_data.location,
         created_at=warehouse_data.created_at
     )
@@ -815,7 +817,6 @@ def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.We
         Time=wet_leaves_collection.Time,
         Weight=wet_leaves_collection.Weight,
         Status=wet_leaves_collection.Status,
-        Expired=wet_leaves_collection.Expired,
         Duration=wet_leaves_collection.Duration
         # ExpirationTime=wet_leaves_collection.ExpirationTime
     )
@@ -852,26 +853,34 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
 
 #CentraShipment
 
-def create_shipment(db: Session, shipment: schemas.CentraShipmentCreate):
-    db_shipment = models.CentraShipment(
-        ShippingMethod=shipment.ShippingMethod,
-        AirwayBill=shipment.AirwayBill
-    )
-    db.add(db_shipment)
-    db.commit()
-    db.refresh(db_shipment)
+# def create_shipment(db: Session, shipment: schemas.CentraShipmentCreate):
+#     db_shipment = models.CentraShipment(
+#         ShippingMethod=shipment.ShippingMethod,
+#         AirwayBill=shipment.AirwayBill
+#     )
+#     db.add(db_shipment)
+#     db.commit()
+#     db.refresh(db_shipment)
     
-    if shipment.batch_ids:
-        for batch_id in shipment.batch_ids:
-            batch = db.query(models.ProcessedLeaves).get(batch_id)
-            if batch:
-                db_shipment.batches.append(batch)
-        db.commit()
+#     if shipment.batch_ids:
+#         for batch_id in shipment.batch_ids:
+#             batch = db.query(models.ProcessedLeaves).get(batch_id)
+#             if batch:
+#                 db_shipment.batches.append(batch)
+#         db.commit()
     
-    return db_shipment
+#     return db_shipment
 
-def get_shipment(db: Session, shipment_id: int):
-    return db.query(models.CentraShipment).filter(models.CentraShipment.id == shipment_id).first()
+# def get_shipment(db: Session, shipment_id: int):
+#     return db.query(models.CentraShipment).filter(models.CentraShipment.id == shipment_id).first()
+
+# def delete_shipment(db: Session, shipment_id: int):
+#     db_shipment = db.query(models.CentraShipment).filter(models.CentraShipment.id == shipment_id).first()
+#     if db_shipment:
+#         db.delete(db_shipment)
+#         db.commit()
+#         return True
+#     return False
 
 #expedition
 def get_expedition(db: Session, expedition_id: int):
