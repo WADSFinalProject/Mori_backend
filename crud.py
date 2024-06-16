@@ -50,8 +50,22 @@ def create_user(db: Session, user: schemas.UserCreate):
         db.rollback()
         return None  # Indicate that an integrity error occurred
 
-def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
-    return db.query(models.User).offset(skip).limit(limit).all()
+def get_all_users(db: Session, skip: int = 0, limit: int = 100, sort_by: str = 'Name', sort_order: str = 'asc', role: str = None) -> List[models.User]:
+    query = db.query(models.User)
+    
+    if role:
+        query = query.filter(models.User.Role == role)
+    
+    if sort_by:
+        if sort_by == 'Name':
+            sort_column = models.User.FirstName
+        elif sort_by == 'CreatedDate':
+            sort_column = models.User.CreatedDate
+        if sort_order == 'desc':
+            sort_column = sort_column.desc()
+        query = query.order_by(sort_column)
+    
+    return query.offset(skip).limit(limit).all()
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.UserID == user_id).first()
@@ -184,16 +198,18 @@ def set_user_password(db: Session, Email: str, new_password: str):
 
 # BATCHES
 def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
-    drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == batch.DryingID).first()
+    # drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == batch.DryingID).first()
     flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == batch.FlouringID).first()
+    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
     
     db_batch = models.ProcessedLeaves(
         Description=batch.Description,
         Weight=batch.Weight,
         DryingID=batch.DryingID,
         FlouringID=batch.FlouringID,
-        DriedDate=drying_activity.Date if drying_activity else None,
-        FlouredDate=flouring_activity.Date if flouring_activity else None
+        DriedDate=dried_leaves.DriedDate if dried_leaves else None,
+        FlouredDate=flouring_activity.Date if flouring_activity else None,
+        # dried_leaf=dried_leaves  # Assign the fetched DriedLeaves instance
     )
     db.add(db_batch)
     db.commit()
@@ -240,7 +256,8 @@ def delete_batch(db: Session, batch_id: int):
     if batch:
         db.delete(batch)
         db.commit()
-    return batch
+        return {"message": "Batch successfully deleted"}
+    return None
 
 def batch_get_dried_date(db: Session, drying_id: str):
     activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
@@ -323,7 +340,7 @@ def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivity
         # DryingID=drying_activity.DryingID,
         # UserID=drying_activity.UserID,
         CentralID=drying_activity.CentralID,
-        Date=drying_activity.Date,
+        # Date=drying_activity.Date,
         Weight=drying_activity.Weight,
         DryingMachineID=drying_activity.DryingMachineID,
         Time=drying_activity.Time
@@ -361,6 +378,40 @@ def delete_drying_activity(db: Session, drying_id: str):
         db.delete(db_drying_activity)
         db.commit()
     return db_drying_activity
+
+#driedleaves
+
+def get_dried_leaves(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.DriedLeaves).offset(skip).limit(limit).all()
+
+def get_dried_leaf(db: Session, leaf_id: int):
+    return db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
+
+def create_dried_leaf(db: Session, dried_leaf: schemas.DriedLeavesCreate):
+    db_dried_leaf = models.DriedLeaves(**dried_leaf.dict())
+    db.add(db_dried_leaf)
+    db.commit()
+    db.refresh(db_dried_leaf)
+    return db_dried_leaf
+
+def update_dried_leaf(db: Session, leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate):
+    db_dried_leaf = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
+    if not db_dried_leaf:
+        return None
+    update_data = dried_leaf.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_dried_leaf, key, value)
+    db.commit()
+    db.refresh(db_dried_leaf)
+    return db_dried_leaf
+
+def delete_dried_leaf(db: Session, leaf_id: int):
+    db_dried_leaf = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
+    if db_dried_leaf:
+        db.delete(db_dried_leaf)
+        db.commit()
+        return db_dried_leaf
+    return None
 
 # MACHINES - FLOURING
 def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMachineCreate):
@@ -595,8 +646,8 @@ def get_centra_by_id(db: Session, CentralID: int):
 
 def add_new_centra(db: Session, centra: schemas.CentraCreate):
     db_centra = models.Centra(
-        # CentralID=centra.CentralID,
-        Address=centra.Address
+        Address=centra.Address,
+        FlouringSchedule=centra.FlouringSchedule
     )
     db.add(db_centra)
     db.commit()
@@ -615,7 +666,7 @@ def update_centra(db: Session, CentralID: int, centra_update: schemas.CentraUpda
     return db_centra
 
 def delete_centra(db: Session, CentralID: int):
-    db_centra = db.query(models.CentraDetails).filter(models.CentraDetails.CentralID == CentralID).first()
+    db_centra = db.query(models.Centra).filter(models.Centra.CentralID == CentralID).first()
     if db_centra:
         db.delete(db_centra)
         db.commit()
@@ -770,9 +821,12 @@ def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.We
         # UserID=wet_leaves_collection.UserID,
         CentralID=wet_leaves_collection.CentralID,
         Date=wet_leaves_collection.Date,
+        Time=wet_leaves_collection.Time,
         Weight=wet_leaves_collection.Weight,
+        Status=wet_leaves_collection.Status,
         Expired=wet_leaves_collection.Expired,
-        ExpirationTime=wet_leaves_collection.ExpirationTime
+        Duration=wet_leaves_collection.Duration
+        # ExpirationTime=wet_leaves_collection.ExpirationTime
     )
     db.add(db_wet_leaves_collection)
     db.commit()
@@ -805,6 +859,28 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     return db_wet_leaves_collection
 
 
+#CentraShipment
+
+def create_shipment(db: Session, shipment: schemas.CentraShipmentCreate):
+    db_shipment = models.CentraShipment(
+        ShippingMethod=shipment.ShippingMethod,
+        AirwayBill=shipment.AirwayBill
+    )
+    db.add(db_shipment)
+    db.commit()
+    db.refresh(db_shipment)
+    
+    if shipment.batch_ids:
+        for batch_id in shipment.batch_ids:
+            batch = db.query(models.ProcessedLeaves).get(batch_id)
+            if batch:
+                db_shipment.batches.append(batch)
+        db.commit()
+    
+    return db_shipment
+
+def get_shipment(db: Session, shipment_id: int):
+    return db.query(models.CentraShipment).filter(models.CentraShipment.id == shipment_id).first()
 
 #expedition
 def get_expedition(db: Session, expedition_id: int):
@@ -832,11 +908,12 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
 
 def delete_expedition(db: Session, expedition_id: int):
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-    if not db_expedition:
-        return None
-    db.delete(db_expedition)
-    db.commit()
-    return db_expedition
+    if db_expedition:
+        db.delete(db_expedition)
+        db.commit()
+        return {"message": "Expedition deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Expedition not found")
 
 def change_expedition_status(db: Session, expedition_id: int, new_status: str):
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
@@ -854,6 +931,39 @@ def confirm_expedition(db: Session, expedition_id: int, TotalWeight: int):
         db.commit()
         return expedition
     return None
+
+
+#expeditioncontent
+
+def get_expedition_content(db: Session, expedition_content_id: int):
+    return db.query(models.ExpeditionContent).filter(models.ExpeditionContent.id == expedition_content_id).first()
+
+def get_expedition_contents(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ExpeditionContent).offset(skip).limit(limit).all()
+
+def create_expedition_content(db: Session, expedition_content: schemas.ExpeditionContentCreate):
+    db_expedition_content = models.ExpeditionContent(**expedition_content.dict())
+    db.add(db_expedition_content)
+    db.commit()
+    db.refresh(db_expedition_content)
+    return db_expedition_content
+
+def update_expedition_content(db: Session, expedition_content_id: int, expedition_content: schemas.ExpeditionContentUpdate):
+    db_expedition_content = db.query(models.ExpeditionContent).filter(models.ExpeditionContent.id == expedition_content_id).first()
+    if db_expedition_content:
+        for key, value in expedition_content.dict(exclude_unset=True).items():
+            setattr(db_expedition_content, key, value)
+        db.commit()
+        db.refresh(db_expedition_content)
+    return db_expedition_content
+
+def delete_expedition_content(db: Session, expedition_content_id: int):
+    db_expedition_content = db.query(models.ExpeditionContent).filter(models.ExpeditionContent.id == expedition_content_id).first()
+    if db_expedition_content:
+        db.delete(db_expedition_content)
+        db.commit()
+    return db_expedition_content
+    
 #receveid packages
 def get_received_package(db: Session, package_id: int):
     return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()

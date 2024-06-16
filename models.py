@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time
+from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from database import Base
@@ -6,6 +6,7 @@ from typing import Optional
 from datetime import datetime
 
 from database import engine, Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -21,13 +22,15 @@ class User(Base):
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
     secret_key = Column(String, unique=True) #OTP Secret Key
+    
 
-    processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
+    # processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
     drying_machines = relationship("DryingMachine", back_populates="creator")
     flouring_machines = relationship("FlouringMachine", back_populates="creator")
     drying_activity = relationship("DryingActivity", back_populates="creator")
     flouring_activity = relationship("FlouringActivity", back_populates="creator")
     WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
+    xyz = relationship("XYZuser", back_populates="user")
 
 class URLToken(Base):
     __tablename__ = "URLtoken"
@@ -35,38 +38,47 @@ class URLToken(Base):
     UserID = Column(Integer, ForeignKey('users.UserID'))
     exp = Column(DateTime)
 
+shipment_batch_association = Table('shipment_batch_association', Base.metadata,
+    Column('shipment_id', Integer, ForeignKey('CentraShipment.id'), primary_key=True),
+    Column('batch_id', Integer, ForeignKey('ProcessedLeaves.ProductID'), primary_key=True)
+)
+
    
 
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
-    Description = Column(String(100))
+    creator_id = Column(Integer, ForeignKey("Centra.CentralID"), nullable=True)
+    Description = Column(String(100)) #drop
     Weight = Column(Integer)
     FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
-    DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
-    DriedDate = Column(Date)
+    DryingID = DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
+    DriedDate = Column(Date, ForeignKey('DriedLeaves.DriedDate'))
     FlouredDate = Column(Date)
 
     drying_activity = relationship("DryingActivity", backref="processed_leaves")
     flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
 
     stocks = relationship("Stock", backref="processed_leaves")
-    creator = relationship("User", back_populates="processed_leaves")
+    creator = relationship("Centra", back_populates="processed_leaves")
+    date = relationship("DriedLeaves", back_populates="dried")
+    expeditioncontent = relationship("ExpeditionContent", back_populates="batch")
+    shipments = relationship("CentraShipment", secondary=shipment_batch_association, back_populates="batches")
 
 class WetLeavesCollection(Base):
     __tablename__ = 'WetLeavesCollection'
     WetLeavesBatchID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
-    Date = Column(DateTime)
-    # Time = Column(Time)
+    Date = Column(Date)
+    Time = Column(Time)
     Weight = Column(Integer)
     Expired = Column(Boolean)
-    ExpirationTime = Column(Time, name="ExpirationTime")
+    Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', name='wet_status'), default='Fresh')
+    Duration = Column(Interval)  # New column for duration
     creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
-    centra = relationship("Centra")
+    centra = relationship("Centra", back_populates="wet")
     creator = relationship("User", back_populates="WetLeavesCollection")
     
 class DryingMachine(Base):
@@ -82,15 +94,27 @@ class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
     DryingID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
-    Date = Column(Date)
+    # Date = Column(Date)  #delete
     Weight = Column(Integer)
     DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
     Time = Column(Time)
     creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
-
     centra = relationship("Centra")
     drying_machine = relationship("DryingMachine")
     creator = relationship("User", back_populates="drying_activity")
+
+class DriedLeaves (Base):
+    __tablename__ = 'DriedLeaves'
+
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
+    Weight = Column(Integer)
+    DriedDate = Column (Date)
+    Floured = Column(Boolean, default=False)
+
+
+    dried = relationship("ProcessedLeaves", back_populates="date")
+    centra = relationship("Centra", back_populates="driedleaves")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
@@ -124,16 +148,22 @@ class Centra(Base):
     __tablename__ = 'Centra'
     CentralID = Column(Integer, primary_key=True)
     Address = Column(String(100))
+    FlouringSchedule = Column(String(100))
 
 
     usercentra = relationship("UserCentra", back_populates="centra")
+    processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
+    driedleaves = relationship("DriedLeaves", back_populates="centra")
+    wet = relationship("WetLeavesCollection", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
+    Active = Column(Boolean)
 
     centra = relationship("Centra", back_populates="usercentra")
+    #Active (boolean)
 
 
 class HarborGuard(Base):
@@ -145,7 +175,7 @@ class HarborGuard(Base):
     phone = Column(String, nullable=True)
     openingHour = Column(Time, nullable=False)
     closingHour = Column(Time, nullable=False)
-
+    
 class Stock(Base):
     __tablename__ = 'stocks'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -156,12 +186,22 @@ class Stock(Base):
     # product = relationship("processed_leaves", backref="stock")
     # location = relationship("Location", back_populates="stocks")
 
+
+class CentraShipment(Base):
+    __tablename__ = 'CentraShipment'
+
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    ShippingMethod = Column(String)
+    AirwayBill = Column(String)
+
+    batches = relationship("ProcessedLeaves", secondary=shipment_batch_association, back_populates="shipments")
+
 class Expedition(Base):
     __tablename__ = 'Expedition'
     ExpeditionID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     AirwayBill = Column(String)
     EstimatedArrival = Column(DateTime) 
-    TotalPackages = Column(Integer)
+    TotalPackages = Column(Integer) 
     TotalWeight = Column(Integer)
     Status = Column(Enum('Shipped', 'To deliver', 'Completed', 'Missing', name='expedition_status'), default='To deliver')
     ExpeditionDate = Column(DateTime) 
@@ -177,6 +217,17 @@ class Expedition(Base):
 
     received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
+    content = relationship("ExpeditionContent", back_populates="expedition")
+
+#ExpeditionContent
+class ExpeditionContent(Base):
+    __tablename__ = 'ExpeditionContent'
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    BatchID = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
+
+    expedition = relationship("Expedition", back_populates="content")
+    batch = relationship("ProcessedLeaves", back_populates="expeditioncontent")
 
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
@@ -223,32 +274,21 @@ class Warehouse(Base):
     __tablename__ = 'warehouses'
 
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    warehouseName = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
     location = Column(String, index=True)
-    createdDate = Column(DateTime, default=datetime.utcnow)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
-
-class Shipment(Base):
-    __tablename__ = 'shipments'
-    ID = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    batch_id = Column(String, index=True)  
-    shipmentId = Column(String, nullable=False) 
-    driedDate = Column(String, nullable=True)  
-    flouredDate = Column(String, nullable=True)  
-    weight = Column(String, nullable=True)  
-    status = Column(String, nullable=True)
-    checkpoint = Column(String, nullable=True) 
 
 class XYZuser(Base):
     __tablename__ = 'XYZuser'
 
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    userID = Column(Integer, ForeignKey('users.UserID'))
     WarehouseID = Column(Integer, ForeignKey('warehouses.id'))
 
     warehouse = relationship("Warehouse", back_populates="xyzuser")
+    user = relationship("User", back_populates="xyz")
 
 # class Shipment(Base):
 #     __tablename__ = 'shipments'

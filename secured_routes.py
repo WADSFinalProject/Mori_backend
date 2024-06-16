@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Query, Depends
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
@@ -48,10 +48,10 @@ def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpd
 
 @secured_router.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
 def delete_existing_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    batch = crud.delete_batch(db=db, batch_id=batch_id)
-    if batch is None:
+    result = crud.delete_batch(db=db, batch_id=batch_id)
+    if result is None:
         raise HTTPException(status_code=404, detail="Batch not found")
-    return batch
+    return result
 
 #DRYING
 @secured_router.post("/drying-machine/create/")
@@ -149,6 +149,36 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
     if db_drying_activity is None:
         raise HTTPException(status_code=404, detail="Drying activity not found")
     return db_drying_activity
+
+#driedleaves
+@secured_router.post("/dried_leaves/", response_model=schemas.DriedLeaves)
+def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db)):
+    return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
+
+@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+
+@secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
+def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
+    db_dried_leaf = crud.get_dried_leaf(db=db, leaf_id=leaf_id)
+    if db_dried_leaf is None:
+        raise HTTPException(status_code=404, detail="Dried leaf not found")
+    return db_dried_leaf
+
+@secured_router.put("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
+def update_dried_leaf(leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate, db: Session = Depends(get_db)):
+    db_dried_leaf = crud.update_dried_leaf(db=db, leaf_id=leaf_id, dried_leaf=dried_leaf)
+    if db_dried_leaf is None:
+        raise HTTPException(status_code=404, detail="Dried leaf not found")
+    return db_dried_leaf
+
+@secured_router.delete("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
+def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
+    db_dried_leaf = crud.delete_dried_leaf(db=db, leaf_id=leaf_id)
+    if db_dried_leaf is None:
+        raise HTTPException(status_code=404, detail="Dried leaf not found")
+    return db_dried_leaf
 
 #FLOURING
 @secured_router.post("/flouring-machine/create/")
@@ -391,7 +421,7 @@ def read_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depe
     centra = crud.get_centra_by_id(db, CentralID)
     return centra
 
-@secured_router.post("/centras", response_model=schemas.CentraDetails)
+@secured_router.post("/centras", response_model=schemas.Centra)
 async def create_new_centra(centra_data: schemas.CentraCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     new_centra = crud.add_new_centra(db, centra_data)
     return new_centra
@@ -512,6 +542,10 @@ async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db), use
 #         raise HTTPException(status_code=404, detail="Admin not found")
 #     return db_admin
 
+#CentraShipment
+@secured_router.post("/shipments/", response_model=schemas.CentraShipmentBase)
+def create_shipment(shipment: schemas.CentraShipmentCreate, db: Session = Depends(get_db)):
+    return crud.create_shipment(db, shipment)
 
 #expedition
 @secured_router.post("/expeditions/", response_model=schemas.Expedition)
@@ -543,6 +577,53 @@ def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: d
     if db_expedition is None:
         raise HTTPException(status_code=404, detail="Expedition not found")
     return db_expedition
+
+@secured_router.put("/expeditions/{expedition_id}/change_status")
+def change_expedition_status_route(expedition_id: int, new_status: str, db: Session = Depends(get_db)):
+    expedition = crud.change_expedition_status(db, expedition_id, new_status)
+    if expedition is None:
+        raise HTTPException(status_code=404, detail=f"Expedition with id {expedition_id} not found")
+    return {"message": f"Status of Expedition {expedition_id} changed to {new_status}"}
+
+
+@secured_router.put("/expeditions/{expedition_id}/confirm", response_model=schemas.Expedition)
+def confirm_expedition_route(expedition_id: int, TotalWeight: int, db: Session = Depends(get_db)):
+    expedition = crud.confirm_expedition(db, expedition_id, TotalWeight)
+    if expedition is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return expedition
+
+#expeditioncontent
+
+@secured_router.post("/expedition_contents/", response_model=schemas.ExpeditionContent)
+def create_expedition_content(expedition_content: schemas.ExpeditionContentCreate, db: Session = Depends(get_db)):
+    return crud.create_expedition_content(db=db, expedition_content=expedition_content)
+
+@secured_router.get("/expedition_contents/{expedition_content_id}", response_model=schemas.ExpeditionContent)
+def read_expedition_content(expedition_content_id: int, db: Session = Depends(get_db)):
+    db_expedition_content = crud.get_expedition_content(db, expedition_content_id=expedition_content_id)
+    if db_expedition_content is None:
+        raise HTTPException(status_code=404, detail="Expedition content not found")
+    return db_expedition_content
+
+@secured_router.get("/expedition_contents/", response_model=List[schemas.ExpeditionContent])
+def read_expedition_contents(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expedition_contents = crud.get_expedition_contents(db, skip=skip, limit=limit)
+    return expedition_contents
+
+@secured_router.put("/expedition_contents/{expedition_content_id}", response_model=schemas.ExpeditionContent)
+def update_expedition_content(expedition_content_id: int, expedition_content: schemas.ExpeditionContentUpdate, db: Session = Depends(get_db)):
+    db_expedition_content = crud.update_expedition_content(db, expedition_content_id=expedition_content_id, expedition_content=expedition_content)
+    if db_expedition_content is None:
+        raise HTTPException(status_code=404, detail="Expedition content not found")
+    return db_expedition_content
+
+@secured_router.delete("/expedition_contents/{expedition_content_id}", response_model=schemas.ExpeditionContent)
+def delete_expedition_content(expedition_content_id: int, db: Session = Depends(get_db)):
+    db_expedition_content = crud.delete_expedition_content(db, expedition_content_id=expedition_content_id)
+    if db_expedition_content is None:
+        raise HTTPException(status_code=404, detail="Expedition content not found")
+    return db_expedition_content
 
 #received package
 @secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
@@ -646,8 +727,8 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current
     return db_user
 
 @secured_router.get("/users", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    return crud.get_all_users(db=db, skip=skip, limit=limit)
+def read_users(skip: int = 0, limit: int = 100, sort_by: str = Query('Name'), sort_order: str = Query('asc'), role: str = Query(None), db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return crud.get_all_users(db=db, skip=skip, limit=limit, sort_by=sort_by, sort_order=sort_order, role=role)
 
 @secured_router.get("/users/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
