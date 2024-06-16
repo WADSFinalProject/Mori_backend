@@ -513,30 +513,35 @@ def delete_user_centra(user_centra_id: int, db: Session = Depends(get_db), user:
 #     raise HTTPException(status_code=404, detail="Shipment not found")
 
 # Harborguards
-@secured_router.get("/harborguards")
-async def show_all_harbor_guards(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    guards = crud.get_all_harbor_guards(db)
-    return guards
+@secured_router.post("/harborguard/", response_model=schemas.HarborGuardInDB)
+def create_harbor_guard(harbor_guard: schemas.HarborGuardCreate, db: Session = Depends(get_db)):
+    return crud.create_harbor_guard(db, harbor_guard)
 
-@secured_router.get("/harborguards/{guard_id}")
-async def show_harbor_guard(HarborID: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    guard = crud.get_harbor_guard(db, HarborID)
-    return guard
+@secured_router.get("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
+def read_harbor_guard(harbour_id: int, db: Session = Depends(get_db)):
+    db_harbor_guard = crud.get_harbor_guard(db, harbour_id)
+    if db_harbor_guard is None:
+        raise HTTPException(status_code=404, detail="Harbor Guard not found")
+    return db_harbor_guard
 
-@secured_router.post("/harborguards", response_model=schemas.HarborGuardCreate)
-async def add_harbor_guard(guard_data: schemas.HarborGuardCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    new_guard = crud.create_harbor_guard(db, guard_data)
-    return new_guard
+@secured_router.put("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
+def update_harbor_guard(harbour_id: int, harbor_guard: schemas.HarborGuardUpdate, db: Session = Depends(get_db)):
+    db_harbor_guard = crud.update_harbor_guard(db, harbour_id, harbor_guard)
+    if db_harbor_guard is None:
+        raise HTTPException(status_code=404, detail="Harbor Guard not found")
+    return db_harbor_guard
 
-@secured_router.put("/harborguards/{guard_id}", response_model=schemas.HarborGuardUpdate)
-async def modify_harbor_guard(HarborID: int, guard_data: schemas.HarborGuardUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    updated_guard = crud.update_harbor_guard(db, HarborID, guard_data)
-    return updated_guard
+@secured_router.delete("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
+def delete_harbor_guard(harbour_id: int, db: Session = Depends(get_db)):
+    db_harbor_guard = crud.delete_harbor_guard(db, harbour_id)
+    if db_harbor_guard is None:
+        raise HTTPException(status_code=404, detail="Harbor Guard not found")
+    return db_harbor_guard
 
-@secured_router.delete("/harborguards/{guard_id}")
-async def remove_harbor_guard(guard_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    result = crud.delete_harbor_guard(db, guard_id)
-    return result
+@secured_router.get("/harborguard/", response_model=list[schemas.HarborGuardInDB])
+def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    harbor_guards = crud.get_all_harbor_guards(db, skip=skip, limit=limit)
+    return harbor_guards
 
 # Warehouses
 @secured_router.get("/warehouses", response_model=List[schemas.Warehouse])

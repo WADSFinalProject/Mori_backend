@@ -18,7 +18,7 @@ class User(Base):
     Phone = Column(String, nullable=True)
     Role = Column(String)
     BirthDate = Column(Date, nullable=True)
-    Address = Column(String, nullable=True)
+    Address = Column(String, nullable=True) #delete
     hashed_password = Column(String, nullable=True)  # Password can be nullable initially
     is_password_set = Column(Boolean, default=False) 
     secret_key = Column(String, unique=True) #OTP Secret Key
@@ -32,6 +32,7 @@ class User(Base):
     WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
+
 class URLToken(Base):
     __tablename__ = "URLtoken"
     value = Column(String, primary_key=True, unique=True)
