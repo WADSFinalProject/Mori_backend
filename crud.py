@@ -203,7 +203,7 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
     
     db_batch = models.ProcessedLeaves(
-        # Description=batch.Description,
+        CentraID=batch.CentraID,
         Weight=batch.Weight,
         DryingID=batch.DryingID,
         FlouringID=batch.FlouringID,

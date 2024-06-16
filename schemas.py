@@ -99,6 +99,7 @@ class Admin(AdminBase):
 class ProcessedLeavesBase(BaseModel):
     # ProductID: int
     # Description: Optional[str] = None
+    CentraID: Optional[int] = None
     Weight: Optional[int] = None
     DryingID: Optional[int] = None
     FlouringID: Optional[int] = None
@@ -118,7 +119,7 @@ class ProcessedLeavesUpdate(BaseModel):
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
     # shipments: Optional[List[CentraShipment]] = []
 
     class Config:
