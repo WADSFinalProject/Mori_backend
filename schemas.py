@@ -156,6 +156,10 @@ class WetLeavesCollection(WetLeavesCollectionBase):
     class Config:
         from_attributes = True
 
+
+class ConversionRate(BaseModel):
+    conversion_rate: float
+
 # Centra Details
 class CentraBase(BaseModel):
     Address: str

@@ -852,6 +852,36 @@ def get_wet_leaves_weight_by_status(db: Session, creator_id: int):
     
     return weights
 
+def get_wet_conversion_rate(db: Session, centraID: int):  #based on each centra 
+    # Total weight of expired wet leaves
+    expired_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centraID, 
+        models.WetLeavesCollection.Status == 'expired'
+    ).scalar() or 0
+
+    # Total weight of dried leaves
+    dried_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centraID
+    ).scalar() or 0
+
+    conversion_rate = (dried_weight / expired_weight) * 100 if expired_weight > 0 else 0
+    return conversion_rate
+
+def get_dry_conversion_rate(db: Session, centraID: int):
+     # Total weight of expired wet leaves
+    expired_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centraID, 
+        models.DriedLeaves.Floured == False
+    ).scalar() or 0
+
+    # Total weight of dried leaves
+    dried_weight = db.query(func.sum(models.ProcessedLeaves.Weight)).filter(
+        models.ProcessedLeaves.CentraID == centraID
+    ).scalar() or 0
+
+    conversion_rate = (dried_weight / expired_weight) * 100 if expired_weight > 0 else 0
+    return conversion_rate
+
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
 
