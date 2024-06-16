@@ -87,11 +87,14 @@ class WetLeavesCollection(Base):
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
+    Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     # creator = relationship("User", back_populates="drying_machines")
+    centra = relationship("Centra", back_populates="Dmachine")
 
 class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
@@ -122,12 +125,15 @@ class DriedLeaves (Base):
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
     MachineID = Column(Integer, primary_key=True, nullable=True,autoincrement=True)
+    CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
+    Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     # creator = relationship("User", back_populates="flouring_machines")
     activity = relationship("FlouringActivity", back_populates="flouring_machine")
+    centra = relationship("Centra", back_populates="Fmachine")
 
 
 class FlouringActivity(Base):
@@ -161,6 +167,8 @@ class Centra(Base):
     wet = relationship("WetLeavesCollection", back_populates="centra")
     expedition = relationship("Expedition", back_populates="centra")
     batch = relationship("ProcessedLeaves", back_populates="centra")
+    Dmachine = relationship("DryingMachine", back_populates="centra")
+    Fmachine = relationship("FlouringMachine", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
@@ -213,6 +221,7 @@ class Expedition(Base):
     Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
+    # checkpoingID = Column(Integer, ForeignKey('CheckpointStatus.id'))
     Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
@@ -220,6 +229,8 @@ class Expedition(Base):
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
+    checkpoint = relationship("CheckpointStatus", back_populates="expedition")
+    # status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
 #ExpeditionContent
 class ExpeditionContent(Base):
@@ -230,6 +241,17 @@ class ExpeditionContent(Base):
 
     expedition = relationship("Expedition", back_populates="content")
     batch = relationship("ProcessedLeaves", back_populates="expeditioncontent")
+
+#CheckpointStatus
+class CheckpointStatus(Base):
+    __tablename__ = 'checkpointstatus'
+    id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    expeditionid = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    status = Column(String)
+    statusdate = Column(DateTime)
+
+    expedition = relationship("Expedition", back_populates="checkpoint")
+    # expeditionpoint = relationship("Expedition", back_populates="status")
 
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'

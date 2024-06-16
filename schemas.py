@@ -2,6 +2,8 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime, date, time, timedelta
 from typing_extensions import Annotated
+from sqlalchemy import Interval
+
 import re
 
 # user schemas
@@ -193,8 +195,11 @@ class UserCentra(UserCentraBase):
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
+    CentraID: int
     Capacity: str
     Status: str
+    Duration: Optional[timedelta]
+
 
 class DryingMachineCreate(DryingMachineBase):
     pass
@@ -260,8 +265,10 @@ class DriedLeaves(DriedLeavesBase):
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
+    CentraID: int
     Capacity: str
     Status: str
+    Duration: Optional[timedelta]
 
 class FlouringMachineCreate(FlouringMachineBase):
     pass
@@ -393,7 +400,22 @@ class ExpeditionContent(ExpeditionContentBase):
 
     class Config:
         orm_mode = True
-        
+
+#checkpointStatus
+class CheckpointStatusBase(BaseModel):
+    expeditionid: int
+    status: str
+    statusdate: datetime
+
+class CheckpointStatusCreate(CheckpointStatusBase):
+    pass
+
+class CheckpointStatus(CheckpointStatusBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
     ExpeditionID: int

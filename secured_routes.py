@@ -288,10 +288,17 @@ def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(g
 #         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
 #     return db_wet_leaves_collection
 
-@secured_router.put("/wet_leaves-collection/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
-def update_wet_leaves_collection(wet_leaves_batch_id: int, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db)):
-    return crud.update_wet_leaves_collection(db, wet_leaves_batch_id, update_data)
+# @secured_router.put("/wet_leaves-collection/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+# def update_wet_leaves_collection(wet_leaves_batch_id: int, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db)):
+#     return crud.update_wet_leaves_collection(db, wet_leaves_batch_id, update_data)
 
+@secured_router.put("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    db_wet_leaves_collection = crud.update_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id, update_data=update_data)
+    if db_wet_leaves_collection is None:
+        raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
+    return db_wet_leaves_collection
+    
 @secured_router.delete("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
 def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     db_wet_leaves_collection = crud.delete_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
@@ -725,6 +732,38 @@ def delete_expedition_content(expedition_content_id: int, db: Session = Depends(
     if db_expedition_content is None:
         raise HTTPException(status_code=404, detail="Expedition content not found")
     return db_expedition_content
+
+
+#checkpointstatus
+
+@secured_router.post("/checkpointstatus/", response_model=schemas.CheckpointStatus)
+def create_checkpoint(checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
+    return crud.create_checkpoint_status(db, checkpoint_status)
+
+@secured_router.get("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
+def read_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
+    db_checkpoint = crud.get_checkpoint_status(db, checkpoint_id)
+    if db_checkpoint is None:
+        raise HTTPException(status_code=404, detail="Checkpoint status not found")
+    return db_checkpoint
+
+@secured_router.get("/checkpointstatus/", response_model=List[schemas.CheckpointStatus])
+def read_all_checkpoints(db: Session = Depends(get_db)):
+    return crud.get_all_checkpoint_statuses(db=db)
+
+@secured_router.put("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
+def update_checkpoint(checkpoint_id: int, checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
+    db_checkpoint = crud.update_checkpoint_status(db, checkpoint_id, checkpoint_status)
+    if db_checkpoint is None:
+        raise HTTPException(status_code=404, detail="Checkpoint status not found")
+    return db_checkpoint
+
+@secured_router.delete("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
+def delete_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
+    db_checkpoint = crud.delete_checkpoint_status(db, checkpoint_id)
+    if db_checkpoint is None:
+        raise HTTPException(status_code=404, detail="Checkpoint status not found")
+    return db_checkpoint
 
 #received package
 @secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
