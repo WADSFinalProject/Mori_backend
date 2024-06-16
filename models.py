@@ -31,7 +31,7 @@ class User(Base):
     flouring_activity = relationship("FlouringActivity", back_populates="creator")
     WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
-
+    centra = relationship("UserCentra", back_populates="user")
 class URLToken(Base):
     __tablename__ = "URLtoken"
     value = Column(String, primary_key=True, unique=True)
@@ -161,9 +161,10 @@ class UserCentra(Base):
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
     Active = Column(Boolean)
+    userID = Column(Integer, ForeignKey("users.UserID"))
 
     centra = relationship("Centra", back_populates="usercentra")
-    #Active (boolean)
+    user = relationship("User", back_populates="centra")
 
 
 class HarborGuard(Base):
@@ -271,6 +272,7 @@ class Warehouse(Base):
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
     location = Column(String, index=True)
+    created_at = Column(Date)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
 
