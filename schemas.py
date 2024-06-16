@@ -99,6 +99,7 @@ class Admin(AdminBase):
 class ProcessedLeavesBase(BaseModel):
     # ProductID: int
     # Description: Optional[str] = None
+    CentraID: Optional[int] = None
     Weight: Optional[int] = None
     DryingID: Optional[int] = None
     FlouringID: Optional[int] = None
@@ -118,7 +119,7 @@ class ProcessedLeavesUpdate(BaseModel):
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
     # shipments: Optional[List[CentraShipment]] = []
 
     class Config:
@@ -270,7 +271,7 @@ class FlouringMachineUpdate(BaseModel):
 
 class FlouringMachine(FlouringMachineBase):
     MachineID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -298,7 +299,7 @@ class FlouringActivityUpdate(BaseModel):
 
 class FlouringActivity(FlouringActivityBase):
     FlouringID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -485,7 +486,7 @@ class PackageReceipt(PackageReceiptBase):
 #     weight: float
 
 class PickupBase(BaseModel):
-    PIC_name: str
+    xyzID: int
     expeditionID: int
     destination: str
     pickup_time: time

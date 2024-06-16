@@ -24,12 +24,7 @@ def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends
 
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        batches = crud.get_batches_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
     return batches
 
 @secured_router.get("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
@@ -128,12 +123,7 @@ def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: di
 
 @secured_router.get("/drying_activity/", response_model=List[schemas.DryingActivity])
 def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-         drying_activity = crud.get_drying_activity_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
     return drying_activity
 
 @secured_router.put("/drying-activities/{drying_id}")
@@ -155,9 +145,19 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
 def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db)):
     return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
 
-@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
-def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+# @secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+# def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+
+@secured_router.get("/dried_leaves/", response_model=List[schemas.DriedLeaves])
+def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user["role"] == "admin":
+        wet_leaves_collections = crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+    elif user["role"] == "centra":
+        wet_leaves_collections = crud.get_dried_leaves_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
+    else:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return wet_leaves_collections
 
 @secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
@@ -198,12 +198,7 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        flouring_machines = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        flouring_machines = crud.get_flouring_machines_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    flouring_machines = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
     return flouring_machines
 
 @secured_router.post("/flouring_machines/{machine_id}/start")
@@ -226,9 +221,9 @@ def delete_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
     if db_flouring_machine is None:
         raise HTTPException(status_code=404, detail="Flouring machine not found")
     
-    db.delete(db_flouring_machine)
-    db.commit()
-    return None
+    # db.delete(db_flouring_machine)
+    # db.commit()
+    return {"message": "Flouring machine successfully deleted"}
 
 #flouring activity
 @secured_router.post("/flouring_activity/create")
@@ -242,12 +237,7 @@ def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, 
     
 @secured_router.get("/flouring_activity/", response_model=List[schemas.FlouringActivity])
 def read_flouring_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        flouring_activity = crud.get_flouring_activity_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
     return flouring_activity
 
 @secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
@@ -264,12 +254,13 @@ def update_flouring_activity(flouring_id: int, flouring_activity: schemas.Flouri
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return updated_flouring
 
-@secured_router.delete("/flouring_activity/delete/{flouring_id}", response_model=schemas.FlouringActivity)
+@secured_router.delete("/flouring_activity/delete/{flouring_id}")
 def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     deleted_flouring_activity = crud.delete_flouring_activity(db=db, flouring_id=flouring_id)
     if not deleted_flouring_activity:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
-    return deleted_flouring_activity
+    
+    return {"message": "Flouring activity successfully deleted",}
 
 
 
@@ -283,7 +274,7 @@ def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = D
     if user["role"] == "admin":
         wet_leaves_collections = crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
     elif user["role"] == "centra":
-        wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
+        wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
     else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return wet_leaves_collections
@@ -301,6 +292,10 @@ def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.
     if db_wet_leaves_collection is None:
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
     return db_wet_leaves_collection
+
+# @secured_router.put("/wet_leaves-collection/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+# def update_wet_leaves_collection(wet_leaves_batch_id: int, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db)):
+#     return crud.update_wet_leaves_collection(db, wet_leaves_batch_id, update_data)
 
 @secured_router.delete("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
 def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -474,6 +469,13 @@ def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_
 def read_user_centra_by_id(user_centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     user_centra = crud.get_user_centra_by_id(db=db, user_centra_id=user_centra_id)
     if user_centra is None:
+        raise HTTPException(status_code=404, detail="UserCentra not found")
+    return user_centra
+
+@secured_router.get('/usercentra/by-user/{user_id}', response_model=schemas.UserCentra)
+def read_user_centra_by_user(user_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    user_centra = crud.get_user_centra_by_user_id(db=db, user_id=user_id)
+    if user_centra is None: 
         raise HTTPException(status_code=404, detail="UserCentra not found")
     return user_centra
 

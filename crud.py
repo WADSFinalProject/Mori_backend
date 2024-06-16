@@ -80,7 +80,7 @@ def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate) -> O
     return db_user
 
 def delete_user(db: Session, user_id: str) -> Optional[models.User]:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_user = db.query(models.User).filter(models.User.UserID == user_id).first()
     if db_user:
         db.delete(db_user)
         db.commit()
@@ -203,7 +203,7 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
     
     db_batch = models.ProcessedLeaves(
-        # Description=batch.Description,
+        CentraID=batch.CentraID,
         Weight=batch.Weight,
         DryingID=batch.DryingID,
         FlouringID=batch.FlouringID,
@@ -361,8 +361,8 @@ def get_drying_activity(db: Session, drying_id: int):
         raise HTTPException(status_code=404, detail="Drying Activity not found")
     return drying
 
-def get_drying_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingActivity).filter(models.DryingActivity.creator_id == creator_id).offset(skip).limit(limit).all()
+# def get_drying_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
+#     return db.query(models.DryingActivity).filter(models.DryingActivity.creator_id == creator_id).offset(skip).limit(limit).all()
 
 def update_drying_activity(db: Session, drying_id: str, drying_activity: schemas.DryingActivityUpdate):
     db_drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
@@ -387,6 +387,9 @@ def get_dried_leaves(db: Session, skip: int = 0, limit: int = 100):
 
 def get_dried_leaf(db: Session, leaf_id: int):
     return db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
+
+def get_dried_leaves_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == creator_id).offset(skip).limit(limit).all()
 
 def create_dried_leaf(db: Session, dried_leaf: schemas.DriedLeavesCreate):
     db_dried_leaf = models.DriedLeaves(**dried_leaf.dict())
@@ -684,6 +687,9 @@ def get_user_centra(db: Session, skip: int = 0, limit: int = 100):
 def get_user_centra_by_id(db: Session, user_centra_id: int):
     return db.query(models.UserCentra).filter(models.UserCentra.id == user_centra_id).first()
 
+def get_user_centra_by_user_id(db: Session, user_id: int): 
+    return db.query(models.UserCentra).filter(models.UserCentra.userID == user_id).first()
+
 def create_user_centra(db: Session, user_centra: schemas.UserCentraCreate):
     db_user_centra = models.UserCentra(**user_centra.dict())
     db.add(db_user_centra)
@@ -829,10 +835,19 @@ def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100)
     return db.query(models.WetLeavesCollection).offset(skip).limit(limit).all()
 
 def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.creator_id == creator_id).offset(skip).limit(limit).all()
+    return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == creator_id).offset(skip).limit(limit).all()
 
-def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
+def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
+
+# def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
+#     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
+#     if db_wet_leaves_collection:
+#         for key, value in update_data.dict().items():
+#             setattr(db_wet_leaves_collection, key, value)
+#         db.commit()
+#         db.refresh(db_wet_leaves_collection)
+#     return db_wet_leaves_collection
 
 def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
@@ -843,7 +858,7 @@ def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_d
         db.refresh(db_wet_leaves_collection)
     return db_wet_leaves_collection
 
-def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
+def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
     if db_wet_leaves_collection:
         db.delete(db_wet_leaves_collection)
