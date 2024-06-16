@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Request, Depends, HTTPException, Query, Depends
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
@@ -634,6 +634,10 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 #         raise HTTPException(status_code=404, detail="Admin not found")
 #     return db_admin
 
+#CentraShipment
+@secured_router.post("/shipments/", response_model=schemas.CentraShipmentBase)
+def create_shipment(shipment: schemas.CentraShipmentCreate, db: Session = Depends(get_db)):
+    return crud.create_shipment(db, shipment)
 
 #expedition
 @secured_router.post("/expeditions/", response_model=schemas.Expedition)
