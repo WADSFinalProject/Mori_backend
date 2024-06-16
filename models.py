@@ -77,7 +77,7 @@ class WetLeavesCollection(Base):
     Date = Column(Date)
     Time = Column(Time)
     Weight = Column(Integer)
-    Status = Column(Enum('Fresh', 'Near Expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
+    Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
     # Duration = Column(Interval)  # New column for duration
     creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
