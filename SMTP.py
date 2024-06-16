@@ -53,7 +53,7 @@ def send_setPassEmail(user: models.User, db:Session):
                
        
         <h1>Welcome to the Mori App!</h1>
-        <p>Hello {user.FullName},</p>
+        <p>Hello {user.FirstName},</p>
         <p>To complete the registration process and ensure the security of your account, we kindly ask you to set up your password by clicking on the link below:</p>
         <p><a href="{setup_link}">{setup_link}</a></p>
         <p>Mori Team</p>
@@ -80,7 +80,7 @@ def send_OTP(user: models.User):
     <div id="email">
         
         <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
-        <p>Hello {user.FullName},</p>
+        <p>Hello {user.FirstName},</p>
         <p>We have received a request to log in to your account. Use the OTP code below to enter:</p>
         <h1 style="text-align:center; font-weight: bold;">{otp}</h1>
         <p>If you did not make any request, you can kindly ignore this email. <b>This code will expire in 2 minutes!</b></p>
@@ -110,7 +110,7 @@ def send_resetPassword_OTP(user: models.User):
     <div id="email">
         
         <img src="https://i.imgur.com/YAJcRx0.png" alt="Descriptive Text" style="width: 100%;" />
-        <p>Hello {user.FullName},</p>
+        <p>Hello {user.FirstName},</p>
         <p>We've received a request to reset your password. Please use the OTP code provided below to continue with the process.</p>
         <h1 style="text-align:center; font-weight: bold;">{otp}</h1>
         <p>If you did not make any request, you can kindly ignore this email. <b>This code will expire in 2 minutes!</b></p>

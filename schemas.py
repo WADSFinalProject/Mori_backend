@@ -39,7 +39,8 @@ class User(UserBase):
 
 class UserRegistration(BaseModel):
     Email: str
-    FullName: str
+    FirstName: str
+    LastName: str
     Role: str
     Password: str
 
@@ -103,7 +104,7 @@ class ProcessedLeaves(ProcessedLeavesBase):
     creator_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
@@ -166,7 +167,7 @@ class UserCentra(UserCentraBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # DryingMachine schemas
@@ -185,7 +186,7 @@ class DryingMachine(DryingMachineBase):
     creator_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
@@ -234,7 +235,7 @@ class DriedLeaves(DriedLeavesBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
@@ -369,7 +370,7 @@ class ExpeditionContent(ExpeditionContentBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
@@ -470,12 +471,11 @@ class PickupBase(BaseModel):
 
 class PickupCreate(PickupBase):
     pass
-
 class Pickup(PickupBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -531,7 +531,7 @@ class HarborGuard(HarborGuardBase):
     HarborID: int  
 
     class Config:
-        from_attributes = True  
+        from_attributes = True
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
@@ -569,4 +569,4 @@ class XYZuser(XYZuserBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

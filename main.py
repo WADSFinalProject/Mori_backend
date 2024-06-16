@@ -114,8 +114,8 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
     db_user = crud.get_user_by_email(db,verification.Email)
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        access_token = create_access_token(db_user.UserID,db_user.IDORole,db_user.FullName)
-        refresh_token = create_refresh_token(db_user.UserID,db_user.IDORole,db_user.FullName)
+        access_token = create_access_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
+        refresh_token = create_refresh_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         response = JSONResponse(content={"access_token": access_token})
         response.set_cookie(key="refresh_token",max_age= 720, value=refresh_token, httponly=True, secure=False)
         response.headers["Set-Cookie"] += "; SameSite=None"
