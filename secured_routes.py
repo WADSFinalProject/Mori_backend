@@ -477,6 +477,13 @@ def read_user_centra_by_id(user_centra_id: int, db: Session = Depends(get_db), u
         raise HTTPException(status_code=404, detail="UserCentra not found")
     return user_centra
 
+@secured_router.get('/usercentra/by-user/{user_id}', response_model=schemas.UserCentra)
+def read_user_centra_by_user(user_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    user_centra = crud.get_user_centra_by_user_id(db=db, user_id=user_id)
+    if user_centra is None: 
+        raise HTTPException(status_code=404, detail="UserCentra not found")
+    return user_centra
+
 @secured_router.post("/usercentra/", response_model=schemas.UserCentra)
 def create_user_centra(user_centra: schemas.UserCentraCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.create_user_centra(db=db, user_centra=user_centra)
