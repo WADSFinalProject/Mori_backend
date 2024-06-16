@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Cookie
+from fastapi import FastAPI, Depends, HTTPException, Cookie , Request
 from sqlalchemy.orm import Session
 from database import get_db, engine 
 from typing import Optional, List
@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from secured_routes import secured_router
 import crud, models, schemas  
 import SMTP, security
+from typing import Annotated
+from datetime import datetime, timedelta,  timezone
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -23,8 +26,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
+    allow_headers=["Access-Control-Allow-Headers", 'Content-Type', 'Authorization', 'Access-Control-Allow-Origin',"Content-Type","Set-Cookie"],
 )
 
 @app.get("/")
@@ -128,25 +131,33 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
         access_token = create_access_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         refresh_token = create_refresh_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         response = JSONResponse(content={"access_token": access_token})
-        response.set_cookie(key="refresh_token",max_age= 720, value=refresh_token, httponly=True, secure=False)
+        expires = datetime.utcnow() + timedelta(hours=12)
+        expires = expires.replace(tzinfo=timezone.utc)
+        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False, expires=expires, path="/")
         response.headers["Set-Cookie"] += "; SameSite=None"
       
-        return response
+        # return {"access_token": access_token, "token_type": "bearer"}
         # response.headers["Set-cookie"] += "; SameSite=None"
-        # return response
+        print(str(response))
+        return response
+        
         
     raise HTTPException(status_code=404, detail="Verification failed")
 
-@app.post("/token/refresh")
-async def refresh_token(refresh_token: str = Cookie(None)):
-    if refresh_token is None:
+@app.post("/token/refresh_token")
+async def refresh_token(token: Annotated[str | None, Cookie()] = None):
+
+    print(str(token))
+    if token is None:
         return HTTPException(status_code=401, detail="No refresh token found")
     try:
-        payload = verify_token(refresh_token)
+        payload = verify_token(token)
         new_access_token = create_access_token(payload["sub"],payload["role"],payload["name"])
+        print(str(new_access_token))
         return {"access_token": new_access_token}
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
 
 @app.post("/users/resend_code")
 async def resend_code(data: dict, db: Session = Depends(get_db)):

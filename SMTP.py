@@ -67,7 +67,7 @@ def send_setPassEmail(user: models.User, db:Session):
     
 def send_OTP(user: models.User):
     key = user.secret_key
-    print(key)
+
  
     otp = generate_otp(key)
 
