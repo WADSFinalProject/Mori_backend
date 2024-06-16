@@ -144,7 +144,7 @@ class WetLeavesCollectionUpdate(BaseModel):
     Date: Optional[date] = None
     Time: Optional[time] = None
     Weight: Optional[int] = None
-    # Status: Optional[str] = None
+    Status: Optional[str] = None
     
     # ExpiredTime: Optional[time] = None
     # ExpirationTime: Optional[time] = None
@@ -204,7 +204,7 @@ class DryingMachineUpdate(BaseModel):
 
 class DryingMachine(DryingMachineBase):
     MachineID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         orm_mode = True

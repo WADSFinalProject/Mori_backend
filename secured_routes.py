@@ -82,12 +82,7 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
 
 @secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        drying_machines = crud.get_all_drying_machines(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        drying_machines = crud.get_drying_machines_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    drying_machines = crud.get_all_drying_machines(db=db, skip=skip, limit=limit)
     return drying_machines
 
 @secured_router.get("/drying_machine/{machine_id}", response_model=schemas.DryingMachine)
