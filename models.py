@@ -76,7 +76,7 @@ class WetLeavesCollection(Base):
     Time = Column(Time)
     Weight = Column(Integer)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
-    Duration = Column(Interval)  # New column for duration
+    # Duration = Column(Interval)  # New column for duration
     creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
     centra = relationship("Centra", back_populates="wet")
