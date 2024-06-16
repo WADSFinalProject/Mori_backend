@@ -25,7 +25,7 @@ class User(Base):
     
 
     # processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
-    drying_machines = relationship("DryingMachine", back_populates="creator")
+    # drying_machines = relationship("DryingMachine", back_populates="creator")
     # flouring_machines = relationship("FlouringMachine", back_populates="creator")
     # drying_activity = relationship("DryingActivity", back_populates="creator")
     # flouring_activity = relationship("FlouringActivity", back_populates="creator")
@@ -89,9 +89,9 @@ class DryingMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     Capacity = Column(String(100))
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
-    creator = relationship("User", back_populates="drying_machines")
+    # creator = relationship("User", back_populates="drying_machines")
 
 class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
