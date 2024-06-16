@@ -155,9 +155,19 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
 def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db)):
     return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
 
-@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
-def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+# @secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+# def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+
+@secured_router.get("/dried_leaves/", response_model=List[schemas.DriedLeaves])
+def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user["role"] == "admin":
+        wet_leaves_collections = crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+    elif user["role"] == "centra":
+        wet_leaves_collections = crud.get_dried_leaves_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
+    else:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return wet_leaves_collections
 
 @secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
@@ -283,7 +293,7 @@ def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = D
     if user["role"] == "admin":
         wet_leaves_collections = crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
     elif user["role"] == "centra":
-        wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
+        wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
     else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return wet_leaves_collections

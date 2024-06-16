@@ -388,6 +388,9 @@ def get_dried_leaves(db: Session, skip: int = 0, limit: int = 100):
 def get_dried_leaf(db: Session, leaf_id: int):
     return db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
 
+def get_dried_leaves_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == creator_id).offset(skip).limit(limit).all()
+
 def create_dried_leaf(db: Session, dried_leaf: schemas.DriedLeavesCreate):
     db_dried_leaf = models.DriedLeaves(**dried_leaf.dict())
     db.add(db_dried_leaf)
@@ -832,7 +835,7 @@ def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100)
     return db.query(models.WetLeavesCollection).offset(skip).limit(limit).all()
 
 def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.creator_id == creator_id).offset(skip).limit(limit).all()
+    return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == creator_id).offset(skip).limit(limit).all()
 
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
