@@ -834,14 +834,32 @@ def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: in
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
 
-def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
-    db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
-    if db_wet_leaves_collection:
-        for key, value in update_data.dict().items():
-            setattr(db_wet_leaves_collection, key, value)
-        db.commit()
-        db.refresh(db_wet_leaves_collection)
-    return db_wet_leaves_collection
+# def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
+#     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
+#     if db_wet_leaves_collection:
+#         for key, value in update_data.dict().items():
+#             setattr(db_wet_leaves_collection, key, value)
+#         db.commit()
+#         db.refresh(db_wet_leaves_collection)
+#     return db_wet_leaves_collection
+
+def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: int, update_data: schemas.WetLeavesCollectionUpdate):
+    db_record = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
+    if not db_record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    # Update fields based on the provided data
+    update_dict = update_data.dict(exclude_unset=True)
+    
+    # Automatically set the status to 'Expired'
+    update_dict['Status'] = 'Expired'
+    
+    for key, value in update_dict.items():
+        setattr(db_record, key, value)
+
+    db.commit()
+    db.refresh(db_record)
+    return db_record
 
 def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
