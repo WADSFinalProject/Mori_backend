@@ -295,12 +295,16 @@ def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
     return db_wet_leaves_collection
 
-@secured_router.put("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
-def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    db_wet_leaves_collection = crud.update_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id, update_data=update_data)
-    if db_wet_leaves_collection is None:
-        raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
-    return db_wet_leaves_collection
+# @secured_router.put("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
+# def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     db_wet_leaves_collection = crud.update_wet_leaves_status(db=db, wet_leaves_batch_id=wet_leaves_batch_id, update_data=update_data)
+#     if db_wet_leaves_collection is None:
+#         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
+#     return db_wet_leaves_collection
+
+@secured_router.put("/wet_leaves/{batch_id}", response_model=schemas.WetLeavesCollection)
+def update_wet_leaves_collection(batch_id: int, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db)):
+    return crud.update_wet_leaves_collection(db, batch_id, update_data)
 
 @secured_router.delete("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
 def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

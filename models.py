@@ -156,6 +156,7 @@ class Centra(Base):
     processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
     driedleaves = relationship("DriedLeaves", back_populates="centra")
     wet = relationship("WetLeavesCollection", back_populates="centra")
+    expedition = relationship("Expedition", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
@@ -209,11 +210,12 @@ class Expedition(Base):
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     Destination = Column(String(100))
-    CentralID = Column(Integer, nullable=False)
+    CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
     received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
+    centra = relationship("Centra", back_populates="expedition")
 
 #ExpeditionContent
 class ExpeditionContent(Base):
