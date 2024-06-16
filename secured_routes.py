@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
@@ -815,8 +815,8 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current
     return db_user
 
 @secured_router.get("/users", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    return crud.get_all_users(db=db, skip=skip, limit=limit)
+def read_users(skip: int = 0, limit: int = 100, sort_by: str = Query('Name'), sort_order: str = Query('asc'), role: str = Query(None), db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return crud.get_all_users(db=db, skip=skip, limit=limit, sort_by=sort_by, sort_order=sort_order, role=role)
 
 @secured_router.get("/users/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
