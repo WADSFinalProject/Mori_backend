@@ -80,7 +80,7 @@ def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate) -> O
     return db_user
 
 def delete_user(db: Session, user_id: str) -> Optional[models.User]:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_user = db.query(models.User).filter(models.User.UserID == user_id).first()
     if db_user:
         db.delete(db_user)
         db.commit()
