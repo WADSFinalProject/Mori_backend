@@ -168,6 +168,12 @@ class Expedition(Base):
     ExpeditionServiceDetails = Column(String(100))
     Destination = Column(String(100))
     CentralID = Column(Integer, nullable=False)
+#     History
+# Status
+# Date
+# Awb
+# Batches
+# Weight
 
     received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
