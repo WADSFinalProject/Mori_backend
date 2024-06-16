@@ -59,7 +59,7 @@ def get_all_users(db: Session, skip: int = 0, limit: int = 100, sort_by: str = '
     if sort_by:
         if sort_by == 'Name':
             sort_column = models.User.FirstName
-        elif sort_by == 'Created Date':
+        elif sort_by == 'CreatedDate':
             sort_column = models.User.CreatedDate
         if sort_order == 'desc':
             sort_column = sort_column.desc()
