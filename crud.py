@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 
 from datetime import datetime, timedelta
@@ -836,6 +837,20 @@ def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100)
 
 def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == creator_id).offset(skip).limit(limit).all()
+
+def get_wet_leaves_weight_by_status(db: Session, creator_id: int):
+    statuses = ['near expiry', 'drying', 'fresh']
+    weights = {}
+    
+    for status in statuses:
+        total_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+            models.WetLeavesCollection.CentralID == creator_id,
+            models.WetLeavesCollection.Status == status
+        ).scalar()
+        
+        weights[status] = total_weight or 0  # Ensure the result is zero if no records found
+    
+    return weights
 
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()

@@ -274,6 +274,18 @@ def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = D
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return wet_leaves_collections
 
+@secured_router.get("/wet-leaves-totalWeight/", response_model=List[schemas.WetLeavesCollection]) ##for admin/xyz dashboard
+def read_wet_leaves_collections( centraId: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db) ):
+    
+    try:
+        weights = crud.get_wet_leaves_weight_by_status(db=db, creator_id=centraId)
+        return weights
+    
+    except Exception as e:
+        db.rollback()  # Rollback in case of any exception
+        raise HTTPException(status_code=500, detail=f"An error occurred during password reset: {str(e)}")
+
+
 @secured_router.get("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
 def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     db_wet_leaves_collection = crud.get_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
