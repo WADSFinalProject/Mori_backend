@@ -271,7 +271,7 @@ class FlouringMachineUpdate(BaseModel):
 
 class FlouringMachine(FlouringMachineBase):
     MachineID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -299,7 +299,7 @@ class FlouringActivityUpdate(BaseModel):
 
 class FlouringActivity(FlouringActivityBase):
     FlouringID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -486,7 +486,7 @@ class PackageReceipt(PackageReceiptBase):
 #     weight: float
 
 class PickupBase(BaseModel):
-    PIC_name: str
+    xyzID: int
     expeditionID: int
     destination: str
     pickup_time: time

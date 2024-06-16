@@ -26,9 +26,9 @@ class User(Base):
 
     # processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
     drying_machines = relationship("DryingMachine", back_populates="creator")
-    flouring_machines = relationship("FlouringMachine", back_populates="creator")
+    # flouring_machines = relationship("FlouringMachine", back_populates="creator")
     # drying_activity = relationship("DryingActivity", back_populates="creator")
-    flouring_activity = relationship("FlouringActivity", back_populates="creator")
+    # flouring_activity = relationship("FlouringActivity", back_populates="creator")
     WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
@@ -124,9 +124,10 @@ class FlouringMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True,autoincrement=True)
     Capacity = Column(String(100))
     Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
-    creator = relationship("User", back_populates="flouring_machines")
+    # creator = relationship("User", back_populates="flouring_machines")
+    activity = relationship("FlouringActivity", back_populates="flouring_machine")
 
 
 class FlouringActivity(Base):
@@ -139,13 +140,13 @@ class FlouringActivity(Base):
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
     DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
     Time = Column(Time)
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
+    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     centra = relationship("Centra")
     # user = relationship("User")
     drying_activity = relationship("DryingActivity")
-    flouring_machine = relationship("FlouringMachine")
-    creator = relationship("User", back_populates="flouring_activity")
+    flouring_machine = relationship("FlouringMachine", back_populates="activity")
+    # creator = relationship("User", back_populates="flouring_activity")
 
 class Centra(Base):
     __tablename__ = 'Centra'
@@ -292,30 +293,20 @@ class XYZuser(Base):
 
     warehouse = relationship("Warehouse", back_populates="xyzuser")
     user = relationship("User", back_populates="xyz")
-
-# class Shipment(Base):
-#     __tablename__ = 'shipments'
-
-#     shipment_id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-#     batch_id = Column(Integer, index=True)
-#     description = Column(String, nullable=True)
-#     status = Column(String, nullable=True)
-#     weight = Column(Integer, nullable=True)
-#     issue_description = Column(String, nullable=True)
-#     created_at = Column(DateTime, default=datetime.utcnow)
-#     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    pickup = relationship("Pickup", back_populates="xyz")
 
 class Pickup(Base):
     __tablename__ = 'pickup'
 
     id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    PIC_name = Column(String, index=True)
+    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
     expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     destination = Column(String)
     pickup_time = Column(Time)
 
 
     expedition = relationship("Expedition", back_populates="pickup")
+    xyz = relationship("XYZuser", back_populates="pickup")
 
 class Admin(Base):
     __tablename__ = 'admins'
