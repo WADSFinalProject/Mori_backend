@@ -821,10 +821,12 @@ def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.We
         # UserID=wet_leaves_collection.UserID,
         CentralID=wet_leaves_collection.CentralID,
         Date=wet_leaves_collection.Date,
+        Time=wet_leaves_collection.Time,
         Weight=wet_leaves_collection.Weight,
         Status=wet_leaves_collection.Status,
         Expired=wet_leaves_collection.Expired,
-        ExpirationTime=wet_leaves_collection.ExpirationTime
+        Duration=wet_leaves_collection.Duration
+        # ExpirationTime=wet_leaves_collection.ExpirationTime
     )
     db.add(db_wet_leaves_collection)
     db.commit()
@@ -857,6 +859,28 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
     return db_wet_leaves_collection
 
 
+#CentraShipment
+
+def create_shipment(db: Session, shipment: schemas.CentraShipmentCreate):
+    db_shipment = models.CentraShipment(
+        ShippingMethod=shipment.ShippingMethod,
+        AirwayBill=shipment.AirwayBill
+    )
+    db.add(db_shipment)
+    db.commit()
+    db.refresh(db_shipment)
+    
+    if shipment.batch_ids:
+        for batch_id in shipment.batch_ids:
+            batch = db.query(models.ProcessedLeaves).get(batch_id)
+            if batch:
+                db_shipment.batches.append(batch)
+        db.commit()
+    
+    return db_shipment
+
+def get_shipment(db: Session, shipment_id: int):
+    return db.query(models.CentraShipment).filter(models.CentraShipment.id == shipment_id).first()
 
 #expedition
 def get_expedition(db: Session, expedition_id: int):

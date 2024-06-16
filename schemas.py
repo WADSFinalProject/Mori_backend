@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from typing_extensions import Annotated
 import re
 
@@ -80,6 +80,21 @@ class Admin(AdminBase):
     class Config:
         from_attributes = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
 
+#CentraShipment
+class CentraShipmentBase(BaseModel):
+    ShippingMethod: str
+    AirwayBill: str
+    batch_ids: List[int] = []
+
+class CentraShipmentCreate(CentraShipmentBase):
+    pass
+
+class CentraShipment(CentraShipmentBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
     # ProductID: int
@@ -102,33 +117,36 @@ class ProcessedLeavesUpdate(BaseModel):
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
     creator_id: Optional[int]
+    shipments: Optional[List[CentraShipment]] = []
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
-    
-    # UserID: int
+    # Define the base fields for your Pydantic model
     CentralID: int
-    Date: datetime
+    Date: date
+    Time: time
     Weight: int
     Status: str
-    Expired: bool
-    ExpirationTime: time
+    Expired: Optional[bool] = False
+    Duration: Optional[timedelta]
+    # ExpirationTime: Optional[time] = None
+    # ExpiredTime: time
 
 class WetLeavesCollectionCreate(WetLeavesCollectionBase):
     pass
 
 class WetLeavesCollectionUpdate(BaseModel):
-    # UserID: Optional[int] = None
-    # CentralID: Optional[int] = None
-    # WetLeavesBatchID: Optional[str] = None
-    Date: Optional[datetime] = None
+    Date: Optional[date] = None
+    Time: Optional[time] = None
     Weight: Optional[int] = None
     Status: Optional[str] = None
-    Expired: Optional[bool] = None
-    ExpirationTime: Optional[time] = None
+    Expired: Optional[bool] = False
+    
+    # ExpiredTime: Optional[time] = None
+    # ExpirationTime: Optional[time] = None
 
 class WetLeavesCollection(WetLeavesCollectionBase):
     WetLeavesBatchID: int
@@ -167,7 +185,7 @@ class UserCentra(UserCentraBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 # DryingMachine schemas
@@ -186,7 +204,7 @@ class DryingMachine(DryingMachineBase):
     creator_id: Optional[int]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
@@ -235,7 +253,7 @@ class DriedLeaves(DriedLeavesBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
@@ -319,6 +337,7 @@ class Centra(CentraBase):
     class Config:
         from_attributes = True
 
+
 # Expedition schemas
 class ExpeditionBase(BaseModel):
     # ExpeditionID: Optional[int] = None
@@ -370,7 +389,7 @@ class ExpeditionContent(ExpeditionContentBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
         
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
@@ -471,11 +490,12 @@ class PickupBase(BaseModel):
 
 class PickupCreate(PickupBase):
     pass
+
 class Pickup(PickupBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -531,7 +551,7 @@ class HarborGuard(HarborGuardBase):
     HarborID: int  
 
     class Config:
-        from_attributes = True
+        from_attributes = True  
 
 # WAREHOUSE LOCATION
 class WarehouseBase(BaseModel):
@@ -569,4 +589,4 @@ class XYZuser(XYZuserBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
