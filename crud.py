@@ -834,7 +834,7 @@ def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100)
 def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.creator_id == creator_id).offset(skip).limit(limit).all()
 
-def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
+def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
 
 # def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate):
@@ -864,7 +864,7 @@ def update_wet_leaves_collection(db: Session, wet_leaves_batch_id: int, update_d
     db.refresh(db_record)
     return db_record
 
-def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: str):
+def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     db_wet_leaves_collection = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
     if db_wet_leaves_collection:
         db.delete(db_wet_leaves_collection)
