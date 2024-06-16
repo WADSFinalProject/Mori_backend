@@ -172,6 +172,7 @@ class CentraDetails(CentraBase):
 
 class UserCentraBase(BaseModel):
     CentraID: int
+    userID: int
     Active: bool
 
 class UserCentraCreate(UserCentraBase):
@@ -179,6 +180,7 @@ class UserCentraCreate(UserCentraBase):
 
 class UserCentraUpdate(BaseModel):
     CentraID: Optional[int] = None
+    userID: Optional[int] = None
     Active: Optional[bool] = False
 
 class UserCentra(UserCentraBase):
@@ -558,6 +560,7 @@ class WarehouseBase(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     location: Optional[str] = None
+    created_at: Optional[date] = None
 
 class WarehouseCreate(WarehouseBase):
     pass

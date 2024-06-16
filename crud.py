@@ -748,11 +748,11 @@ def delete_harbor_guard(db: Session, guard_id: int):
 # WAREHOUSE LOCATION
 def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
     db_warehouse = models.Warehouse(
-        warehouseName=warehouse_data.warehouseName,
+        # warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
         phone=warehouse_data.phone,
         location=warehouse_data.location,
-        createdDate=warehouse_data.createdDate
+        created_at=warehouse_data.created_at
     )
     db.add(db_warehouse)
     db.commit()
