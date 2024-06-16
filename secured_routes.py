@@ -198,12 +198,7 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        flouring_machines = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        flouring_machines = crud.get_flouring_machines_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    flouring_machines = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
     return flouring_machines
 
 @secured_router.post("/flouring_machines/{machine_id}/start")
@@ -226,9 +221,9 @@ def delete_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
     if db_flouring_machine is None:
         raise HTTPException(status_code=404, detail="Flouring machine not found")
     
-    db.delete(db_flouring_machine)
-    db.commit()
-    return None
+    # db.delete(db_flouring_machine)
+    # db.commit()
+    return {"message": "Flouring machine successfully deleted"}
 
 #flouring activity
 @secured_router.post("/flouring_activity/create")
@@ -242,12 +237,7 @@ def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, 
     
 @secured_router.get("/flouring_activity/", response_model=List[schemas.FlouringActivity])
 def read_flouring_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        flouring_activity = crud.get_flouring_activity_by_creator(db=db, creator_id=user["id"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
     return flouring_activity
 
 @secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
@@ -264,12 +254,13 @@ def update_flouring_activity(flouring_id: int, flouring_activity: schemas.Flouri
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return updated_flouring
 
-@secured_router.delete("/flouring_activity/delete/{flouring_id}", response_model=schemas.FlouringActivity)
+@secured_router.delete("/flouring_activity/delete/{flouring_id}")
 def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     deleted_flouring_activity = crud.delete_flouring_activity(db=db, flouring_id=flouring_id)
     if not deleted_flouring_activity:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
-    return deleted_flouring_activity
+    
+    return {"message": "Flouring activity successfully deleted",}
 
 
 
