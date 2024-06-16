@@ -155,9 +155,13 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
 def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db)):
     return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
 
-@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
-def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
+# @secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+# def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+
+#     def get_dried_leaves(db: Session, skip: int = 0, limit: int = 100):
+#     return db.query(models.DriedLeaves).offset(skip).limit(limit).all()
+
+#     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
 
 @secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
