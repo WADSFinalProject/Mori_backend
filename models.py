@@ -29,7 +29,7 @@ class User(Base):
     # flouring_machines = relationship("FlouringMachine", back_populates="creator")
     # drying_activity = relationship("DryingActivity", back_populates="creator")
     # flouring_activity = relationship("FlouringActivity", back_populates="creator")
-    WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
+    # WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
 
@@ -77,12 +77,13 @@ class WetLeavesCollection(Base):
     Date = Column(Date)
     Time = Column(Time)
     Weight = Column(Integer)
+    Expired = Column(Boolean)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
     # Duration = Column(Interval)  # New column for duration
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
+    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
     centra = relationship("Centra", back_populates="wet")
-    creator = relationship("User", back_populates="WetLeavesCollection")
+    # creator = relationship("User", back_populates="WetLeavesCollection")
     
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'

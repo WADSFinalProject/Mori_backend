@@ -135,6 +135,7 @@ class WetLeavesCollectionBase(BaseModel):
     Time: time
     Weight: int
     Status: str
+    Expired: Optional[bool] = False
     # Duration: Optional[timedelta]
     # ExpirationTime: Optional[time] = None
     # ExpiredTime: time
@@ -147,13 +148,14 @@ class WetLeavesCollectionUpdate(BaseModel):
     Time: Optional[time] = None
     Weight: Optional[int] = None
     Status: Optional[str] = None
+    Expired: Optional[bool] = False
     
     # ExpiredTime: Optional[time] = None
     # ExpirationTime: Optional[time] = None
 
 class WetLeavesCollection(WetLeavesCollectionBase):
     WetLeavesBatchID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
