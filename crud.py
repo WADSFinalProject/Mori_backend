@@ -960,7 +960,8 @@ def get_all_checkpoints(db:Session,expedition_id: int):
 
 
 def get_expedition_batches(db: Session, expedition_id: int):
-    return db.query(models.ExpeditionContent).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+    return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+
 
 def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
@@ -971,7 +972,7 @@ def get_expedition(db: Session, expedition_id: int): #only with latest checkpoin
     
     return {
         "expedition": expedition,
-        "batches": [batch.BatchID for batch in batches],
+        "batches": [batch for batch in batches],
         "checkpoint_status": checkpoint.status,
         "checkpoint_statusdate": checkpoint.statusdate
     }
