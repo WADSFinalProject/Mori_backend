@@ -115,9 +115,11 @@ class ProcessedLeavesCreate(ProcessedLeavesBase):
 class ProcessedLeavesUpdate(BaseModel):
     # Description: Optional[str] = None
     Weight: Optional[int] = None
-    FlouringID: Optional[str] = None
-    DryingID: Optional[str] = None
+    # FlouringID: Optional[str] = None
+    # DryingID: Optional[str] = None
+    # DriedDate: Optional[time] = None
     Shipped: Optional[bool] = False
+
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
@@ -356,9 +358,9 @@ class Centra(CentraBase):
         from_attributes = True
 
 
-# Expedition schemas
+#Expedition schemas
+
 class ExpeditionBase(BaseModel):
-    # ExpeditionID: Optional[int] = None
     AirwayBill: str
     EstimatedArrival: datetime
     TotalPackages: int
@@ -366,15 +368,16 @@ class ExpeditionBase(BaseModel):
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
-    # checkpointID: int
-    # Destination: str
     CentralID: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True  # Enable from_orm support
 
 class ExpeditionCreate(ExpeditionBase):
     pass
 
 class ExpeditionUpdate(BaseModel):
-    # ExpeditionID: Optional[int] = None
     AirwayBill: Optional[str] = None
     EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
@@ -382,15 +385,21 @@ class ExpeditionUpdate(BaseModel):
     Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
-    # checkpoint: Optional[int] = None
-    # Destination: Optional[str] = None
     CentralID: Optional[int] = None
 
 class Expedition(ExpeditionBase):
     ExpeditionID: Optional[int] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
+        from_attributes = True  # Enable from_orm support
+
+class ExpeditionWithBatches(BaseModel):
+    Expedition: ExpeditionBase
+    BatchID: int
+    Weight: int
+  
+  
 
 #ExpeditionContent
 

@@ -168,7 +168,7 @@ class Centra(Base):
     driedleaves = relationship("DriedLeaves", back_populates="centra")
     wet = relationship("WetLeavesCollection", back_populates="centra")
     expedition = relationship("Expedition", back_populates="centra")
-    batch = relationship("ProcessedLeaves", back_populates="centra")
+    batch = relationship("ProcessedLeaves", back_populates="centra", overlaps="processed_leaves")
     Dmachine = relationship("DryingMachine", back_populates="centra")
     Fmachine = relationship("FlouringMachine", back_populates="centra")
 
@@ -223,15 +223,11 @@ class Expedition(Base):
     Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
-    # checkpoingID = Column(Integer, ForeignKey('checkpointstatus.id'))
-    # Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
-    # received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
-    # checkpoint = relationship("CheckpointStatus", back_populates="expedition")
     status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
 #ExpeditionContents
@@ -240,11 +236,9 @@ class ExpeditionContent(Base):
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     BatchID = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
-    # checkpointID = Column(Integer, ForeignKey('checkpointstatus.id')) ##
 
     expedition = relationship("Expedition", back_populates="content")
     batch = relationship("ProcessedLeaves", back_populates="expeditioncontent")
-    # checkpoint = relationship("CheckpointStatus", back_populates="expedition")
 
 #CheckpointStatus
 class CheckpointStatus(Base):
@@ -254,7 +248,6 @@ class CheckpointStatus(Base):
     status = Column(String)
     statusdate = Column(DateTime)
 
-    # expedition = relationship("ExpeditionContent", back_populates="checkpoint")
     expeditionpoint = relationship("Expedition", back_populates="status")
 
 
@@ -280,8 +273,6 @@ class Pickup(Base):
 #     PackageType = Column(String(100))
 #     ReceivedDate = Column(DateTime) 
 #     WarehouseDestination = Column(String(100))
-
-
 
 
 class PackageReceipt(Base):
