@@ -706,9 +706,14 @@ def read_expeditions(centraId :int, skip: int = 0, limit: int = 100, db: Session
     return expeditions
 
 
+# @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
+# def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
+#     return db.query(models.Expedition).offset(skip).limit(limit).all()
+
 @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
-def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Expedition).offset(skip).limit(limit).all()
+def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
+    return expeditions
 
 
 @secured_router.get("/expeditions/{expedition_id}", response_model=schemas.Expedition)
