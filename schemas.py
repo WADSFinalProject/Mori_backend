@@ -364,6 +364,7 @@ class ExpeditionBase(BaseModel):
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
+    # checkpointID: int
     Destination: str
     CentralID: int
 
@@ -379,6 +380,7 @@ class ExpeditionUpdate(BaseModel):
     Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
+    # checkpoint: Optional[int] = None
     Destination: Optional[str] = None
     CentralID: Optional[int] = None
 
@@ -393,6 +395,7 @@ class Expedition(ExpeditionBase):
 class ExpeditionContentBase(BaseModel):
     ExpeditionID: int
     BatchID: int
+    checkpointID: int
 
 class ExpeditionContentCreate(ExpeditionContentBase):
     pass
@@ -400,6 +403,7 @@ class ExpeditionContentCreate(ExpeditionContentBase):
 class ExpeditionContentUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
     BatchID: Optional[int] = None
+    checkpointID: Optional[int] = None
 
 class ExpeditionContent(ExpeditionContentBase):
     id: int
@@ -517,7 +521,7 @@ class PackageReceipt(PackageReceiptBase):
 class PickupBase(BaseModel):
     xyzID: int
     expeditionID: int
-    destination: str
+    warehouseid: int
     pickup_time: time
 
 class PickupCreate(PickupBase):

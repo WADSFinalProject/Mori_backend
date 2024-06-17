@@ -979,9 +979,9 @@ def get_expedition(db: Session, expedition_id: int): #only with latest checkpoin
     return {
         "expedition": expedition,
         "batches": [batch for batch in batches],
-        "checkpoint_status": checkpoint.status,
-        "checkpoint_statusdate": checkpoint.statusdate,
-        "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
+        # "status": checkpointstatus.status,
+        # "checkpoint_statusdate": checkpoint.statusdate,
+        # "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
     }
 
 
