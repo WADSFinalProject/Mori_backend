@@ -222,7 +222,7 @@ class Expedition(Base):
     Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
-    # checkpoingID = Column(Integer, ForeignKey('CheckpointStatus.id'))
+    # checkpoingID = Column(Integer, ForeignKey('checkpointstatus.id'))
     Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
@@ -230,18 +230,20 @@ class Expedition(Base):
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
-    checkpoint = relationship("CheckpointStatus", back_populates="expedition")
+    # checkpoint = relationship("CheckpointStatus", back_populates="expedition")
     # status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
-#ExpeditionContent
+#ExpeditionContents
 class ExpeditionContent(Base):
     __tablename__ = 'ExpeditionContent'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     BatchID = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
+    checkpointID = Column(Integer, ForeignKey('checkpointstatus.id'))
 
     expedition = relationship("Expedition", back_populates="content")
     batch = relationship("ProcessedLeaves", back_populates="expeditioncontent")
+    checkpoint = relationship("CheckpointStatus", back_populates="expedition")
 
 #CheckpointStatus
 class CheckpointStatus(Base):
@@ -251,7 +253,7 @@ class CheckpointStatus(Base):
     status = Column(String)
     statusdate = Column(DateTime)
 
-    expedition = relationship("Expedition", back_populates="checkpoint")
+    expedition = relationship("ExpeditionContent", back_populates="checkpoint")
     # expeditionpoint = relationship("Expedition", back_populates="status")
 
 
@@ -261,10 +263,13 @@ class Pickup(Base):
     id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
     xyzID = Column(Integer, ForeignKey('XYZuser.id'))
     expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    destination = Column(String)
+    warehouseid = Column(Integer, ForeignKey('warehouses.id'))
     pickup_time = Column(Time)
+
+
     expedition = relationship("Expedition", back_populates="pickup")
     xyz = relationship("XYZuser", back_populates="pickup")
+    warehouse = relationship("Warehouse", back_populates="pickup")
 
 # class ReceivedPackage(Base):
 #     __tablename__ = 'ReceivedPackage'
@@ -317,6 +322,7 @@ class Warehouse(Base):
     created_at = Column(Date)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
+    pickup = relationship("Pickup", back_populates="warehouse")
 
 class XYZuser(Base):
     __tablename__ = 'XYZuser'
