@@ -11,6 +11,7 @@ from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from datetime import datetime
 
 
 from datetime import datetime, timedelta
@@ -974,14 +975,31 @@ def get_expedition(db: Session, expedition_id: int): #only with latest checkpoin
         "expedition": expedition,
         "batches": [batch for batch in batches],
         "checkpoint_status": checkpoint.status,
-        "checkpoint_statusdate": checkpoint.statusdate
+        "checkpoint_statusdate": checkpoint.statusdate,
+        "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
     }
+
+
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
 def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
     expeditions = get_expeditions(db=db, skip=skip, limit=limit)
+    result = []
+    for expedition in expeditions:
+        expedition_data = get_expedition(db, expedition.ExpeditionID)
+        result.append(expedition_data)
+    return result
+
+def get_expeditions_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.Expedition)
+    if centra_id:
+        query = query.filter(models.Expedition.CentralID == centra_id)
+    return query.offset(skip).limit(limit).all()
+
+def get_all_expeditions_with_batches_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+    expeditions = get_expeditions_by_centra(db=db, centra_id=centra_id, skip=skip, limit=limit)
     result = []
     for expedition in expeditions:
         expedition_data = get_expedition(db, expedition.ExpeditionID)
