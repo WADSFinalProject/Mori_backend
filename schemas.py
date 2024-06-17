@@ -136,6 +136,7 @@ class WetLeavesCollectionBase(BaseModel):
     Weight: int
     Status: str
     Expired: Optional[bool] = False
+    Dried: Optional [bool] = False
     # Duration: Optional[timedelta]
     # ExpirationTime: Optional[time] = None
     # ExpiredTime: time
@@ -149,6 +150,7 @@ class WetLeavesCollectionUpdate(BaseModel):
     Weight: Optional[int] = None
     Status: Optional[str] = None
     Expired: Optional[bool] = False
+    Dried: Optional [bool] = False
     
     # ExpiredTime: Optional[time] = None
     # ExpirationTime: Optional[time] = None
@@ -395,7 +397,7 @@ class Expedition(ExpeditionBase):
 class ExpeditionContentBase(BaseModel):
     ExpeditionID: int
     BatchID: int
-    checkpointID: int
+    # checkpointID: int
 
 class ExpeditionContentCreate(ExpeditionContentBase):
     pass
@@ -403,7 +405,7 @@ class ExpeditionContentCreate(ExpeditionContentBase):
 class ExpeditionContentUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
     BatchID: Optional[int] = None
-    checkpointID: Optional[int] = None
+    # checkpointID: Optional[int] = None
 
 class ExpeditionContent(ExpeditionContentBase):
     id: int
