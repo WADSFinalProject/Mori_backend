@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 
 from datetime import datetime, timedelta
@@ -842,6 +843,50 @@ def get_all_wet_leaves_collections(db: Session, skip: int = 0, limit: int = 100)
 def get_wet_leaves_collections_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == creator_id).offset(skip).limit(limit).all()
 
+def get_wet_leaves_weight_by_status(db: Session, creator_id: int):
+    statuses = ['near expiry', 'drying', 'fresh']
+    weights = {}
+    
+    for status in statuses:
+        total_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+            models.WetLeavesCollection.CentralID == creator_id,
+            models.WetLeavesCollection.Status == status
+        ).scalar()
+        
+        weights[status] = total_weight or 0  # Ensure the result is zero if no records found
+    
+    return weights
+
+def get_wet_conversion_rate(db: Session, centraID: int):  #based on each centra 
+    # Total weight of expired wet leaves
+    expired_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centraID, 
+        models.WetLeavesCollection.Status == 'expired'
+    ).scalar() or 0
+
+    # Total weight of dried leaves
+    dried_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centraID
+    ).scalar() or 0
+
+    conversion_rate = (dried_weight / expired_weight) * 100 if expired_weight > 0 else 0
+    return conversion_rate
+
+def get_dry_conversion_rate(db: Session, centraID: int):
+     # Total weight of expired wet leaves
+    expired_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centraID, 
+        models.DriedLeaves.Floured == False
+    ).scalar() or 0
+
+    # Total weight of dried leaves
+    dried_weight = db.query(func.sum(models.ProcessedLeaves.Weight)).filter(
+        models.ProcessedLeaves.CentraID == centraID
+    ).scalar() or 0
+
+    conversion_rate = (dried_weight / expired_weight) * 100 if expired_weight > 0 else 0
+    return conversion_rate
+
 def get_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
     return db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.WetLeavesBatchID == wet_leaves_batch_id).first()
 
@@ -912,11 +957,40 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
 #     return False
 
 #expedition
-def get_expedition(db: Session, expedition_id: int):
-    return db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+def get_latest_checkpoint(db: Session, expedition_id: int):
+    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition_id).order_by(models.CheckpointStatus.statusdate.desc()).first()
+
+def get_all_checkpoints(db:Session,expedition_id: int):
+    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid==expedition_id).all()
+
+
+def get_expedition_batches(db: Session, expedition_id: int):
+    return db.query(models.ExpeditionContent).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+
+def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if expedition is None:
+        return None
+    batches = get_expedition_batches(db, expedition_id)
+    checkpoint = get_latest_checkpoint(db,expedition_id)
+    
+    return {
+        "expedition": expedition,
+        "batches": [batch.BatchID for batch in batches],
+        "checkpoint_status": checkpoint.status,
+        "checkpoint_statusdate": checkpoint.statusdate
+    }
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
+
+def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
+    expeditions = get_expeditions(db=db, skip=skip, limit=limit)
+    result = []
+    for expedition in expeditions:
+        expedition_data = get_expedition(db, expedition.ExpeditionID)
+        result.append(expedition_data)
+    return result
 
 def create_expedition(db: Session, expedition: schemas.ExpeditionCreate):
     db_expedition = models.Expedition(**expedition.dict())

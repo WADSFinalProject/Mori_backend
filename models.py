@@ -254,6 +254,18 @@ class CheckpointStatus(Base):
     expedition = relationship("Expedition", back_populates="checkpoint")
     # expeditionpoint = relationship("Expedition", back_populates="status")
 
+
+class Pickup(Base):
+    __tablename__ = 'pickup'
+
+    id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
+    expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    destination = Column(String)
+    pickup_time = Column(Time)
+    expedition = relationship("Expedition", back_populates="pickup")
+    xyz = relationship("XYZuser", back_populates="pickup")
+
 class ReceivedPackage(Base):
     __tablename__ = 'ReceivedPackage'
     PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -263,15 +275,14 @@ class ReceivedPackage(Base):
     ReceivedDate = Column(DateTime) 
     WarehouseDestination = Column(String(100))
 
-    user = relationship("User")
-    expedition = relationship("Expedition", back_populates="received_packages")
+
 
 
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    PackageID = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
+    xyzID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
@@ -286,7 +297,7 @@ class ProductReceipt(Base):
     ProductID = Column(Integer)
     ReceiptID = Column(Integer, ForeignKey('PackageReceipt.ReceiptID'))
     RescaledWeight = Column(Integer)
-
+    
     package_receipt = relationship("PackageReceipt")
 
 class PackageType(Base):
@@ -318,18 +329,6 @@ class XYZuser(Base):
     user = relationship("User", back_populates="xyz")
     pickup = relationship("Pickup", back_populates="xyz")
 
-class Pickup(Base):
-    __tablename__ = 'pickup'
-
-    id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
-    expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    destination = Column(String)
-    pickup_time = Column(Time)
-
-
-    expedition = relationship("Expedition", back_populates="pickup")
-    xyz = relationship("XYZuser", back_populates="pickup")
 
 class Admin(Base):
     __tablename__ = 'admins'
