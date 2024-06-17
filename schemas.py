@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime, date, time, timedelta
 from typing_extensions import Annotated
@@ -353,6 +353,23 @@ class Centra(CentraBase):
     class Config:
         from_attributes = True
 
+#notifications
+class NotificationBase(BaseModel):
+    message: str
+
+class NotificationCreate(NotificationBase):
+    centraid: int
+
+class Notification(NotificationBase):
+    id: int
+    centraid: int
+    timestamp: datetime
+    read: bool
+
+    class Config:
+        orm_mode: True
+
+Machine = Union[DryingMachine, FlouringMachine]
 
 #Expedition schemas
 
@@ -603,6 +620,7 @@ class WarehouseBase(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     TotalStock: int
+    Capacity: int
     location: Optional[str] = None
     created_at: Optional[date] = None
 
@@ -613,6 +631,7 @@ class WarehouseUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     TotalStock: Optional[int] = None
+    Capacity: Optional[int] = None
     location: Optional[str] = None
 
 class Warehouse(WarehouseBase):

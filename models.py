@@ -1,11 +1,12 @@
-from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval, Event
+from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from database import Base
 from typing import Optional
 from datetime import datetime
+from sqlalchemy.event import listen
 
-from database import engine, Base
+from database import engine, Base, SessionLocal
 
 
 class User(Base):
@@ -165,6 +166,7 @@ class Centra(Base):
     batch = relationship("ProcessedLeaves", back_populates="centra", overlaps="processed_leaves")
     Dmachine = relationship("DryingMachine", back_populates="centra")
     Fmachine = relationship("FlouringMachine", back_populates="centra")
+    notification = relationship("Notification", back_populates="user")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
@@ -180,26 +182,27 @@ class UserCentra(Base):
 class Notification(Base):
     __tablename__ = 'notifications'
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
+    centraid = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
     message = Column(String, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
     read = Column(Boolean, default=False)
 
-    user = relationship("Centra", back_populates="notifications")
+    user = relationship("Centra", back_populates="notification")
 
 
-# def after_update_listener(mapper, connection, target):
-#     db = Session(get_db)
-#     if target.Status == 'running':
-#         notification = Notification(
-#             user_id=target.CentraID,
-#             message=f"{target.__tablename__} with ID {target.MachineID} is now running."
-#         )
-#         db.add(notification)
-#         db.commit()
+def after_update_listener(mapper, connection, target):
+    db = SessionLocal(bind=connection)
+    if target.Status == 'running':
+        notification = Notification(
+            centraid=target.CentraID,
+            message=f"{target.__tablename__} with ID {target.MachineID} is now running."
+        )
+        db.add(notification)
+        db.commit()
+    db.close()
 
-# event.listen(DryingMachine, 'after_update', after_update_listener)
-# event.listen(FlouringMachine, 'after_update', after_update_listener)
+listen(DryingMachine, 'after_update', after_update_listener)
+listen(FlouringMachine, 'after_update', after_update_listener)
 
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
@@ -328,6 +331,7 @@ class Warehouse(Base):
     email = Column(String, unique=True, index=True)
     phone = Column(String, index=True)
     TotalStock = Column(Integer)
+    Capacity = Column(Integer)
     location = Column(String, index=True)
     created_at = Column(Date)
 

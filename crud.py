@@ -671,6 +671,38 @@ def delete_centra(db: Session, CentralID: int):
         raise HTTPException(status_code=404, detail="Centra not found")
     return {"message": "Centra deleted successfully"}
 
+#notifications
+def get_notifications(db: Session, centraid: int):
+    return db.query(models.Notification).filter(models.Notification.centraid == centraid).all()
+
+def create_notification(db: Session, notification: schemas.NotificationCreate):
+    db_notification = models.Notification(**notification.dict())
+    db.add(db_notification)
+    db.commit()
+    db.refresh(db_notification)
+    return db_notification
+
+def mark_notification_as_read(db: Session, notification_id: int):
+    db_notification = db.query(models.Notification).filter(models.Notification.id == notification_id).first()
+    if db_notification:
+        db_notification.read = True
+        db.commit()
+        db.refresh(db_notification)
+    return db_notification
+
+def update_machine_status(db: Session, machine_id: int, new_status: str, machine_type: str):
+    if machine_type == "drying":
+        machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    elif machine_type == "flouring":
+        machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
+    else:
+        return None
+
+    if machine:
+        machine.Status = new_status
+        db.commit()
+        db.refresh(machine)
+    return machine
 
 #userCentra
 
@@ -743,6 +775,7 @@ def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
         email=warehouse_data.email,
         phone=warehouse_data.phone,
         TotalStock=warehouse_data.TotalStock,
+        Capacity=warehouse_data.Capacity,
         location=warehouse_data.location,
         created_at=warehouse_data.created_at
     )
