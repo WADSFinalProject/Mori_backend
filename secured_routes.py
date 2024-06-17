@@ -700,6 +700,17 @@ def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     expeditions = crud.get_all_expeditions_with_batches(db=db, skip=skip, limit=limit)
     return expeditions
 
+@secured_router.get("/all_expeditions/{centraId}", response_model=List[schemas.Expedition])
+def read_expeditions(centraId :int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expeditions = crud.get_all_expeditions_with_batches_by_centra(db=db,centra_id=centraId,skip=skip,limit=limit)
+    return expeditions
+
+
+@secured_router.get("/expeditions", response_model=List[schemas.Expedition])
+def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Expedition).offset(skip).limit(limit).all()
+
+
 @secured_router.get("/expeditions/{expedition_id}", response_model=schemas.Expedition)
 def read_expedition(expedition_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     expedition = crud.get_expedition(db=db, expedition_id=expedition_id)

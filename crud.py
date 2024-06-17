@@ -11,6 +11,7 @@ from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from datetime import datetime
 
 
 from datetime import datetime, timedelta
@@ -965,7 +966,8 @@ def get_all_checkpoints(db:Session,expedition_id: int):
 
 
 def get_expedition_batches(db: Session, expedition_id: int):
-    return db.query(models.ExpeditionContent).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+    return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+
 
 def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
@@ -976,16 +978,33 @@ def get_expedition(db: Session, expedition_id: int): #only with latest checkpoin
     
     return {
         "expedition": expedition,
-        "batches": [batch.BatchID for batch in batches],
+        "batches": [batch for batch in batches],
         "checkpoint_status": checkpoint.status,
-        "checkpoint_statusdate": checkpoint.statusdate
+        "checkpoint_statusdate": checkpoint.statusdate,
+        "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
     }
+
+
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
 def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
     expeditions = get_expeditions(db=db, skip=skip, limit=limit)
+    result = []
+    for expedition in expeditions:
+        expedition_data = get_expedition(db, expedition.ExpeditionID)
+        result.append(expedition_data)
+    return result
+
+def get_expeditions_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.Expedition)
+    if centra_id:
+        query = query.filter(models.Expedition.CentralID == centra_id)
+    return query.offset(skip).limit(limit).all()
+
+def get_all_expeditions_with_batches_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+    expeditions = get_expeditions_by_centra(db=db, centra_id=centra_id, skip=skip, limit=limit)
     result = []
     for expedition in expeditions:
         expedition_data = get_expedition(db, expedition.ExpeditionID)
