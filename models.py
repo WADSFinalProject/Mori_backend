@@ -24,12 +24,6 @@ class User(Base):
     secret_key = Column(String, unique=True) #OTP Secret Key
     
 
-    # processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
-    # drying_machines = relationship("DryingMachine", back_populates="creator")
-    # flouring_machines = relationship("FlouringMachine", back_populates="creator")
-    # drying_activity = relationship("DryingActivity", back_populates="creator")
-    # flouring_activity = relationship("FlouringActivity", back_populates="creator")
-    # WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
 
@@ -78,6 +72,7 @@ class WetLeavesCollection(Base):
     Time = Column(Time)
     Weight = Column(Integer)
     Expired = Column(Boolean)
+    Dried = Column(Boolean)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
     # Duration = Column(Interval)  # New column for duration
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
@@ -167,7 +162,7 @@ class Centra(Base):
     driedleaves = relationship("DriedLeaves", back_populates="centra")
     wet = relationship("WetLeavesCollection", back_populates="centra")
     expedition = relationship("Expedition", back_populates="centra")
-    batch = relationship("ProcessedLeaves", back_populates="centra")
+    batch = relationship("ProcessedLeaves", back_populates="centra", overlaps="processed_leaves")
     Dmachine = relationship("DryingMachine", back_populates="centra")
     Fmachine = relationship("FlouringMachine", back_populates="centra")
 
@@ -222,18 +217,14 @@ class Expedition(Base):
     Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
-    # checkpoingID = Column(Integer, ForeignKey('CheckpointStatus.id'))
-    Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
-    received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
-    checkpoint = relationship("CheckpointStatus", back_populates="expedition")
-    # status = relationship("CheckpointStatus", back_populates="expeditionpoint")
+    status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
-#ExpeditionContent
+#ExpeditionContents
 class ExpeditionContent(Base):
     __tablename__ = 'ExpeditionContent'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
@@ -251,34 +242,45 @@ class CheckpointStatus(Base):
     status = Column(String)
     statusdate = Column(DateTime)
 
-    expedition = relationship("Expedition", back_populates="checkpoint")
-    # expeditionpoint = relationship("Expedition", back_populates="status")
+    expeditionpoint = relationship("Expedition", back_populates="status")
 
-class ReceivedPackage(Base):
-    __tablename__ = 'ReceivedPackage'
-    PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    PackageType = Column(String(100))
-    ReceivedDate = Column(DateTime) 
-    WarehouseDestination = Column(String(100))
 
-    user = relationship("User")
-    expedition = relationship("Expedition", back_populates="received_packages")
+class Pickup(Base):
+    __tablename__ = 'pickup'
+
+    id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
+    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
+    expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    warehouseid = Column(Integer, ForeignKey('warehouses.id'))
+    pickup_time = Column(Time)
+
+
+    expedition = relationship("Expedition", back_populates="pickup")
+    xyz = relationship("XYZuser", back_populates="pickup")
+    warehouse = relationship("Warehouse", back_populates="pickup")
+
+# class ReceivedPackage(Base):
+#     __tablename__ = 'ReceivedPackage'
+#     PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+#     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+#     UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+#     PackageType = Column(String(100))
+#     ReceivedDate = Column(DateTime) 
+#     WarehouseDestination = Column(String(100))
 
 
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    PackageID = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
+    xyzID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    # haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
     Date = Column(DateTime)
 
     user = relationship("User")
-    received_package = relationship("ReceivedPackage")
+    # received_package = relationship("ReceivedPackage")
 
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
@@ -286,13 +288,13 @@ class ProductReceipt(Base):
     ProductID = Column(Integer)
     ReceiptID = Column(Integer, ForeignKey('PackageReceipt.ReceiptID'))
     RescaledWeight = Column(Integer)
-
+    
     package_receipt = relationship("PackageReceipt")
 
-class PackageType(Base):
-    __tablename__ = 'PackageType'
-    PackageTypeID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    Description = Column(String(100))
+# class PackageType(Base):
+#     __tablename__ = 'PackageType'
+#     PackageTypeID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+#     Description = Column(String(100))
 
 
 class Warehouse(Base):
@@ -306,6 +308,7 @@ class Warehouse(Base):
     created_at = Column(Date)
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
+    pickup = relationship("Pickup", back_populates="warehouse")
 
 class XYZuser(Base):
     __tablename__ = 'XYZuser'
@@ -318,18 +321,6 @@ class XYZuser(Base):
     user = relationship("User", back_populates="xyz")
     pickup = relationship("Pickup", back_populates="xyz")
 
-class Pickup(Base):
-    __tablename__ = 'pickup'
-
-    id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
-    expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    destination = Column(String)
-    pickup_time = Column(Time)
-
-
-    expedition = relationship("Expedition", back_populates="pickup")
-    xyz = relationship("XYZuser", back_populates="pickup")
 
 class Admin(Base):
     __tablename__ = 'admins'
