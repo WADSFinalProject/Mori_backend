@@ -500,8 +500,8 @@ def update_centra(CentralID: int, centra_update: schemas.CentraUpdate, db: Sessi
     return crud.update_centra(db, CentralID, centra_update)
 
 @secured_router.delete("/centras/{centra_id}", response_model=dict)
-def delete_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.delete_centra(db, CentralID)
+def delete_centra(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.delete_centra(db, centra_id)
 
 #notifications
 @secured_router.post("/notifications/", response_model=schemas.Notification)
