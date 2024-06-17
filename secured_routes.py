@@ -669,7 +669,7 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 
 #expedition
-@secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
+@secured_router.post("/expeditions/") # belum bener harus di kerjain
 def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     
     try:
