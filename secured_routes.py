@@ -669,7 +669,7 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 
 #expedition
-@secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
+@secured_router.post("/expeditions/") # belum bener harus di kerjain
 def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     
     try:
@@ -704,7 +704,7 @@ def get_expeditions_by_central(central_id: int, db: Session = Depends(get_db)):
     return expeditions
 
 @secured_router.get("/all_expeditions", response_model=List[schemas.ExpeditionWithBatches])
-def get_all_expedition_with_batches( skip:int, limit:int, db: Session = Depends(get_db)):
+def get_all_expedition_with_batches( skip:int = 0, limit:int = 100, db: Session = Depends(get_db)):
     all = crud.get_all_expedition_with_batches(db=db,skip=skip,limit=limit)
     return all
 
@@ -715,10 +715,10 @@ def get_expedition_with_batches(expedition_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Expedition not found")
     return expeditions_with_batches
 
-@secured_router.get("/expeditions", response_model=List[schemas.Expedition])
-def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
-    return expeditions
+# @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
+# def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
+#     return expeditions
 
 
 @secured_router.get("/expeditions/{expedition_id}", response_model=schemas.Expedition)

@@ -1007,7 +1007,7 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .all()
     )
 
-def get_all_expedition_with_batches(db: Session, skip:int, limit:0):
+def get_all_expedition_with_batches(db: Session, skip:int, limit:int):
  
   return (
         db.query(
