@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import models, schemas
 from fastapi import HTTPException
 from schemas import CentraDetails
@@ -231,28 +231,15 @@ def get_batches_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 1
 def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
-def update_batch(db: Session, batch_id: int, update_data: schemas.ProcessedLeavesUpdate):
-    batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
-    if batch:
-        if update_data.DryingID is not None:
-            drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == update_data.DryingID).first()
-            batch.DryingID = update_data.DryingID
-            batch.DriedDate = drying_activity.Date if drying_activity else None
-
-        if update_data.FlouringID is not None:
-            flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == update_data.FlouringID).first()
-            batch.FlouringID = update_data.FlouringID
-            batch.FlouredDate = flouring_activity.Date if flouring_activity else None
-
-        if update_data.Description is not None:
-            batch.Description = update_data.Description
-
+#update batch
+def update_batch(db: Session, batch_id: str, update_data: schemas.ProcessedLeavesUpdate):
+    db_batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
+    if db_batch:
+        for key, value in update_data.dict().items():
+            setattr(db_batch, key, value)
         db.commit()
-        db.refresh(batch)
-        return batch
-    return None
-
-
+        db.refresh(db_batch)
+    return db_batch
 
 def delete_batch(db: Session, batch_id: int):
     batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
@@ -959,58 +946,90 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
 #     return False
 
 #expedition
-def get_latest_checkpoint(db: Session, expedition_id: int):
-    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition_id).order_by(models.CheckpointStatus.statusdate.desc()).first()
+# def get_latest_checkpoint(db: Session, expedition_id: int):
+#     return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition_id).order_by(models.CheckpointStatus.statusdate.desc()).first()
 
-def get_all_checkpoints(db:Session,expedition_id: int):
-    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid==expedition_id).all()
+# def get_all_checkpoints(db:Session,expedition_id: int):
+#     return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid==expedition_id).all()
+def get_expeditions_by_central_id(db: Session, central_id: int):
+    return db.query(models.Expedition).filter(models.Expedition.CentralID == central_id).all()
 
+def get_expedition_with_batches(db: Session, expedition_id: int):
+    return (
+        db.query(models.Expedition, models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight)
+        .join(models.ExpeditionContent, models.Expedition.ExpeditionID == models.ExpeditionContent.ExpeditionID)
+        .join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID)
+        .filter(models.Expedition.ExpeditionID == expedition_id)
+        .options(joinedload(models.ProcessedLeaves))
+        .all()
+    )
 
-def get_expedition_batches(db: Session, expedition_id: int):
-    return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+# def get_expedition_batches(db: Session, expedition_id: int):
+#     return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
 
+# def get_expedition_batches(db: Session, expedition_id: int):
+#     return db.query(
+#         models.Expedition.ExpeditionID,
+#         models.Expedition.AirwayBill,
+#         models.Expedition.EstimatedArrival,
+#         models.Expedition.TotalPackages,
+#         models.Expedition.TotalWeight,
+#         models.Expedition.Status,
+#         models.Expedition.ExpeditionDate,
+#         models.Expedition.ExpeditionServiceDetails,
+#         models.Expedition.CentralID,
+#         models.ExpeditionContent.BatchID,
+#         models.ProcessedLeaves.Weight
+#     ).join(
+#         models.ExpeditionContent, models.Expedition.ExpeditionID == models.ExpeditionContent.ExpeditionID
+#     ).join(
+#         models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID
+#     ).filter(
+#         models.Expedition.ExpeditionID == expedition_id
+#     ).all()
 
-def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
-    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-    if expedition is None:
-        return None
-    batches = get_expedition_batches(db, expedition_id)
-    checkpoint = get_latest_checkpoint(db,expedition_id)
+# def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
+#     expeditions = db.query(models.Expedition).offset(skip).limit(limit).all()
+#     for expedition in expeditions:
+#         expedition.batches = get_expedition_batches(db, expedition.ExpeditionID)
+#     return expeditions
+
+# def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
+#     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+#     if expedition is None:
+#         return None
+#     batches = get_expedition_batches(db, expedition_id)
+#     checkpoint = get_latest_checkpoint(db,expedition_id)
     
-    return {
-        "expedition": expedition,
-        "batches": [batch for batch in batches],
-        # "status": checkpointstatus.status,
-        # "checkpoint_statusdate": checkpoint.statusdate,
-        # "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
-    }
+#     return {
+#         "expedition": expedition,
+#         "batches": [batch for batch in batches],
+#         "status": checkpoint.status,
+#         "checkpoint_statusdate": checkpoint.statusdate,
+#         "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
+#     }
 
 
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
-def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
-    expeditions = get_expeditions(db=db, skip=skip, limit=limit)
-    result = []
-    for expedition in expeditions:
-        expedition_data = get_expedition(db, expedition.ExpeditionID)
-        result.append(expedition_data)
-    return result
+# def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
+#     expeditions = get_expeditions(db=db, skip=skip, limit=limit)
+#     result = []
+#     for expedition in expeditions:
+#         expedition_data = get_expedition(db, expedition.ExpeditionID)
+#         result.append(expedition_data)
+#     return result
 
-def get_expeditions_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
-    query = db.query(models.Expedition)
-    if centra_id:
-        query = query.filter(models.Expedition.CentralID == centra_id)
-    return query.offset(skip).limit(limit).all()
 
-def get_all_expeditions_with_batches_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
-    expeditions = get_expeditions_by_centra(db=db, centra_id=centra_id, skip=skip, limit=limit)
-    result = []
-    for expedition in expeditions:
-        expedition_data = get_expedition(db, expedition.ExpeditionID)
-        result.append(expedition_data)
-    return result
+# def get_all_expeditions_with_batches_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+#     expeditions = get_expeditions_by_centra(db=db, centra_id=centra_id, skip=skip, limit=limit)
+#     result = []
+#     for expedition in expeditions:
+#         expedition_data = get_expedition(db, expedition.ExpeditionID)
+#         result.append(expedition_data)
+#     return result
 
 def create_expedition(db: Session, expedition: schemas.ExpeditionCreate):
     db_expedition = models.Expedition(**expedition.dict())

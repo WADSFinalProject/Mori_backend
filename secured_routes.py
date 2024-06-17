@@ -644,71 +644,43 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="XYZuser not found")
     return db_xyzuser
 
-# User (Admin)
-# @secured_router.post("/admins/", response_model=schemas.Admin)
-# def create_admin(admin: schemas.AdminCreate, db: Session = Depends(get_db)):
-#     db_admin = crud.get_admin_by_email(db, email=admin.email)
-#     if db_admin:
-#         raise HTTPException(status_code=400, detail="Email already registered")
-#     return crud.create_admin(db=db, admin=admin)
-
-# @secured_router.get("/admins/", response_model=List[schemas.Admin])
-# def read_admins(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     admins = crud.get_admins(db, skip=skip, limit=limit)
-#     return admins
-
-# @secured_router.get("/admins/{admin_id}", response_model=schemas.Admin)
-# def read_admin(admin_id: int, db: Session = Depends(get_db)):
-#     db_admin = crud.get_admin(db, admin_id=admin_id)
-#     if db_admin is None:
-#         raise HTTPException(status_code=404, detail="Admin not found")
-#     return db_admin
-
-# @secured_router.put("/admins/{admin_id}", response_model=schemas.Admin)
-# def update_admin(admin_id: int, admin: schemas.AdminUpdate, db: Session = Depends(get_db)):
-#     db_admin = crud.update_admin(db, admin_id=admin_id, admin=admin)
-#     if db_admin is None:
-#         raise HTTPException(status_code=404, detail="Admin not found")
-#     return db_admin
-
-# @secured_router.delete("/admins/{admin_id}", response_model=schemas.Admin)
-# def delete_admin(admin_id: int, db: Session = Depends(get_db)):
-#     db_admin = crud.delete_admin(db, admin_id=admin_id)
-#     if db_admin is None:
-#         raise HTTPException(status_code=404, detail="Admin not found")
-#     return db_admin
-
-#CentraShipment
-# @secured_router.post("/shipments/", response_model=schemas.CentraShipmentBase)
-# def create_shipment(shipment: schemas.CentraShipmentCreate, db: Session = Depends(get_db)):
-#     return crud.create_shipment(db, shipment)
-
-# @secured_router.delete("/shipments/{shipment_id}", response_model=schemas.CentraShipment)
-# def delete_shipment(shipment_id: int, db: Session = Depends(get_db)):
-#     deleted = crud.delete_shipment(db, shipment_id)
-#     if not deleted:
-#         raise HTTPException(status_code=404, detail="Shipment not found")
-#     return {"message": "Shipment deleted successfully"}
 
 #expedition
-@secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
-def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.create_expedition(db, expedition)
+# @secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
+# def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     return crud.create_expedition(db, expedition)
 
-@secured_router.get("/all_expeditions/", response_model=List[schemas.Expedition])
-def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    expeditions = crud.get_all_expeditions_with_batches(db=db, skip=skip, limit=limit)
-    return expeditions
+# @secured_router.get("/all_expeditions/", response_model=List[schemas.Expedition])
+# def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     expeditions = crud.get_all_expeditions_with_batches(db=db, skip=skip, limit=limit)
+#     return expeditions
 
-@secured_router.get("/all_expeditions/{centraId}", response_model=List[schemas.Expedition])
-def read_expeditions(centraId :int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    expeditions = crud.get_all_expeditions_with_batches_by_centra(db=db,centra_id=centraId,skip=skip,limit=limit)
-    return expeditions
+# @secured_router.get("/all_expeditions/", response_model=List[schemas.Expedition])
+# def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     expeditions = crud.get_all_expeditions_with_batches(db=db, skip=skip, limit=limit)
+#     return expeditions
+
+# @secured_router.get("/all_expeditions/{centraId}", response_model=List[schemas.Expedition])
+# def read_expeditions(centraId :int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     expeditions = crud.get_all_expeditions_with_batches_by_centra(db=db,centra_id=centraId,skip=skip,limit=limit)
+#     return expeditions
 
 
 # @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
 # def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
 #     return db.query(models.Expedition).offset(skip).limit(limit).all()
+
+@secured_router.get("/expeditions_by_central/{central_id}", response_model=List[schemas.Expedition])
+def get_expeditions_by_central(central_id: int, db: Session = Depends(get_db)):
+    expeditions = crud.get_expeditions_by_central_id(db, central_id)
+    return expeditions
+
+@secured_router.get("/expedition/{expedition_id}", response_model=List[schemas.ExpeditionWithBatches])
+def get_expedition_with_batches(expedition_id: int, db: Session = Depends(get_db)):
+    expeditions_with_batches = crud.get_expedition_with_batches(db, expedition_id)
+    if not expeditions_with_batches:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return expeditions_with_batches
 
 @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
 def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -737,20 +709,20 @@ def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: d
         raise HTTPException(status_code=404, detail="Expedition not found")
     return db_expedition
 
-@secured_router.put("/expeditions/{expedition_id}/change_status")
-def change_expedition_status_route(expedition_id: int, new_status: str, db: Session = Depends(get_db)):
-    expedition = crud.change_expedition_status(db, expedition_id, new_status)
-    if expedition is None:
-        raise HTTPException(status_code=404, detail=f"Expedition with id {expedition_id} not found")
-    return {"message": f"Status of Expedition {expedition_id} changed to {new_status}"}
+# @secured_router.put("/expeditions/{expedition_id}/change_status")
+# def change_expedition_status_route(expedition_id: int, new_status: str, db: Session = Depends(get_db)):
+#     expedition = crud.change_expedition_status(db, expedition_id, new_status)
+#     if expedition is None:
+#         raise HTTPException(status_code=404, detail=f"Expedition with id {expedition_id} not found")
+#     return {"message": f"Status of Expedition {expedition_id} changed to {new_status}"}
 
 
-@secured_router.put("/expeditions/{expedition_id}/confirm", response_model=schemas.Expedition)
-def confirm_expedition_route(expedition_id: int, TotalWeight: int, db: Session = Depends(get_db)):
-    expedition = crud.confirm_expedition(db, expedition_id, TotalWeight)
-    if expedition is None:
-        raise HTTPException(status_code=404, detail="Expedition not found")
-    return expedition
+# @secured_router.put("/expeditions/{expedition_id}/confirm", response_model=schemas.Expedition)
+# def confirm_expedition_route(expedition_id: int, TotalWeight: int, db: Session = Depends(get_db)):
+#     expedition = crud.confirm_expedition(db, expedition_id, TotalWeight)
+#     if expedition is None:
+#         raise HTTPException(status_code=404, detail="Expedition not found")
+#     return expedition
 
 #expeditioncontent
 
