@@ -34,12 +34,19 @@ def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depend
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
-@secured_router.put("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
-def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    batch = crud.update_batch(db=db, batch_id=batch_id, update_data=update_data)
+@secured_router.put("/batchesShipped/{batch_id}", response_model=schemas.ProcessedLeavesShipped)
+def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.update_batch_shipped(db=db,batch_id=batch_id)
     if batch is None:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
+
+# @router.put("/update_batch_shipped/{batch_id}", response_model=schemas.ProcessedLeaves)
+# def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+#     updated_batch = crud.update_batch_shipped(db, batch_id)
+#     if updated_batch is None:
+#         raise HTTPException(status_code=404, detail="Batch not found")
+#     return updated_batch
 
 @secured_router.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
 def delete_existing_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

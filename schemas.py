@@ -112,10 +112,13 @@ class ProcessedLeavesBase(BaseModel):
 class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 
-class ProcessedLeavesUpdate(BaseModel):
-    Weight: Optional[int] = None
-    Shipped: Optional[bool] = False
+class ProcessedLeavesRescale(BaseModel):
+    Weight: int
 
+class ProcessedLeavesShipped(BaseModel):
+    Shipped: bool
+
+   
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
@@ -412,7 +415,8 @@ class ExpeditionWithBatches(BaseModel):
     DriedDate: date
     status: str
     statusdate: datetime
-    
+
+
 
 #ExpeditionContent
 

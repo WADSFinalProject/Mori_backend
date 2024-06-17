@@ -232,11 +232,10 @@ def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
 #update batch
-def update_batch(db: Session, batch_id: str, update_data: schemas.ProcessedLeavesUpdate):
+def update_batch_shipped(db: Session, batch_id: int):
     db_batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
     if db_batch:
-        for key, value in update_data.dict().items():
-            setattr(db_batch, key, value)
+        db_batch.Shipped = True
         db.commit()
         db.refresh(db_batch)
     return db_batch
@@ -1007,7 +1006,7 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .all()
     )
 
-def get_all_expedition_with_batches(db: Session, skip:int, limit:int):
+def get_all_expedition_with_batches(db: Session):
  
   return (
         db.query(
@@ -1023,8 +1022,6 @@ def get_all_expedition_with_batches(db: Session, skip:int, limit:int):
         .join(models.ExpeditionContent.batch)
         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)
         .options(joinedload(models.Expedition.content))
-        .offset(skip)
-        .limit(limit)
         .all()
     )
     
