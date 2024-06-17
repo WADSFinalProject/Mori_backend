@@ -390,6 +390,7 @@ class Expedition(ExpeditionBase):
 class ExpeditionWithBatches(BaseModel):
     Expedition: ExpeditionBase
     BatchID: int
+    Weight: int
 
   
   

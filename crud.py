@@ -954,11 +954,18 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
 def get_expeditions_by_central_id(db: Session, central_id: int):
     return db.query(models.Expedition).filter(models.Expedition.CentralID == central_id).all()
 
+
 def get_expedition_with_batches(db: Session, expedition_id: int):
     return (
-        db.query(models.Expedition, models.ExpeditionContent.BatchID)
-        .join(models.ExpeditionContent, models.Expedition.ExpeditionID == models.ExpeditionContent.ExpeditionID)
+        db.query(
+            models.Expedition,
+            models.ExpeditionContent.BatchID,
+            models.ProcessedLeaves.Weight
+        )
+        .join(models.Expedition.content)  # Join to ExpeditionContent through the relationship
+        .join(models.ExpeditionContent.batch)  # Join to ProcessedLeaves through the relationship
         .filter(models.Expedition.ExpeditionID == expedition_id)
+        .options(joinedload(models.Expedition.content))  # Ensure content relationship is loaded
         .all()
     )
 
