@@ -367,7 +367,7 @@ class ExpeditionBase(BaseModel):
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
     # checkpointID: int
-    Destination: str
+    # Destination: str
     CentralID: int
 
 class ExpeditionCreate(ExpeditionBase):
@@ -383,7 +383,7 @@ class ExpeditionUpdate(BaseModel):
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
     # checkpoint: Optional[int] = None
-    Destination: Optional[str] = None
+    # Destination: Optional[str] = None
     CentralID: Optional[int] = None
 
 class Expedition(ExpeditionBase):

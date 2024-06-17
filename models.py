@@ -224,7 +224,7 @@ class Expedition(Base):
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     # checkpoingID = Column(Integer, ForeignKey('checkpointstatus.id'))
-    Destination = Column(String(100))
+    # Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
     # received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
