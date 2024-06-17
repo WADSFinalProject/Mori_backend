@@ -956,11 +956,9 @@ def get_expeditions_by_central_id(db: Session, central_id: int):
 
 def get_expedition_with_batches(db: Session, expedition_id: int):
     return (
-        db.query(models.Expedition, models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight)
+        db.query(models.Expedition, models.ExpeditionContent.BatchID)
         .join(models.ExpeditionContent, models.Expedition.ExpeditionID == models.ExpeditionContent.ExpeditionID)
-        .join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID)
         .filter(models.Expedition.ExpeditionID == expedition_id)
-        .options(joinedload(models.ProcessedLeaves))
         .all()
     )
 
