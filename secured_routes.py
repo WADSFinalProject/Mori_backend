@@ -675,6 +675,11 @@ def get_expeditions_by_central(central_id: int, db: Session = Depends(get_db)):
     expeditions = crud.get_expeditions_by_central_id(db, central_id)
     return expeditions
 
+@secured_router.get("/all_expeditions", response_model=List[schemas.ExpeditionWithBatches])
+def get_all_expedition_with_batches( skip:int, limit:int, db: Session = Depends(get_db)):
+    all = crud.get_all_expedition_with_batches(db=db,skip=skip,limit=limit)
+    return all
+
 @secured_router.get("/expedition/{expedition_id}", response_model=List[schemas.ExpeditionWithBatches])
 def get_expedition_with_batches(expedition_id: int, db: Session = Depends(get_db)):
     expeditions_with_batches = crud.get_expedition_with_batches(db, expedition_id)
