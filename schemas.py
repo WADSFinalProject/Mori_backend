@@ -2,6 +2,8 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
 from datetime import datetime, date, time, timedelta
 from typing_extensions import Annotated
+from sqlalchemy import Interval
+
 import re
 
 # user schemas
@@ -133,6 +135,7 @@ class WetLeavesCollectionBase(BaseModel):
     Time: time
     Weight: int
     Status: str
+    Expired: Optional[bool] = False
     # Duration: Optional[timedelta]
     # ExpirationTime: Optional[time] = None
     # ExpiredTime: time
@@ -145,13 +148,14 @@ class WetLeavesCollectionUpdate(BaseModel):
     Time: Optional[time] = None
     Weight: Optional[int] = None
     Status: Optional[str] = None
+    Expired: Optional[bool] = False
     
     # ExpiredTime: Optional[time] = None
     # ExpirationTime: Optional[time] = None
 
 class WetLeavesCollection(WetLeavesCollectionBase):
     WetLeavesBatchID: int
-    creator_id: Optional[int]
+    # creator_id: Optional[int]
 
     class Config:
         from_attributes = True
@@ -197,8 +201,11 @@ class UserCentra(UserCentraBase):
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
+    CentraID: int
     Capacity: str
     Status: str
+    Duration: Optional[timedelta]
+
 
 class DryingMachineCreate(DryingMachineBase):
     pass
@@ -264,8 +271,10 @@ class DriedLeaves(DriedLeavesBase):
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
+    CentraID: int
     Capacity: str
     Status: str
+    Duration: Optional[timedelta]
 
 class FlouringMachineCreate(FlouringMachineBase):
     pass
@@ -397,7 +406,22 @@ class ExpeditionContent(ExpeditionContentBase):
 
     class Config:
         orm_mode = True
-        
+
+#checkpointStatus
+class CheckpointStatusBase(BaseModel):
+    expeditionid: int
+    status: str
+    statusdate: datetime
+
+class CheckpointStatusCreate(CheckpointStatusBase):
+    pass
+
+class CheckpointStatus(CheckpointStatusBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 # ReceivedPackage schemas
 class ReceivedPackageBase(BaseModel):
     ExpeditionID: int

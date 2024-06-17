@@ -29,7 +29,7 @@ class User(Base):
     # flouring_machines = relationship("FlouringMachine", back_populates="creator")
     # drying_activity = relationship("DryingActivity", back_populates="creator")
     # flouring_activity = relationship("FlouringActivity", back_populates="creator")
-    WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
+    # WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
 
@@ -77,12 +77,13 @@ class WetLeavesCollection(Base):
     Date = Column(Date)
     Time = Column(Time)
     Weight = Column(Integer)
+    Expired = Column(Boolean)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
     # Duration = Column(Interval)  # New column for duration
-    creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
+    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
 
     centra = relationship("Centra", back_populates="wet")
-    creator = relationship("User", back_populates="WetLeavesCollection")
+    # creator = relationship("User", back_populates="WetLeavesCollection")
     
 class DryingMachine(Base):
     __tablename__ = 'DryingMachine'
@@ -253,6 +254,7 @@ class CheckpointStatus(Base):
     expedition = relationship("Expedition", back_populates="checkpoint")
     # expeditionpoint = relationship("Expedition", back_populates="status")
 
+
 class Pickup(Base):
     __tablename__ = 'pickup'
 
@@ -263,6 +265,15 @@ class Pickup(Base):
     pickup_time = Column(Time)
     expedition = relationship("Expedition", back_populates="pickup")
     xyz = relationship("XYZuser", back_populates="pickup")
+
+class ReceivedPackage(Base):
+    __tablename__ = 'ReceivedPackage'
+    PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+    ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    PackageType = Column(String(100))
+    ReceivedDate = Column(DateTime) 
+    WarehouseDestination = Column(String(100))
 
 
 

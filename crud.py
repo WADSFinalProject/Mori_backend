@@ -277,8 +277,10 @@ def batch_get_floured_date(db: Session, flouring_id: str):
 def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCreate):
     db_drying_machine = models.DryingMachine(
         # MachineID=drying_machine.MachineID,
+        CentraID=drying_machine.CentraID,
         Capacity=drying_machine.Capacity,
-        Status=drying_machine.Status
+        Status=drying_machine.Status,
+        Duration=drying_machine.Duration
     )
     db.add(db_drying_machine)
     db.commit()
@@ -422,8 +424,10 @@ def delete_dried_leaf(db: Session, leaf_id: int):
 def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMachineCreate):
     db_flouring_machine = models.FlouringMachine(
         # MachineID=flouring_machine.MachineID,
+        CentraID=flouring_machine.CentraID,
         Capacity=flouring_machine.Capacity,
-        Status=flouring_machine.Status
+        Status=flouring_machine.Status,
+        Duration=flouring_machine.Duration
     )
     db.add(db_flouring_machine)
     db.commit()
@@ -824,6 +828,7 @@ def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.We
         Time=wet_leaves_collection.Time,
         Weight=wet_leaves_collection.Weight,
         Status=wet_leaves_collection.Status,
+        Expired=wet_leaves_collection.Expired
         # Duration=wet_leaves_collection.Duration
         # ExpirationTime=wet_leaves_collection.ExpirationTime
     )
@@ -1061,7 +1066,40 @@ def delete_expedition_content(db: Session, expedition_content_id: int):
         db.delete(db_expedition_content)
         db.commit()
     return db_expedition_content
-    
+
+#checkpointstatus
+def create_checkpoint_status(db: Session, checkpoint_status: schemas.CheckpointStatusCreate):
+    db_checkpoint_status = models.CheckpointStatus(**checkpoint_status.dict())
+    db.add(db_checkpoint_status)
+    db.commit()
+    db.refresh(db_checkpoint_status)
+    return db_checkpoint_status
+
+# Read operation
+def get_checkpoint_status(db: Session, checkpoint_id: int):
+    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.id == checkpoint_id).first()
+
+def get_all_checkpoint_statuses(db: Session) -> List[models.CheckpointStatus]:
+    return db.query(models.CheckpointStatus).all()
+
+# Update operation
+def update_checkpoint_status(db: Session, checkpoint_id: int, checkpoint_status: schemas.CheckpointStatusCreate):
+    db_checkpoint_status = db.query(models.CheckpointStatus).filter(models.CheckpointStatus.id == checkpoint_id).first()
+    if db_checkpoint_status:
+        for key, value in checkpoint_status.dict(exclude_unset=True).items():
+            setattr(db_checkpoint_status, key, value)
+        db.commit()
+        db.refresh(db_checkpoint_status)
+    return db_checkpoint_status
+
+# Delete operation
+def delete_checkpoint_status(db: Session, checkpoint_id: int):
+    db_checkpoint_status = db.query(models.CheckpointStatus).filter(models.CheckpointStatus.id == checkpoint_id).first()
+    if db_checkpoint_status:
+        db.delete(db_checkpoint_status)
+        db.commit()
+    return db_checkpoint_status
+
 #receveid packages
 def get_received_package(db: Session, package_id: int):
     return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
