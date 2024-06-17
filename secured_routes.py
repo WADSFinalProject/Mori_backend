@@ -777,7 +777,7 @@ def create_expedition_contents(expedition_content: schemas.ExpeditionContentCrea
     created_contents = []
     expedition_id = expedition_content.ExpeditionID
     for batch_id in expedition_content.BatchIDs:
-        content_data = schemas.ExpeditionContentCreate(ExpeditionID=expedition_id, BatchID=batch_id)
+        content_data = models.ExpeditionContent(ExpeditionID=expedition_id, BatchID=batch_id)
         created_content = crud.create_expedition_content(db=db, expedition_content=content_data)
         created_contents.append(created_content)
     return created_contents

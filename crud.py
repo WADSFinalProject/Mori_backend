@@ -1162,12 +1162,12 @@ def get_expedition_content(db: Session, expedition_content_id: int):
 def get_expedition_contents(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ExpeditionContent).offset(skip).limit(limit).all()
 
-def create_expedition_content(db: Session, expedition_content: schemas.ExpeditionContentCreate):
-    db_expedition_content = models.ExpeditionContent(**expedition_content.dict())
-    db.add(db_expedition_content)
+def create_expedition_content(db: Session, expedition_content: models.ExpeditionContent):
+    db.add(expedition_content)
     db.commit()
-    db.refresh(db_expedition_content)
-    return db_expedition_content
+    db.refresh(expedition_content)
+    return expedition_content
+
 
 
 def update_expedition_content(db: Session, expedition_content_id: int, expedition_content: schemas.ExpeditionContentUpdate):
