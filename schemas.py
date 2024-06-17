@@ -366,9 +366,6 @@ class ExpeditionBase(BaseModel):
     ExpeditionServiceDetails: str
     CentralID: int
 
-    class Config:
-        orm_mode = True
-        from_attributes = True  # Enable from_orm support
 
 class ExpeditionCreate(ExpeditionBase):
     pass
@@ -388,12 +385,12 @@ class Expedition(ExpeditionBase):
 
     class Config:
         orm_mode = True
-        from_attributes = True  # Enable from_orm support
+        # from_attributes = True  # Enable from_orm support
 
 class ExpeditionWithBatches(BaseModel):
     Expedition: ExpeditionBase
     BatchID: int
-    Weight: int
+
   
   
 
