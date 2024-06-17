@@ -552,7 +552,7 @@ def delete_user_centra(user_centra_id: int, db: Session = Depends(get_db), user:
 #     raise HTTPException(status_code=404, detail="Shipment not found")
 
 # Harborguards
-@secured_router.post("/harborguard/", response_model=schemas.HarborGuardInDB)
+@secured_router.post("/harborguard", response_model=schemas.HarborGuardInDB)
 def create_harbor_guard(harbor_guard: schemas.HarborGuardCreate, db: Session = Depends(get_db)):
     return crud.create_harbor_guard(db, harbor_guard)
 
@@ -577,7 +577,7 @@ def delete_harbor_guard(harbour_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Harbor Guard not found")
     return db_harbor_guard
 
-@secured_router.get("/harborguard/", response_model=list[schemas.HarborGuardInDB])
+@secured_router.get("/harborguard", response_model=list[schemas.HarborGuardInDB])
 def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     harbor_guards = crud.get_all_harbor_guards(db, skip=skip, limit=limit)
     return harbor_guards
