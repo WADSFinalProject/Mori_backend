@@ -381,7 +381,7 @@ class ExpeditionBase(BaseModel):
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
-    CentralID: int
+
 
 
 class ExpeditionCreate(ExpeditionBase):
@@ -395,7 +395,7 @@ class ExpeditionUpdate(BaseModel):
     Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
-    CentralID: Optional[int] = None
+    
 
 class Expedition(ExpeditionBase):
     ExpeditionID: Optional[int] = None
