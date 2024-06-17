@@ -435,6 +435,7 @@ class ExpeditionContent(ExpeditionContentBase):
     class Config:
         orm_mode = True
 
+
 #checkpointStatus
 class CheckpointStatusBase(BaseModel):
     expeditionid: int
