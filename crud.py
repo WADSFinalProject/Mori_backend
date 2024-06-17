@@ -1098,13 +1098,12 @@ def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
 
 def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: schemas.User):
     # Fetch the user including their related Centra
-    db_user = get_user_centra_by_user_id(user.UserID)
+    
     
     # Assuming you have a direct relationship to Centra or a method to fetch it
-    if db_user:
-        centra_id = db_user.CentraID
-    else:
-        raise ValueError("User does not have associated Centra.")
+    
+    centra_id = user["centralID"]
+  
 
     # Create the expedition object with CentraID included
     db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id)
