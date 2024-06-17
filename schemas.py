@@ -82,25 +82,8 @@ class Admin(AdminBase):
     class Config:
         from_attributes = True  # This setting is crucial for compatibility with ORMs like SQLAlchemy
 
-#CentraShipment
-# class CentraShipmentBase(BaseModel):
-#     ShippingMethod: str
-#     AirwayBill: str
-#     batch_ids: List[int] = []
-
-# class CentraShipmentCreate(CentraShipmentBase):
-#     pass
-
-# class CentraShipment(CentraShipmentBase):
-#     id: int
-
-#     class Config:
-#         orm_mode = True
-
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
-    # ProductID: int
-    # Description: Optional[str] = None
     CentraID: Optional[int] = None
     Weight: Optional[int] = None
     DryingID: Optional[int] = None
@@ -119,8 +102,6 @@ class ProcessedLeavesUpdate(BaseModel):
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
-    # creator_id: Optional[int]
-    # shipments: Optional[List[CentraShipment]] = []
 
     class Config:
         orm_mode = True
@@ -135,9 +116,6 @@ class WetLeavesCollectionBase(BaseModel):
     Status: str
     Expired: Optional[bool] = False
     Dried: Optional [bool] = False
-    # Duration: Optional[timedelta]
-    # ExpirationTime: Optional[time] = None
-    # ExpiredTime: time
 
 class WetLeavesCollectionCreate(WetLeavesCollectionBase):
     pass
@@ -149,9 +127,7 @@ class WetLeavesCollectionUpdate(BaseModel):
     Status: Optional[str] = None
     Expired: Optional[bool] = False
     Dried: Optional [bool] = False
-    
-    # ExpiredTime: Optional[time] = None
-    # ExpirationTime: Optional[time] = None
+
 
 class WetLeavesCollection(WetLeavesCollectionBase):
     WetLeavesBatchID: int
@@ -382,8 +358,6 @@ class ExpeditionBase(BaseModel):
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
 
-
-
 class ExpeditionCreate(ExpeditionBase):
     pass
 
@@ -395,45 +369,35 @@ class ExpeditionUpdate(BaseModel):
     Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
-    
 
 class Expedition(ExpeditionBase):
     ExpeditionID: Optional[int] = None
 
     class Config:
         orm_mode = True
-        # from_attributes = True  # Enable from_orm support
-
-class ExpeditionWithBatches(BaseModel):
-    Expedition: ExpeditionBase
-    BatchID: int
-    Weight: int
-    FlouredDate: date
-    DriedDate: date
-    status: str
-    statusdate: datetime
-    
-
-#ExpeditionContent
-
 
 class ExpeditionContentBase(BaseModel):
-    ExpeditionID: int
-    BatchIDs: List[int]
-    # checkpointID: int
+    BatchID: int
+    Weight: int
 
 class ExpeditionContentCreate(ExpeditionContentBase):
     pass
 
 class ExpeditionContentUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
-    BatchIDs: Optional[List[int]] = None
-    # checkpointID: Optional[int] = None
+    BatchID: Optional[List[int]] = None
 
 class ExpeditionContent(BaseModel):
     id: int
     ExpeditionID: int
     BatchID: int
+
+    class Config:
+        orm_mode = True
+
+class ExpeditionWithBatches(BaseModel):
+    Expedition: Expedition
+    Batches: List[ExpeditionContentBase]
 
     class Config:
         orm_mode = True
@@ -454,30 +418,7 @@ class CheckpointStatus(CheckpointStatusBase):
     class Config:
         orm_mode = True
 
-# ReceivedPackage schemas
-# class ReceivedPackageBase(BaseModel):
-#     ExpeditionID: int
-#     UserID: int
-#     PackageType: str
 
-#     ReceivedDate: datetime
-#     WarehouseDestination: str
-
-# class ReceivedPackageCreate(ReceivedPackageBase):
-#     pass
-
-# class ReceivedPackageUpdate(BaseModel):
-#     ExpeditionID: Optional[int] = None
-#     UserID: Optional[int] = None
-#     PackageType: Optional[str] = None
-#     ReceivedDate: Optional[datetime] = None
-#     WarehouseDestination: Optional[str] = None
-
-# class ReceivedPackage(ReceivedPackageBase):
-#     PackageID: int
-
-#     class Config:
-#         from_attributes = True
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
@@ -505,46 +446,7 @@ class PackageReceipt(PackageReceiptBase):
     class Config:
         from_attributes = True
 
-# Shipment
-# class ShipmentPickupSchedule(BaseModel):
-#     # shipment_id: int
-#     pickup_time: datetime
-#     location: str
 
-# class ShipmentBase(BaseModel):
-#     batch_id: Optional[int] = None
-#     description: Optional[str] = None
-#     status: Optional[str] = None
-#     weight: Optional[float] = None
-#     issue_description: Optional[str] = None
-
-# class ShipmentCreate(ShipmentBase):
-#     pass
-
-# class ShipmentUpdate(BaseModel):
-#     shipment_id: Optional[int] = None
-#     batch_id: Optional[int] = None
-#     description: Optional[str] = None
-#     status: Optional[str] = None
-#     weight: Optional[int] = None
-#     issue_description: Optional[str] = None
-
-# class Shipment(ShipmentBase):
-#     shipment_id: int
-#     # created_at: Optional[datetime] = None
-#     # updated_at: Optional[datetime] = None
-
-#     class Config:
-#         from_attributes = True
-
-# class ShipmentIssue(BaseModel):
-#     description: str
-
-# class ShipmentRescale(BaseModel):
-#     new_weight: float
-
-# class ShipmentConfirmation(BaseModel):
-#     weight: float
 
 class PickupBase(BaseModel):
     xyzID: int
@@ -580,22 +482,6 @@ class ProductReceipt(ProductReceiptBase):
 
     class Config:
         from_attributes = True
-
-# PackageType schemas
-# class PackageTypeBase(BaseModel):
-#     Description: str
-
-# class PackageTypeCreate(PackageTypeBase):
-#     pass
-
-# class PackageTypeUpdate(BaseModel):
-#     Description: Optional[str] = None
-
-# class PackageType(PackageTypeBase):
-#     PackageTypeID: int
-
-#     class Config:
-#         from_attributes = True
 
 class HarborGuardBase(BaseModel):
     HarbourName: str
