@@ -113,11 +113,7 @@ class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 
 class ProcessedLeavesUpdate(BaseModel):
-    # Description: Optional[str] = None
     Weight: Optional[int] = None
-    # FlouringID: Optional[str] = None
-    # DryingID: Optional[str] = None
-    # DriedDate: Optional[time] = None
     Shipped: Optional[bool] = False
 
 

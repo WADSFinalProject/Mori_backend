@@ -24,12 +24,6 @@ class User(Base):
     secret_key = Column(String, unique=True) #OTP Secret Key
     
 
-    # processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
-    # drying_machines = relationship("DryingMachine", back_populates="creator")
-    # flouring_machines = relationship("FlouringMachine", back_populates="creator")
-    # drying_activity = relationship("DryingActivity", back_populates="creator")
-    # flouring_activity = relationship("FlouringActivity", back_populates="creator")
-    # WetLeavesCollection = relationship("WetLeavesCollection", back_populates="creator")
     xyz = relationship("XYZuser", back_populates="user")
     centra = relationship("UserCentra", back_populates="user")
 
