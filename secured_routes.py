@@ -496,12 +496,12 @@ async def create_new_centra(centra_data: schemas.CentraCreate, db: Session = Dep
     return new_centra
 
 @secured_router.put("/centras/{centra_id}", response_model=schemas.Centra)
-def update_centra(CentralID: int, centra_update: schemas.CentraUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.update_centra(db, CentralID, centra_update)
+def update_centra(centra_id: int, centra_update: schemas.CentraUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.update_centra(db, centra_id, centra_update)
 
 @secured_router.delete("/centras/{centra_id}", response_model=dict)
-def delete_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.delete_centra(db, CentralID)
+def delete_centra(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.delete_centra(db, centra_id)
 
 #notifications
 @secured_router.post("/notifications/", response_model=schemas.Notification)

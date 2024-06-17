@@ -340,16 +340,16 @@ class Stock(StockBase):
         from_attributes = True
 
 # Centra schemas
-class CentraBase(BaseModel):
-    Address: str
-    FlouringSchedule: str
+# class CentraBase(BaseModel):
+#     Address: str
+#     FlouringSchedule: str
 
-class CentraCreate(CentraBase):
-    pass
+# class CentraCreate(CentraBase):
+#     pass
 
 class CentraUpdate(BaseModel):
     Address: Optional[str] = None
-    FlouringSchedule: Optional[str] = None
+    # FlouringSchedule: Optional[str] = None
 
 class Centra(CentraBase):
     CentralID: int

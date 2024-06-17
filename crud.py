@@ -643,7 +643,7 @@ def get_centra_by_id(db: Session, CentralID: int):
 def add_new_centra(db: Session, centra: schemas.CentraCreate):
     db_centra = models.Centra(
         Address=centra.Address,
-        FlouringSchedule=centra.FlouringSchedule
+        # FlouringSchedule=centra.FlouringSchedule
     )
     db.add(db_centra)
     db.commit()
