@@ -494,6 +494,29 @@ def update_centra(CentralID: int, centra_update: schemas.CentraUpdate, db: Sessi
 def delete_centra(CentralID: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.delete_centra(db, CentralID)
 
+#notifications
+@secured_router.post("/notifications/", response_model=schemas.Notification)
+def create_notification(notification: schemas.NotificationCreate, db: Session = Depends(get_db)):
+    return crud.create_notification(db=db, notification=notification)
+
+@secured_router.get("/notifications/{user_id}", response_model=List[schemas.Notification])
+def get_notifications(centraid: int, db: Session = Depends(get_db)):
+    return crud.get_notifications(db, centraid)
+
+@secured_router.put("/notifications/{notification_id}", response_model=schemas.Notification)
+def mark_notification_as_read(notification_id: int, db: Session = Depends(get_db)):
+    db_notification = crud.mark_notification_as_read(db, notification_id)
+    if db_notification is None:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return db_notification
+
+@secured_router.put("/machines/{machine_id}/status", response_model=schemas.Machine)
+def update_machine_status(machine_id: int, new_status: str, machine_type: str, db: Session = Depends(get_db)):
+    machine = crud.update_machine_status(db, machine_id, new_status, machine_type)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found or invalid machine type")
+    return machine
+
 #userCentra
 @secured_router.get("/usercentra/", response_model=List[schemas.UserCentra])
 def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
