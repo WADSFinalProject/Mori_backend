@@ -99,13 +99,12 @@ class Admin(AdminBase):
 
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
-    # ProductID: int
-    # Description: Optional[str] = None
     CentraID: Optional[int] = None
     Weight: Optional[int] = None
-    DryingID: Optional[int] = None
-    FlouringID: Optional[int] = None
-    DriedDate: date
+    DriedID: Optional[int] = None
+    # DryingID: Optional[int] = None
+    # FlouringID: Optional[int] = None
+    # DriedDate: Optional[date] = None
     FlouredDate: date
     Shipped: Optional[bool] = False
 
@@ -297,6 +296,7 @@ class FlouringActivityBase(BaseModel):
     CentralID: Optional[int] = None
     Date: Optional[date] = None
     Weight: Optional[int] = None
+    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[int] = None
     Time: Optional[time] = None
@@ -310,6 +310,7 @@ class FlouringActivityUpdate(BaseModel):
     CentralID: Optional[int] = None
     Date: Optional[date] = None
     Weight: Optional[int] = None
+    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[str] = None
     Time: Optional[time] = None

@@ -201,16 +201,17 @@ def set_user_password(db: Session, Email: str, new_password: str):
 # BATCHES
 def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     # drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == batch.DryingID).first()
-    flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == batch.FlouringID).first()
-    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
+    # flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == batch.FlouringID).first()
+    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == batch.DriedID).first()
     
     db_batch = models.ProcessedLeaves(
         CentraID=batch.CentraID,
         Weight=batch.Weight,
-        DryingID=batch.DryingID,
-        FlouringID=batch.FlouringID,
-        DriedDate=dried_leaves.DriedDate if dried_leaves else None,
-        FlouredDate=flouring_activity.Date if flouring_activity else None,
+        # DriedID=batch.DriedID,
+        # DryingID=batch.DryingID,
+        # FlouringID=batch.FlouringID,
+        DriedID=dried_leaves.id if dried_leaves else None,
+        FlouredDate=batch.FlouredDate,
         Shipped=batch.Shipped
         # dried_leaf=dried_leaves  # Assign the fetched DriedLeaves instance
     )
@@ -463,6 +464,7 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
         CentralID=flouring_activity.CentralID,
         Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
+        DriedID=flouring_activity.DriedID,
         FlouringMachineID=flouring_activity.FlouringMachineID,
         Time=flouring_activity.Time
     )
@@ -993,7 +995,7 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
             models.Expedition,
             models.ExpeditionContent.BatchID,
             models.ProcessedLeaves.Weight,
-            models.ProcessedLeaves.DriedDate,
+            models.DriedLeaves.DriedDate,
             models.ProcessedLeaves.FlouredDate,
             models.CheckpointStatus.status, # Include CheckpointStatus in the query
             models.CheckpointStatus.statusdate  # Include CheckpointStatus in the query
@@ -1006,14 +1008,14 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .all()
     )
 
-def get_all_expedition_with_batches(db: Session):
+def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100):
  
   return (
         db.query(
             models.Expedition,
             models.ExpeditionContent.BatchID,
             models.ProcessedLeaves.Weight,
-            models.ProcessedLeaves.DriedDate,
+            models.DriedLeaves.DriedDate,
             models.ProcessedLeaves.FlouredDate,
             models.CheckpointStatus.status,
             models.CheckpointStatus.statusdate
