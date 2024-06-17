@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval
+from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval, Event
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from database import Base
@@ -176,6 +176,30 @@ class UserCentra(Base):
     centra = relationship("Centra", back_populates="usercentra")
     user = relationship("User", back_populates="centra")
 
+#notifications
+class Notification(Base):
+    __tablename__ = 'notifications'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
+    message = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    read = Column(Boolean, default=False)
+
+    user = relationship("Centra", back_populates="notifications")
+
+
+# def after_update_listener(mapper, connection, target):
+#     db = Session(get_db)
+#     if target.Status == 'running':
+#         notification = Notification(
+#             user_id=target.CentraID,
+#             message=f"{target.__tablename__} with ID {target.MachineID} is now running."
+#         )
+#         db.add(notification)
+#         db.commit()
+
+# event.listen(DryingMachine, 'after_update', after_update_listener)
+# event.listen(FlouringMachine, 'after_update', after_update_listener)
 
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
