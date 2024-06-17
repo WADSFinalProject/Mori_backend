@@ -155,7 +155,7 @@ class Centra(Base):
     __tablename__ = 'Centra'
     CentralID = Column(Integer, primary_key=True)
     Address = Column(String(100))
-    FlouringSchedule = Column(String(100))
+    # FlouringSchedule = Column(String(100))
 
 
     usercentra = relationship("UserCentra", back_populates="centra")
