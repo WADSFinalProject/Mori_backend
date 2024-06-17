@@ -226,7 +226,7 @@ class Expedition(Base):
     Destination = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
-    received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
+    # received_packages = relationship("ReceivedPackage", back_populates="expedition", cascade="all, delete-orphan")
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
@@ -266,14 +266,14 @@ class Pickup(Base):
     expedition = relationship("Expedition", back_populates="pickup")
     xyz = relationship("XYZuser", back_populates="pickup")
 
-class ReceivedPackage(Base):
-    __tablename__ = 'ReceivedPackage'
-    PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
-    UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    PackageType = Column(String(100))
-    ReceivedDate = Column(DateTime) 
-    WarehouseDestination = Column(String(100))
+# class ReceivedPackage(Base):
+#     __tablename__ = 'ReceivedPackage'
+#     PackageID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+#     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
+#     UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+#     PackageType = Column(String(100))
+#     ReceivedDate = Column(DateTime) 
+#     WarehouseDestination = Column(String(100))
 
 
 
@@ -282,14 +282,14 @@ class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     xyzID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
-    haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
+    # haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
     Date = Column(DateTime)
 
     user = relationship("User")
-    received_package = relationship("ReceivedPackage")
+    # received_package = relationship("ReceivedPackage")
 
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
@@ -300,10 +300,10 @@ class ProductReceipt(Base):
     
     package_receipt = relationship("PackageReceipt")
 
-class PackageType(Base):
-    __tablename__ = 'PackageType'
-    PackageTypeID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    Description = Column(String(100))
+# class PackageType(Base):
+#     __tablename__ = 'PackageType'
+#     PackageTypeID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
+#     Description = Column(String(100))
 
 
 class Warehouse(Base):

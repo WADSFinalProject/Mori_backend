@@ -1120,36 +1120,36 @@ def delete_checkpoint_status(db: Session, checkpoint_id: int):
     return db_checkpoint_status
 
 #receveid packages
-def get_received_package(db: Session, package_id: int):
-    return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+# def get_received_package(db: Session, package_id: int):
+#     return db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
 
-def get_received_packages(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.ReceivedPackage).offset(skip).limit(limit).all()
+# def get_received_packages(db: Session, skip: int = 0, limit: int = 100):
+#     return db.query(models.ReceivedPackage).offset(skip).limit(limit).all()
 
-def create_received_package(db: Session, received_package: schemas.ReceivedPackageCreate):
-    db_received_package = models.ReceivedPackage(**received_package.dict())
-    db.add(db_received_package)
-    db.commit()
-    db.refresh(db_received_package)
-    return db_received_package
+# def create_received_package(db: Session, received_package: schemas.ReceivedPackageCreate):
+#     db_received_package = models.ReceivedPackage(**received_package.dict())
+#     db.add(db_received_package)
+#     db.commit()
+#     db.refresh(db_received_package)
+#     return db_received_package
 
-def update_received_package(db: Session, package_id: int, received_package: schemas.ReceivedPackageUpdate):
-    db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
-    if not db_received_package:
-        return None
-    for key, value in received_package.dict(exclude_unset=True).items():
-        setattr(db_received_package, key, value)
-    db.commit()
-    db.refresh(db_received_package)
-    return db_received_package
+# def update_received_package(db: Session, package_id: int, received_package: schemas.ReceivedPackageUpdate):
+#     db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+#     if not db_received_package:
+#         return None
+#     for key, value in received_package.dict(exclude_unset=True).items():
+#         setattr(db_received_package, key, value)
+#     db.commit()
+#     db.refresh(db_received_package)
+#     return db_received_package
 
-def delete_received_package(db: Session, package_id: int):
-    db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
-    if not db_received_package:
-        return None
-    db.delete(db_received_package)
-    db.commit()
-    return db_received_package
+# def delete_received_package(db: Session, package_id: int):
+#     db_received_package = db.query(models.ReceivedPackage).filter(models.ReceivedPackage.PackageID == package_id).first()
+#     if not db_received_package:
+#         return None
+#     db.delete(db_received_package)
+#     db.commit()
+#     return db_received_package
 
 
 #package receipt
