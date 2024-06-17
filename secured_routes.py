@@ -3,7 +3,7 @@ from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
 import schemas, crud, models
-from middleware import get_current_user
+from middleware import get_current_user, centra_user, harbour_user
 
 secured_router = APIRouter()
 
@@ -13,9 +13,11 @@ async def protected_route(user: dict = Depends(get_current_user)):
     return {"message": "You are authenticated", "user": user["sub"]}
 
 # Batches
-@secured_router.post("/batches/", response_model=schemas.ProcessedLeaves)
-def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.create_batch(db=db, batch=batch)
+@secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
+def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    central_id = user["centralID"]
+    batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
+    return batches
 
 # @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 # def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -23,26 +25,34 @@ def create_new_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends
 #     return batches
 
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
-def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
     return batches
 
 @secured_router.get("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
-def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     batch = crud.get_batch_by_id(db=db, batch_id=batch_id)
     if batch is None:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
-@secured_router.put("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
-def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    batch = crud.update_batch(db=db, batch_id=batch_id, update_data=update_data)
+
+@secured_router.put("/batchesShipped/{batch_id}", response_model=schemas.ProcessedLeavesShipped)
+def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.update_batch_shipped(db=db,batch_id=batch_id)
     if batch is None:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
+# @router.put("/update_batch_shipped/{batch_id}", response_model=schemas.ProcessedLeaves)
+# def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+#     updated_batch = crud.update_batch_shipped(db, batch_id)
+#     if updated_batch is None:
+#         raise HTTPException(status_code=404, detail="Batch not found")
+#     return updated_batch
+
 @secured_router.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
-def delete_existing_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def delete_existing_batch(batch_id: int, db: Session = Depends(get_db),user: dict = Depends(centra_user)):
     result = crud.delete_batch(db=db, batch_id=batch_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Batch not found")
@@ -50,7 +60,7 @@ def delete_existing_batch(batch_id: int, db: Session = Depends(get_db), user: di
 
 #DRYING
 @secured_router.post("/drying-machine/create/")
-def add_drying_machine(drying_machine: schemas.DryingMachineCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def add_drying_machine(drying_machine: schemas.DryingMachineCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     new_machine = crud.create_drying_machine(db, drying_machine)
     if new_machine:
         return {"message": "Drying machine created successfully!"}
@@ -58,7 +68,7 @@ def add_drying_machine(drying_machine: schemas.DryingMachineCreate, db: Session 
         raise HTTPException(status_code=400, detail="Drying machine with the same ID already exists!")
 
 @secured_router.post("/drying_machines/{machine_id}/start", response_model=schemas.DryingMachine)
-def start_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def start_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     success = crud.start_drying_machine(db, machine_id)
     if not success:
         raise HTTPException(status_code=400, detail="Machine could not be started")
@@ -66,7 +76,7 @@ def start_machine(machine_id: str, db: Session = Depends(get_db), user: dict = D
     return machine
 
 @secured_router.post("/drying_machines/{machine_id}/stop", response_model=schemas.DryingMachine)
-def stop_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def stop_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     success = crud.stop_drying_machine(db, machine_id)
     if not success:
         raise HTTPException(status_code=400, detail="Machine could not be stopped")
@@ -74,26 +84,27 @@ def stop_machine(machine_id: str, db: Session = Depends(get_db), user: dict = De
     return machine
 
 @secured_router.get("/drying_machines/{machine_id}/status", response_model=str)
-def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     status = crud.get_drying_machine_status(db, machine_id)
     if status is None:
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
-@secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
-def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    drying_machines = crud.get_all_drying_machines(db=db, skip=skip, limit=limit)
+@secured_router.get("/drying-machines/", response_model=List[schemas.DryingMachine])
+def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    central_id = user["centralID"]
+    drying_machines = crud.get_all_drying_machines(db=db, central_id=central_id, skip=skip, limit=limit)
     return drying_machines
 
 @secured_router.get("/drying_machine/{machine_id}", response_model=schemas.DryingMachine)
-def read_drying_machine(machine_id: str, db: Session = Depends(get_db)):
+def read_drying_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_drying_machine = crud.delete_drying_machine(db, machine_id)
     if db_drying_machine is None:
         raise HTTPException(status_code=404, detail="Drying machine not found")
     return db_drying_machine
 
 @secured_router.delete("/drying-machine/{machine_id}", response_model=schemas.DryingMachine)
-def delete_drying_machine(machine_id: str, db: Session = Depends(get_db)):
+def delete_drying_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_drying_machine = crud.get_drying_machine(db, machine_id)
     if db_drying_machine is None:
         raise HTTPException(status_code=404, detail="Drying machine not found")
@@ -104,7 +115,7 @@ def delete_drying_machine(machine_id: str, db: Session = Depends(get_db)):
 
  #drying activity  
 @secured_router.post("/drying_activity/create")
-def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     dry_activity = crud.add_new_drying_activity(db, drying_activity)
     if dry_activity:
         return {"message": "Drying activity created successfully!"}
@@ -112,24 +123,25 @@ def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Se
         raise HTTPException(status_code=400, detail="Drying machine with the same ID already exists!")
 
 @secured_router.get("/drying-activities/{drying_id}")
-def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     drying = crud.get_drying_activity(db, drying_id)
     return drying
 
 @secured_router.get("/drying_activity/", response_model=List[schemas.DryingActivity])
-def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
+def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    central_id = user["centralID"]
+    drying_activity = crud.get_all_drying_activity(db=db, central_id=central_id, skip=skip, limit=limit)
     return drying_activity
 
 @secured_router.put("/drying-activities/{drying_id}")
-def update_drying_activity(drying_id: int, drying_activity: schemas.DryingActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def update_drying_activity(drying_id: int, drying_activity: schemas.DryingActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_drying_activity = crud.update_drying_activity(db, drying_id, drying_activity)
     if db_drying_activity is None:
         raise HTTPException(status_code=404, detail="Drying activity not found")
     return db_drying_activity
 
 @secured_router.delete("/drying-activities/{drying_id}")
-def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_drying_activity = crud.delete_drying_activity(db, drying_id)
     if db_drying_activity is None:
         raise HTTPException(status_code=404, detail="Drying activity not found")
@@ -137,7 +149,7 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
 
 #driedleaves
 @secured_router.post("/dried_leaves/", response_model=schemas.DriedLeaves)
-def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db)):
+def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
 
 # @secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
@@ -145,14 +157,10 @@ def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depen
 #     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
 
 @secured_router.get("/dried_leaves/", response_model=List[schemas.DriedLeaves])
-def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user["role"] == "admin":
-        wet_leaves_collections = crud.get_dried_leaves(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
-        wet_leaves_collections = crud.get_dried_leaves_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    return wet_leaves_collections
+def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    central_id = user["centralID"]
+    dried_leaves = crud.get_dried_leaves(db=db, central_id=central_id, skip=skip, limit=limit)
+    return dried_leaves
 
 @secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
@@ -162,14 +170,14 @@ def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
     return db_dried_leaf
 
 @secured_router.put("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
-def update_dried_leaf(leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate, db: Session = Depends(get_db)):
+def update_dried_leaf(leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_dried_leaf = crud.update_dried_leaf(db=db, leaf_id=leaf_id, dried_leaf=dried_leaf)
     if db_dried_leaf is None:
         raise HTTPException(status_code=404, detail="Dried leaf not found")
     return db_dried_leaf
 
 @secured_router.delete("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
-def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
+def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_dried_leaf = crud.delete_dried_leaf(db=db, leaf_id=leaf_id)
     if db_dried_leaf is None:
         raise HTTPException(status_code=404, detail="Dried leaf not found")
@@ -177,7 +185,7 @@ def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
 
 #FLOURING
 @secured_router.post("/flouring-machine/create/")
-def add_flouring_machine(flouring_machine: schemas.FlouringMachineCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def add_flouring_machine(flouring_machine: schemas.FlouringMachineCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     new_machine = crud.add_new_flouring_machine(db, flouring_machine)
     if new_machine:
         return {"message": "Flouring machine created successfully!"}
@@ -185,33 +193,34 @@ def add_flouring_machine(flouring_machine: schemas.FlouringMachineCreate, db: Se
         raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
 
 @secured_router.get("/flouring_machines/{machine_id}/status", response_model=str)
-def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     status = crud.get_flouring_machine_status(db, machine_id)
     if status is None:
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
-def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    flouring_machines = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
+def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    central_id = user["centralID"]
+    flouring_machines = crud.get_all_flouring_machines(db=db, central_id=central_id, skip=skip, limit=limit)
     return flouring_machines
 
 @secured_router.post("/flouring_machines/{machine_id}/start")
-def start_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def start_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     success = crud.start_flouring_machine(db, machine_id)
     if not success:
         raise HTTPException(status_code=400, detail="Failed to start the machine or machine already running")
     return {"message": "Machine started successfully"}
 
 @secured_router.post("/flouring_machines/{machine_id}/stop")
-def stop_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def stop_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     success = crud.stop_flouring_machine(db, machine_id)
     if not success:
         raise HTTPException(status_code=400, detail="Failed to stop the machine or machine already idle")
     return {"message": "Machine stopped successfully"}
 
 @secured_router.delete("/flouring-machine/{machine_id}", response_model=schemas.FlouringMachine)
-def delete_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
+def delete_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_flouring_machine = crud.delete_flouring_machine(db, machine_id)
     if db_flouring_machine is None:
         raise HTTPException(status_code=404, detail="Flouring machine not found")
@@ -222,35 +231,35 @@ def delete_flouring_machine(machine_id: str, db: Session = Depends(get_db)):
 
 #flouring activity
 @secured_router.post("/flouring_activity/create")
-def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     flour_activity = crud.add_new_flouring_activity(db, flouring_activity)
     if flour_activity:
         return {"message": "Flouring activity created successfully!"}
     else:
         raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
 
-    
 @secured_router.get("/flouring_activity/", response_model=List[schemas.FlouringActivity])
-def read_flouring_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
+def read_flouring_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    CentralID = user["centralID"]
+    flouring_activity = crud.get_all_flouring_activity(db=db, CentralID=CentralID, skip=skip, limit=limit)
     return flouring_activity
 
 @secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
-def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     flouring_activity = crud.get_flouring_activity(db=db, flouring_id=flouring_id)
     if not flouring_activity:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return flouring_activity
 
 @secured_router.put("/flouring_activity/update/{flouring_id}", response_model=schemas.FlouringActivity)
-def update_flouring_activity(flouring_id: int, flouring_activity: schemas.FlouringActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def update_flouring_activity(flouring_id: int, flouring_activity: schemas.FlouringActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     updated_flouring = crud.update_flouring_activity(db, flouring_id, flouring_activity)
     if not updated_flouring:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return updated_flouring
 
 @secured_router.delete("/flouring_activity/delete/{flouring_id}")
-def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     deleted_flouring_activity = crud.delete_flouring_activity(db=db, flouring_id=flouring_id)
     if not deleted_flouring_activity:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
@@ -261,11 +270,11 @@ def delete_flouring_activity(flouring_id: int, db: Session = Depends(get_db), us
 
 #WET LEAVES COLLECTIONS
 @secured_router.post("/wet-leaves-collections/create")
-def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollectionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollectionCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     return crud.add_new_wet_leaves_collection(db, wet_leaves_collection)
 
 @secured_router.get("/wet-leaves-collections/", response_model=List[schemas.WetLeavesCollection])
-def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     if user["role"] == "admin":
         wet_leaves_collections = crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
     elif user["role"] == "centra":
@@ -286,7 +295,7 @@ def read_wet_leaves_collections( centraId: int, skip: int = 0, limit: int = 100,
         raise HTTPException(status_code=500, detail=f"An error occurred during password reset: {str(e)}")
 
 @secured_router.get("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
-def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_wet_leaves_collection = crud.get_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
     if db_wet_leaves_collection is None:
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
@@ -304,21 +313,21 @@ def read_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(g
 #     return crud.update_wet_leaves_collection(db, wet_leaves_batch_id, update_data)
 
 @secured_router.put("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
-def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def update_wet_leaves_collection(wet_leaves_batch_id: str, update_data: schemas.WetLeavesCollectionUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_wet_leaves_collection = crud.update_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id, update_data=update_data)
     if db_wet_leaves_collection is None:
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
     return db_wet_leaves_collection
     
 @secured_router.delete("/wet-leaves-collections/{wet_leaves_batch_id}", response_model=schemas.WetLeavesCollection)
-def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def delete_wet_leaves_collection(wet_leaves_batch_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_wet_leaves_collection = crud.delete_wet_leaves_collection(db=db, wet_leaves_batch_id=wet_leaves_batch_id)
     if db_wet_leaves_collection is None:
         raise HTTPException(status_code=404, detail="WetLeavesCollection not found")
     return db_wet_leaves_collection
 
 @secured_router.get("/wet-leaves-collections/conversion", response_model= schemas.ConversionRate)
-def get_wet_leaves_conversion(centraId: int, db: Session = Depends(get_db)):
+def get_wet_leaves_conversion(centraId: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     try:
         conversion_rate = crud.get_wet_conversion_rate(db=db,centraID=centraId)
 
@@ -328,7 +337,7 @@ def get_wet_leaves_conversion(centraId: int, db: Session = Depends(get_db)):
         return { "error": str(e)}
     
 @secured_router.get("/dried-leaves/conversion", response_model= schemas.ConversionRate)
-def get_dry_leaves_conversion(centraId: int, db: Session = Depends(get_db)):
+def get_dry_leaves_conversion(centraId: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     try:
         conversion_rate = crud.get_dry_conversion_rate(db=db,centraID=centraId)
         return conversion_rate
@@ -555,7 +564,7 @@ def delete_user_centra(user_centra_id: int, db: Session = Depends(get_db), user:
         raise HTTPException(status_code=404, detail="UserCentra not found")
     return db_user_centra
 
-@secured_router.get("wet")
+# @secured_router.get("wet")
 
 # Shipment (XYZ)
 
@@ -576,32 +585,32 @@ def delete_user_centra(user_centra_id: int, db: Session = Depends(get_db), user:
 
 # Harborguards
 @secured_router.post("/harborguard", response_model=schemas.HarborGuardInDB)
-def create_harbor_guard(harbor_guard: schemas.HarborGuardCreate, db: Session = Depends(get_db)):
+def create_harbor_guard(harbor_guard: schemas.HarborGuardCreate, db: Session = Depends(get_db), user: dict = Depends(harbour_user)):
     return crud.create_harbor_guard(db, harbor_guard)
 
 @secured_router.get("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
-def read_harbor_guard(harbour_id: int, db: Session = Depends(get_db)):
+def read_harbor_guard(harbour_id: int, db: Session = Depends(get_db), user: dict = Depends(harbour_user)):
     db_harbor_guard = crud.get_harbor_guard(db, harbour_id)
     if db_harbor_guard is None:
         raise HTTPException(status_code=404, detail="Harbor Guard not found")
     return db_harbor_guard
 
 @secured_router.put("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
-def update_harbor_guard(harbour_id: int, harbor_guard: schemas.HarborGuardUpdate, db: Session = Depends(get_db)):
+def update_harbor_guard(harbour_id: int, harbor_guard: schemas.HarborGuardUpdate, db: Session = Depends(get_db), user: dict = Depends(harbour_user)):
     db_harbor_guard = crud.update_harbor_guard(db, harbour_id, harbor_guard)
     if db_harbor_guard is None:
         raise HTTPException(status_code=404, detail="Harbor Guard not found")
     return db_harbor_guard
 
 @secured_router.delete("/harborguard/{harbour_id}", response_model=schemas.HarborGuardInDB)
-def delete_harbor_guard(harbour_id: int, db: Session = Depends(get_db)):
+def delete_harbor_guard(harbour_id: int, db: Session = Depends(get_db), user: dict = Depends(harbour_user)):
     db_harbor_guard = crud.delete_harbor_guard(db, harbour_id)
     if db_harbor_guard is None:
         raise HTTPException(status_code=404, detail="Harbor Guard not found")
     return db_harbor_guard
 
 @secured_router.get("/harborguard", response_model=list[schemas.HarborGuardInDB])
-def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(harbour_user)):
     harbor_guards = crud.get_all_harbor_guards(db, skip=skip, limit=limit)
     return harbor_guards
 
@@ -669,9 +678,10 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 
 #expedition
+
 @secured_router.post("/expeditions/") # belum bener harus di kerjain
 def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    
+   
     try:
         expedition = crud.create_expedition(db, expedition,user)
         return {"expeditionId": expedition.ExpeditionID}
@@ -809,38 +819,7 @@ def delete_expedition_content(expedition_content_id: int, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Expedition content not found")
     return db_expedition_content
 
-
 #checkpointstatus
-
-# @secured_router.post("/checkpointstatus/", response_model=schemas.CheckpointStatus)
-# def create_checkpoint(checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
-#     return crud.create_checkpoint_status(db, checkpoint_status)
-
-# @secured_router.get("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
-# def read_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
-#     db_checkpoint = crud.get_checkpoint_status(db, checkpoint_id)
-#     if db_checkpoint is None:
-#         raise HTTPException(status_code=404, detail="Checkpoint status not found")
-#     return db_checkpoint
-
-# @secured_router.get("/checkpointstatus/", response_model=List[schemas.CheckpointStatus])
-# def read_all_checkpoints(db: Session = Depends(get_db)):
-#     return crud.get_all_checkpoint_statuses(db=db)
-
-# @secured_router.put("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
-# def update_checkpoint(checkpoint_id: int, checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
-#     db_checkpoint = crud.update_checkpoint_status(db, checkpoint_id, checkpoint_status)
-#     if db_checkpoint is None:
-#         raise HTTPException(status_code=404, detail="Checkpoint status not found")
-#     return db_checkpoint
-
-# @secured_router.delete("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
-# def delete_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
-#     db_checkpoint = crud.delete_checkpoint_status(db, checkpoint_id)
-#     if db_checkpoint is None:
-#         raise HTTPException(status_code=404, detail="Checkpoint status not found")
-#     return db_checkpoint
-
 @secured_router.post("/checkpointstatus/", response_model=schemas.CheckpointStatus)
 def create_checkpoint(checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
     return crud.create_checkpoint_status(db, checkpoint_status)
