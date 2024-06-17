@@ -38,6 +38,21 @@ from security import verify_token
 
 def get_current_user(request: Request):
     # Temporarily bypass authentication
-    token_data = {"id": 1, "role": "centra", "name": "test_user", "centralID": 12}  # Mock user data
+    token_data = {"id": 1, "role": "Centra", "name": "test_user", "centralID": 12}  # Mock user data
     request.state.user = token_data  # Attach user payload to request state
     return token_data
+
+def centra_user(user: dict = Depends(get_current_user)):
+    if user["role"] not in ["Centra", "Admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return user
+
+def harbour_user(user: dict = Depends(get_current_user)):
+    if user["role"] not in ["Harbour Guard", "Admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return user
+
+def xyz_user(user: dict = Depends(get_current_user)):
+    if user["role"] not in ["XYZ", "Admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return user

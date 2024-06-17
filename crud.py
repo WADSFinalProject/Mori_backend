@@ -219,8 +219,8 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     db.refresh(db_batch)
     return db_batch
 
-def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.ProcessedLeaves).offset(skip).limit(limit).all()
+def get_all_batches(db: Session, central_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.CentraID == central_id).offset(skip).limit(limit).all()
 
 def get_batches_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -274,8 +274,8 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
     db.refresh(db_drying_machine)
     return db_drying_machine
 
-def get_all_drying_machines(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingMachine).offset(skip).limit(limit).all()
+def get_all_drying_machines(db: Session, central_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == central_id).offset(skip).limit(limit).all()
 
 def get_drying_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.DryingMachine).filter(models.DryingMachine.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -342,8 +342,8 @@ def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivity
     db.refresh(db_drying_activity)
     return db_drying_activity
 
-def get_all_drying_activity(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingActivity).offset(skip).limit(limit).all()
+def get_all_drying_activity(db: Session, central_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.DryingActivity).filter(models.DryingActivity.CentralID == central_id).offset(skip).limit(limit).all()
 
 def get_drying_activity(db: Session, drying_id: int):
     drying= db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
@@ -372,8 +372,8 @@ def delete_drying_activity(db: Session, drying_id: str):
 
 #driedleaves
 
-def get_dried_leaves(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.DriedLeaves).offset(skip).limit(limit).all()
+def get_dried_leaves(db: Session, central_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == central_id).offset(skip).limit(limit).all()
 
 def get_dried_leaf(db: Session, leaf_id: int):
     return db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
@@ -421,8 +421,8 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
     db.refresh(db_flouring_machine)
     return db_flouring_machine
 
-def get_all_flouring_machines(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringMachine).offset(skip).limit(limit).all()
+def get_all_flouring_machines(db: Session, central_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.FlouringMachine).filter(models.FlouringMachine.CentraID == central_id).offset(skip).limit(limit).all()
 
 def get_flouring_machine_status(db: Session, machine_id: str):
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
@@ -471,11 +471,11 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
     db.refresh(db_flouring_activity)
     return db_flouring_activity
 
-def get_flouring_activity(db: Session, flouring_id: int):
-    return db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
+# def get_all_flouring_activity(db: Session, CentralID: int, skip: int = 0, limit: int = 100):
+#     return db.query(models.FlouringActivity).filter(models.FlouringActivity.CentralID == CentralID).offset(skip).limit(limit).all()
 
-def get_all_flouring_activity(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringActivity).offset(skip).limit(limit).all()
+def get_all_flouring_activity(db: Session, CentralID: int, skip: int = 0, limit: int = 100):
+    return db.query(models.FlouringActivity).filter(models.FlouringActivity.CentralID == CentralID).offset(skip).limit(limit).all()
 
 def get_flouring_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.FlouringActivity).filter(models.FlouringActivity.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -1026,72 +1026,12 @@ def get_all_expedition_with_batches(db: Session):
     )
     
 
-# def get_expedition_batches(db: Session, expedition_id: int):
-#     return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
-
-# def get_expedition_batches(db: Session, expedition_id: int):
-#     return db.query(
-#         models.Expedition.ExpeditionID,
-#         models.Expedition.AirwayBill,
-#         models.Expedition.EstimatedArrival,
-#         models.Expedition.TotalPackages,
-#         models.Expedition.TotalWeight,
-#         models.Expedition.Status,
-#         models.Expedition.ExpeditionDate,
-#         models.Expedition.ExpeditionServiceDetails,
-#         models.Expedition.CentralID,
-#         models.ExpeditionContent.BatchID,
-#         models.ProcessedLeaves.Weight
-#     ).join(
-#         models.ExpeditionContent, models.Expedition.ExpeditionID == models.ExpeditionContent.ExpeditionID
-#     ).join(
-#         models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID
-#     ).filter(
-#         models.Expedition.ExpeditionID == expedition_id
-#     ).all()
-
-# def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
-#     expeditions = db.query(models.Expedition).offset(skip).limit(limit).all()
-#     for expedition in expeditions:
-#         expedition.batches = get_expedition_batches(db, expedition.ExpeditionID)
-#     return expeditions
-
-# def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
-#     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-#     if expedition is None:
-#         return None
-#     batches = get_expedition_batches(db, expedition_id)
-#     checkpoint = get_latest_checkpoint(db,expedition_id)
-    
-#     return {
-#         "expedition": expedition,
-#         "batches": [batch for batch in batches],
-#         "status": checkpoint.status,
-#         "checkpoint_statusdate": checkpoint.statusdate,
-#         "checkpoint": f"{checkpoint.status} | {checkpoint.statusdate}"
-#     }
 
 
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
-# def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
-#     expeditions = get_expeditions(db=db, skip=skip, limit=limit)
-#     result = []
-#     for expedition in expeditions:
-#         expedition_data = get_expedition(db, expedition.ExpeditionID)
-#         result.append(expedition_data)
-#     return result
-
-
-# def get_all_expeditions_with_batches_by_centra(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
-#     expeditions = get_expeditions_by_centra(db=db, centra_id=centra_id, skip=skip, limit=limit)
-#     result = []
-#     for expedition in expeditions:
-#         expedition_data = get_expedition(db, expedition.ExpeditionID)
-#         result.append(expedition_data)
-#     return result
 
 def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: schemas.User):
     # Fetch the user including their related Centra
@@ -1100,7 +1040,6 @@ def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: s
     # Assuming you have a direct relationship to Centra or a method to fetch it
     
     centra_id = user["centralID"]
-  
 
     # Create the expedition object with CentraID included
     db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id)

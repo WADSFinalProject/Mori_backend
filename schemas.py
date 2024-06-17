@@ -298,6 +298,7 @@ class FlouringActivityBase(BaseModel):
     Date: Optional[date] = None
     Weight: Optional[int] = None
     FlouringMachineID: Optional[int] = None
+    # DryingID: Optional[int] = None
     Time: Optional[time] = None
 
 class FlouringActivityCreate(FlouringActivityBase):
