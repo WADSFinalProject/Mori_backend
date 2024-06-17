@@ -232,11 +232,10 @@ def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
 #update batch
-def update_batch(db: Session, batch_id: str, update_data: schemas.ProcessedLeavesUpdate):
+def update_batch_shipped(db: Session, batch_id: int):
     db_batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
     if db_batch:
-        for key, value in update_data.dict().items():
-            setattr(db_batch, key, value)
+        db_batch.Shipped = True
         db.commit()
         db.refresh(db_batch)
     return db_batch
@@ -787,7 +786,7 @@ def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
 def get_all_warehouses(db: Session, skip: int = 0, limit: int = 100) -> List[models.Warehouse]:
     return db.query(models.Warehouse).offset(skip).limit(limit).all()
 
-def get_warehouse(db: Session, warehouse_id: str) -> Optional[models.Warehouse]:
+def get_warehouse(db: Session, warehouse_id: int) -> Optional[models.Warehouse]:
     return db.query(models.Warehouse).filter(models.Warehouse.id == warehouse_id).first()
 
 def update_warehouse(db: Session, warehouse_id: str, update_data: schemas.WarehouseUpdate) -> Optional[models.Warehouse]:
@@ -1007,7 +1006,7 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .all()
     )
 
-def get_all_expedition_with_batches(db: Session, skip:int, limit:0):
+def get_all_expedition_with_batches(db: Session):
  
   return (
         db.query(
@@ -1023,8 +1022,6 @@ def get_all_expedition_with_batches(db: Session, skip:int, limit:0):
         .join(models.ExpeditionContent.batch)
         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)
         .options(joinedload(models.Expedition.content))
-        .offset(skip)
-        .limit(limit)
         .all()
     )
     
@@ -1043,7 +1040,7 @@ def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: s
     # Assuming you have a direct relationship to Centra or a method to fetch it
     
     centra_id = user["centralID"]
-  
+
     # Create the expedition object with CentraID included
     db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id)
     
@@ -1100,12 +1097,13 @@ def get_expedition_content(db: Session, expedition_content_id: int):
 def get_expedition_contents(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ExpeditionContent).offset(skip).limit(limit).all()
 
-def create_expedition_content(db: Session, expedition_content: schemas.ExpeditionContentCreate):
-    db_expedition_content = models.ExpeditionContent(**expedition_content.dict())
-    db.add(db_expedition_content)
+def create_expedition_content(db: Session, expedition_content: models.ExpeditionContent):
+    db.add(expedition_content)
     db.commit()
-    db.refresh(db_expedition_content)
-    return db_expedition_content
+    db.refresh(expedition_content)
+    return expedition_content
+
+
 
 def update_expedition_content(db: Session, expedition_content_id: int, expedition_content: schemas.ExpeditionContentUpdate):
     db_expedition_content = db.query(models.ExpeditionContent).filter(models.ExpeditionContent.id == expedition_content_id).first()

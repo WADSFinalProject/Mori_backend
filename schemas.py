@@ -112,10 +112,13 @@ class ProcessedLeavesBase(BaseModel):
 class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 
-class ProcessedLeavesUpdate(BaseModel):
-    Weight: Optional[int] = None
-    Shipped: Optional[bool] = False
+class ProcessedLeavesRescale(BaseModel):
+    Weight: int
 
+class ProcessedLeavesShipped(BaseModel):
+    Shipped: bool
+
+   
 
 class ProcessedLeaves(ProcessedLeavesBase):
     ProductID: int
@@ -413,13 +416,15 @@ class ExpeditionWithBatches(BaseModel):
     DriedDate: date
     status: str
     statusdate: datetime
-    
+
+
 
 #ExpeditionContent
 
+
 class ExpeditionContentBase(BaseModel):
     ExpeditionID: int
-    BatchID: int
+    BatchIDs: List[int]
     # checkpointID: int
 
 class ExpeditionContentCreate(ExpeditionContentBase):
@@ -427,14 +432,17 @@ class ExpeditionContentCreate(ExpeditionContentBase):
 
 class ExpeditionContentUpdate(BaseModel):
     ExpeditionID: Optional[int] = None
-    BatchID: Optional[int] = None
+    BatchIDs: Optional[List[int]] = None
     # checkpointID: Optional[int] = None
 
-class ExpeditionContent(ExpeditionContentBase):
+class ExpeditionContent(BaseModel):
     id: int
+    ExpeditionID: int
+    BatchID: int
 
     class Config:
         orm_mode = True
+
 
 #checkpointStatus
 class CheckpointStatusBase(BaseModel):

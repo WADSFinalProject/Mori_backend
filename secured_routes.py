@@ -36,12 +36,20 @@ def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depend
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
-@secured_router.put("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
-def update_existing_batch(batch_id: int, update_data: schemas.ProcessedLeavesUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    batch = crud.update_batch(db=db, batch_id=batch_id, update_data=update_data)
+
+@secured_router.put("/batchesShipped/{batch_id}", response_model=schemas.ProcessedLeavesShipped)
+def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+    batch = crud.update_batch_shipped(db=db,batch_id=batch_id)
     if batch is None:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
+
+# @router.put("/update_batch_shipped/{batch_id}", response_model=schemas.ProcessedLeaves)
+# def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
+#     updated_batch = crud.update_batch_shipped(db, batch_id)
+#     if updated_batch is None:
+#         raise HTTPException(status_code=404, detail="Batch not found")
+#     return updated_batch
 
 @secured_router.delete("/batches/{batch_id}", response_model=schemas.ProcessedLeaves)
 def delete_existing_batch(batch_id: int, db: Session = Depends(get_db),user: dict = Depends(centra_user)):
@@ -613,7 +621,7 @@ async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Dep
     return warehouses
 
 @secured_router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
-async def get_warehouse(warehouse_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def get_warehouse(warehouse_id: int, db: Session = Depends(get_db)):
     warehouse = crud.get_warehouse(db, warehouse_id=warehouse_id)
     if warehouse is None:
         raise HTTPException(status_code=404, detail="Warehouse not found")
@@ -624,7 +632,7 @@ async def create_warehouse(warehouse_data: schemas.WarehouseCreate, db: Session 
     return crud.create_warehouse(db=db, warehouse_data=warehouse_data)
 
 @secured_router.put("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
-async def update_warehouse(warehouse_id: str, warehouse_data: schemas.WarehouseUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def update_warehouse(warehouse_id: int, warehouse_data: schemas.WarehouseUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     updated_warehouse = crud.update_warehouse(db, warehouse_id=warehouse_id, update_data=warehouse_data)
     if updated_warehouse is None:
         raise HTTPException(status_code=404, detail="Warehouse not found")
@@ -670,10 +678,10 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 
 #expedition
-@secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
+
 @secured_router.post("/expeditions/") # belum bener harus di kerjain
 def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-
+   
     try:
         expedition = crud.create_expedition(db, expedition,user)
         return {"expeditionId": expedition.ExpeditionID}
@@ -706,7 +714,7 @@ def get_expeditions_by_central(central_id: int, db: Session = Depends(get_db)):
     return expeditions
 
 @secured_router.get("/all_expeditions", response_model=List[schemas.ExpeditionWithBatches])
-def get_all_expedition_with_batches( skip:int, limit:int, db: Session = Depends(get_db)):
+def get_all_expedition_with_batches( skip:int = 0, limit:int = 100, db: Session = Depends(get_db)):
     all = crud.get_all_expedition_with_batches(db=db,skip=skip,limit=limit)
     return all
 
@@ -717,10 +725,10 @@ def get_expedition_with_batches(expedition_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Expedition not found")
     return expeditions_with_batches
 
-@secured_router.get("/expeditions", response_model=List[schemas.Expedition])
-def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
-    return expeditions
+# @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
+# def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
+#     return expeditions
 
 
 @secured_router.get("/expeditions/{expedition_id}", response_model=schemas.Expedition)
@@ -760,10 +768,30 @@ def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: d
 #     return expedition
 
 #expeditioncontent
+# class ExpeditionContentBase(BaseModel):
+#     ExpeditionID: int
+#     BatchID: int
+#     # checkpointID: int
 
-@secured_router.post("/expedition_contents/", response_model=schemas.ExpeditionContent)
-def create_expedition_content(expedition_content: schemas.ExpeditionContentCreate, db: Session = Depends(get_db)):
-    return crud.create_expedition_content(db=db, expedition_content=expedition_content)
+
+# @secured_router.post("/expedition_contents/", response_model=schemas.ExpeditionContent)
+# def create_expedition_contents(expedition_contents: List[schemas.ExpeditionContentCreate], db: Session = Depends(get_db)):
+#     created_contents = []
+#     for content in expedition_contents:
+#         created_content = crud.create_expedition_content(db=db, expedition_content=content)
+#         created_contents.append(created_content)
+#     return created_contents
+
+@secured_router.post("/expedition_contents/", response_model=List[schemas.ExpeditionContent])
+def create_expedition_contents(expedition_content: schemas.ExpeditionContentCreate, db: Session = Depends(get_db)):
+    created_contents = []
+    expedition_id = expedition_content.ExpeditionID
+    for batch_id in expedition_content.BatchIDs:
+        content_data = models.ExpeditionContent(ExpeditionID=expedition_id, BatchID=batch_id)
+        created_content = crud.create_expedition_content(db=db, expedition_content=content_data)
+        created_contents.append(created_content)
+    return created_contents
+
 
 @secured_router.get("/expedition_contents/{expedition_content_id}", response_model=schemas.ExpeditionContent)
 def read_expedition_content(expedition_content_id: int, db: Session = Depends(get_db)):
