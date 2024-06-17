@@ -423,28 +423,29 @@ class CheckpointStatus(CheckpointStatusBase):
         orm_mode = True
 
 # ReceivedPackage schemas
-class ReceivedPackageBase(BaseModel):
-    ExpeditionID: int
-    UserID: int
-    PackageType: str
-    ReceivedDate: datetime
-    WarehouseDestination: str
+# class ReceivedPackageBase(BaseModel):
+#     ExpeditionID: int
+#     UserID: int
+#     PackageType: str
 
-class ReceivedPackageCreate(ReceivedPackageBase):
-    pass
+#     ReceivedDate: datetime
+#     WarehouseDestination: str
 
-class ReceivedPackageUpdate(BaseModel):
-    ExpeditionID: Optional[int] = None
-    UserID: Optional[int] = None
-    PackageType: Optional[str] = None
-    ReceivedDate: Optional[datetime] = None
-    WarehouseDestination: Optional[str] = None
+# class ReceivedPackageCreate(ReceivedPackageBase):
+#     pass
 
-class ReceivedPackage(ReceivedPackageBase):
-    PackageID: int
+# class ReceivedPackageUpdate(BaseModel):
+#     ExpeditionID: Optional[int] = None
+#     UserID: Optional[int] = None
+#     PackageType: Optional[str] = None
+#     ReceivedDate: Optional[datetime] = None
+#     WarehouseDestination: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+# class ReceivedPackage(ReceivedPackageBase):
+#     PackageID: int
+
+#     class Config:
+#         from_attributes = True
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
@@ -549,20 +550,20 @@ class ProductReceipt(ProductReceiptBase):
         from_attributes = True
 
 # PackageType schemas
-class PackageTypeBase(BaseModel):
-    Description: str
+# class PackageTypeBase(BaseModel):
+#     Description: str
 
-class PackageTypeCreate(PackageTypeBase):
-    pass
+# class PackageTypeCreate(PackageTypeBase):
+#     pass
 
-class PackageTypeUpdate(BaseModel):
-    Description: Optional[str] = None
+# class PackageTypeUpdate(BaseModel):
+#     Description: Optional[str] = None
 
-class PackageType(PackageTypeBase):
-    PackageTypeID: int
+# class PackageType(PackageTypeBase):
+#     PackageTypeID: int
 
-    class Config:
-        from_attributes = True
+#     class Config:
+#         from_attributes = True
 
 class HarborGuardBase(BaseModel):
     HarbourName: str

@@ -847,35 +847,35 @@ def delete_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
 
 
 #received package
-@secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
-def create_received_package(received_package: schemas.ReceivedPackageCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    return crud.create_received_package(db=db, received_package=received_package)
+# @secured_router.post("/received_packages/", response_model=schemas.ReceivedPackage)
+# def create_received_package(received_package: schemas.ReceivedPackageCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     return crud.create_received_package(db=db, received_package=received_package)
 
-@secured_router.get("/received_packages/", response_model=List[schemas.ReceivedPackage])
-def read_received_packages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    received_packages = crud.get_received_packages(db=db, skip=skip, limit=limit)
-    return received_packages
+# @secured_router.get("/received_packages/", response_model=List[schemas.ReceivedPackage])
+# def read_received_packages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     received_packages = crud.get_received_packages(db=db, skip=skip, limit=limit)
+#     return received_packages
 
-@secured_router.get("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
-def read_received_package(package_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    received_package = crud.get_received_package(db=db, package_id=package_id)
-    if received_package is None:
-        raise HTTPException(status_code=404, detail="Received package not found")
-    return received_package
+# @secured_router.get("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+# def read_received_package(package_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     received_package = crud.get_received_package(db=db, package_id=package_id)
+#     if received_package is None:
+#         raise HTTPException(status_code=404, detail="Received package not found")
+#     return received_package
 
-@secured_router.put("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
-def update_received_package(package_id: int, received_package: schemas.ReceivedPackageUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    db_received_package = crud.update_received_package(db=db, package_id=package_id, received_package=received_package)
-    if db_received_package is None:
-        raise HTTPException(status_code=404, detail="Received package not found")
-    return db_received_package
+# @secured_router.put("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+# def update_received_package(package_id: int, received_package: schemas.ReceivedPackageUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     db_received_package = crud.update_received_package(db=db, package_id=package_id, received_package=received_package)
+#     if db_received_package is None:
+#         raise HTTPException(status_code=404, detail="Received package not found")
+#     return db_received_package
 
-@secured_router.delete("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
-def delete_received_package(package_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    db_received_package = crud.delete_received_package(db=db, package_id=package_id)
-    if db_received_package is None:
-        raise HTTPException(status_code=404, detail="Received package not found")
-    return db_received_package
+# @secured_router.delete("/received_packages/{package_id}", response_model=schemas.ReceivedPackage)
+# def delete_received_package(package_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     db_received_package = crud.delete_received_package(db=db, package_id=package_id)
+#     if db_received_package is None:
+#         raise HTTPException(status_code=404, detail="Received package not found")
+#     return db_received_package
 
 #package receipt
 @secured_router.post("/package_receipts/", response_model=schemas.PackageReceipt)
