@@ -307,6 +307,7 @@ class Warehouse(Base):
     location = Column(String, index=True)
     created_at = Column(Date)
 
+
     xyzuser = relationship("XYZuser", back_populates="warehouse")
     pickup = relationship("Pickup", back_populates="warehouse")
 

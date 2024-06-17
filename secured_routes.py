@@ -646,9 +646,9 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 
 #expedition
-# @secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
-# def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     return crud.create_expedition(db, expedition)
+@secured_router.post("/expeditions/", response_model=schemas.Expedition) # belum bener harus di kerjain
+def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    return crud.create_expedition(db, expedition,user)
 
 # @secured_router.get("/all_expeditions/", response_model=List[schemas.Expedition])
 # def read_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
