@@ -247,7 +247,7 @@ class Expedition(Base):
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
 
     pickup = relationship("Pickup", back_populates="expedition")
-    content = relationship("ExpeditionContent", back_populates="expedition")
+    content = relationship("ExpeditionContent", back_populates="expedition", cascade="all, delete-orphan")
     centra = relationship("Centra", back_populates="expedition")
     status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
