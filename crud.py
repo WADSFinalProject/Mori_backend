@@ -961,6 +961,8 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
             models.Expedition,
             models.ExpeditionContent.BatchID,
             models.ProcessedLeaves.Weight,
+            models.ProcessedLeaves.DriedDate,
+            models.ProcessedLeaves.FlouredDate,
             models.CheckpointStatus.status, # Include CheckpointStatus in the query
             models.CheckpointStatus.statusdate  # Include CheckpointStatus in the query
         )
@@ -971,6 +973,28 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .options(joinedload(models.Expedition.content))  # Ensure content relationship is loaded
         .all()
     )
+
+def get_all_expedition_with_batches(db: Session, skip:int, limit:0):
+ 
+  return (
+        db.query(
+            models.Expedition,
+            models.ExpeditionContent.BatchID,
+            models.ProcessedLeaves.Weight,
+            models.ProcessedLeaves.DriedDate,
+            models.ProcessedLeaves.FlouredDate,
+            models.CheckpointStatus.status,
+            models.CheckpointStatus.statusdate
+        )
+        .join(models.Expedition.content)
+        .join(models.ExpeditionContent.batch)
+        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)
+        .options(joinedload(models.Expedition.content))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    
 
 # def get_expedition_batches(db: Session, expedition_id: int):
 #     return db.query(models.ExpeditionContent.BatchID, models.ProcessedLeaves.Weight).join(models.ProcessedLeaves, models.ExpeditionContent.BatchID == models.ProcessedLeaves.ProductID).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()

@@ -391,6 +391,8 @@ class ExpeditionWithBatches(BaseModel):
     Expedition: ExpeditionBase
     BatchID: int
     Weight: int
+    FlouredDate: date
+    DriedDate: date
     status: str
     statusdate: datetime
     
