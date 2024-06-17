@@ -295,6 +295,7 @@ class FlouringActivityBase(BaseModel):
     Date: Optional[date] = None
     Weight: Optional[int] = None
     FlouringMachineID: Optional[int] = None
+    # DryingID: Optional[int] = None
     Time: Optional[time] = None
 
 class FlouringActivityCreate(FlouringActivityBase):
@@ -381,7 +382,7 @@ class ExpeditionBase(BaseModel):
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
-    CentralID: int
+
 
 
 class ExpeditionCreate(ExpeditionBase):
@@ -395,7 +396,7 @@ class ExpeditionUpdate(BaseModel):
     Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
-    CentralID: Optional[int] = None
+    
 
 class Expedition(ExpeditionBase):
     ExpeditionID: Optional[int] = None
