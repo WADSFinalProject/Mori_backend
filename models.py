@@ -78,6 +78,7 @@ class WetLeavesCollection(Base):
     Time = Column(Time)
     Weight = Column(Integer)
     Expired = Column(Boolean)
+    Dried = Column(Boolean)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
     # Duration = Column(Interval)  # New column for duration
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=False)
@@ -231,7 +232,7 @@ class Expedition(Base):
     content = relationship("ExpeditionContent", back_populates="expedition")
     centra = relationship("Centra", back_populates="expedition")
     # checkpoint = relationship("CheckpointStatus", back_populates="expedition")
-    # status = relationship("CheckpointStatus", back_populates="expeditionpoint")
+    status = relationship("CheckpointStatus", back_populates="expeditionpoint")
 
 #ExpeditionContents
 class ExpeditionContent(Base):
@@ -239,11 +240,11 @@ class ExpeditionContent(Base):
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     BatchID = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
-    checkpointID = Column(Integer, ForeignKey('checkpointstatus.id'))
+    # checkpointID = Column(Integer, ForeignKey('checkpointstatus.id')) ##
 
     expedition = relationship("Expedition", back_populates="content")
     batch = relationship("ProcessedLeaves", back_populates="expeditioncontent")
-    checkpoint = relationship("CheckpointStatus", back_populates="expedition")
+    # checkpoint = relationship("CheckpointStatus", back_populates="expedition")
 
 #CheckpointStatus
 class CheckpointStatus(Base):
@@ -253,8 +254,8 @@ class CheckpointStatus(Base):
     status = Column(String)
     statusdate = Column(DateTime)
 
-    expedition = relationship("ExpeditionContent", back_populates="checkpoint")
-    # expeditionpoint = relationship("Expedition", back_populates="status")
+    # expedition = relationship("ExpeditionContent", back_populates="checkpoint")
+    expeditionpoint = relationship("Expedition", back_populates="status")
 
 
 class Pickup(Base):

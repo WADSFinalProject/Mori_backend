@@ -829,7 +829,8 @@ def add_new_wet_leaves_collection(db: Session, wet_leaves_collection: schemas.We
         Time=wet_leaves_collection.Time,
         Weight=wet_leaves_collection.Weight,
         Status=wet_leaves_collection.Status,
-        Expired=wet_leaves_collection.Expired
+        Expired=wet_leaves_collection.Expired,
+        Dried=wet_leaves_collection.Dried
         # Duration=wet_leaves_collection.Duration
         # ExpirationTime=wet_leaves_collection.ExpirationTime
     )
