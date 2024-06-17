@@ -960,10 +960,13 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         db.query(
             models.Expedition,
             models.ExpeditionContent.BatchID,
-            models.ProcessedLeaves.Weight
+            models.ProcessedLeaves.Weight,
+            models.CheckpointStatus.status, # Include CheckpointStatus in the query
+            models.CheckpointStatus.statusdate  # Include CheckpointStatus in the query
         )
         .join(models.Expedition.content)  # Join to ExpeditionContent through the relationship
         .join(models.ExpeditionContent.batch)  # Join to ProcessedLeaves through the relationship
+        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Outer join to CheckpointStatus
         .filter(models.Expedition.ExpeditionID == expedition_id)
         .options(joinedload(models.Expedition.content))  # Ensure content relationship is loaded
         .all()
