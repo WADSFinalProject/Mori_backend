@@ -952,11 +952,40 @@ def delete_wet_leaves_collection(db: Session, wet_leaves_batch_id: int):
 #     return False
 
 #expedition
-def get_expedition(db: Session, expedition_id: int):
-    return db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+def get_latest_checkpoint(db: Session, expedition_id: int):
+    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition_id).order_by(models.CheckpointStatus.statusdate.desc()).first()
+
+def get_all_checkpoints(db:Session,expedition_id: int):
+    return db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid==expedition_id).all()
+
+
+def get_expedition_batches(db: Session, expedition_id: int):
+    return db.query(models.ExpeditionContent).filter(models.ExpeditionContent.ExpeditionID == expedition_id).all()
+
+def get_expedition(db: Session, expedition_id: int): #only with latest checkpoint status, not complete checkpoint
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    if expedition is None:
+        return None
+    batches = get_expedition_batches(db, expedition_id)
+    checkpoint = get_latest_checkpoint(db,expedition_id)
+    
+    return {
+        "expedition": expedition,
+        "batches": [batch.BatchID for batch in batches],
+        "checkpoint_status": checkpoint.status,
+        "checkpoint_statusdate": checkpoint.statusdate
+    }
 
 def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
+
+def get_all_expeditions_with_batches(db: Session, skip: int = 0, limit: int = 100):
+    expeditions = get_expeditions(db=db, skip=skip, limit=limit)
+    result = []
+    for expedition in expeditions:
+        expedition_data = get_expedition(db, expedition.ExpeditionID)
+        result.append(expedition_data)
+    return result
 
 def create_expedition(db: Session, expedition: schemas.ExpeditionCreate):
     db_expedition = models.Expedition(**expedition.dict())
