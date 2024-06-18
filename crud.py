@@ -350,11 +350,11 @@ def stop_drying_machine(db: Session, machine_id: str) -> bool:
         return True
     return False
 
-def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivityCreate):
+def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivityCreate, user: dict):
     db_drying_activity = models.DryingActivity(
         # DryingID=drying_activity.DryingID,
         # UserID=drying_activity.UserID,
-        CentralID=drying_activity.CentralID,
+        CentralID=user["centralID"],
         # Date=drying_activity.Date,
         Weight=drying_activity.Weight,
         DryingMachineID=drying_activity.DryingMachineID,
