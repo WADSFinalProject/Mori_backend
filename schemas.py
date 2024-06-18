@@ -433,14 +433,15 @@ class Expedition(ExpeditionBase):
         orm_mode = True
         # from_attributes = True  # Enable from_orm support
 
-class ExpeditionWithBatches(BaseModel):
-    Expedition: ExpeditionBase
+class Batch(BaseModel):
     BatchID: int
     Weight: int
-    FlouredDate: date
-    DriedDate: date
-    status: str
-    statusdate: datetime
+
+class ExpeditionWithBatches(BaseModel):
+    expedition: Expedition
+    batches: List[Batch]
+    checkpoint_status: Optional[str]
+    checkpoint_statusdate: Optional[datetime]
 
 class StatusUpdate(BaseModel):
     status: str
@@ -513,8 +514,8 @@ class CheckpointStatus(CheckpointStatusBase):
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
-    UserID: int
-    PackageID: int
+    # xyzid: int
+    PickupID: int
     TotalWeight: int
     TimeAccepted: datetime
     Note: str
@@ -524,8 +525,8 @@ class PackageReceiptCreate(PackageReceiptBase):
     pass
 
 class PackageReceiptUpdate(BaseModel):
-    UserID: Optional[int] = None
-    PackageID: Optional[int] = None
+    # xyzid: Optional[int] = None
+    PickupID: Optional[int] = None
     TotalWeight: Optional[int] = None
     TimeAccepted: Optional[datetime] = None
     Note: Optional[str] = None
