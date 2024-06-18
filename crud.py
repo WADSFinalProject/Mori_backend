@@ -220,14 +220,39 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     db.refresh(db_batch)
     return db_batch
 
-def get_all_batches(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
     query = db.query(models.ProcessedLeaves)
-    if central_id is not None:
-        query = query.filter(models.ProcessedLeaves.CentraID == central_id)
     return query.offset(skip).limit(limit).all()
 
-def get_batches_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.creator_id == creator_id).offset(skip).limit(limit).all()
+def get_all_batches_byCentra(db: Session, central_id: int = None, skip: int = 0, limit: int = 100) -> List[schemas.ProcessedLeavesWithDriedDate]:
+    query = db.query(
+        models.ProcessedLeaves.ProductID,
+        models.ProcessedLeaves.CentraID,
+        models.ProcessedLeaves.Weight,
+        models.ProcessedLeaves.FlouredDate,
+        models.ProcessedLeaves.Shipped,
+        models.DriedLeaves.DriedDate
+    ).join(
+        models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id
+    )
+    
+    if central_id is not None:
+        query = query.filter(models.ProcessedLeaves.CentraID == central_id)
+    
+    results = query.offset(skip).limit(limit).all()
+    
+    return [
+        schemas.ProcessedLeavesWithDriedDate(
+            ProductID=result.ProductID,
+            CentraID=result.CentraID,
+            Weight=result.Weight,
+            FlouredDate=result.FlouredDate,
+            Shipped=result.Shipped,
+            DriedDate=result.DriedDate
+        ) for result in results
+    ]
+
+
 
 def get_batches_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.user_id == user_id).offset(skip).limit(limit).all()
