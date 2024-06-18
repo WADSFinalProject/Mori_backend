@@ -749,3 +749,8 @@ class XYZuser(XYZuserBase):
 
     class Config:
         orm_mode = True
+
+class LeavesStatus(BaseModel):
+    wetLeaves: List[WetLeavesCollection]
+    driedLeaves: List[DriedLeaves]
+    flouredLeaves: List[ProcessedLeaves]
