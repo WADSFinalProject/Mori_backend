@@ -13,7 +13,7 @@ async def protected_route(user: dict = Depends(get_current_user)):
     return {"message": "You are authenticated", "user": user["sub"]}
 
 # Batches
-@secured_router.get("/batches/", response_model=List[schemas.GetBatches])
+@secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves_DriedDate])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     if user["role"] == "Admin":
         # If the user is an admin, fetch all batches regardless of central_id
@@ -21,9 +21,8 @@ def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
     else:
         # If the user is a Centra user, fetch batches specific to their central_id
         central_id = user["centralID"]
-        batches = crud.get_all_batches_byCentra(db=db, central_id=central_id, skip=skip, limit=limit)
+        batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
     return batches
-
 
 @secured_router.post("/batches/", response_model=schemas.ProcessedLeaves)
 def create_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends(get_db)):

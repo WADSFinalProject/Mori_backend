@@ -220,17 +220,13 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     db.refresh(db_batch)
     return db_batch
 
-def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
-    query = db.query(models.ProcessedLeaves)
-    return query.offset(skip).limit(limit).all()
+# def get_all_batches(db: Session, skip: int = 0, limit: int = 100):
+#     query = db.query(models.ProcessedLeaves)
+#     return query.offset(skip).limit(limit).all()
 
-def get_all_batches_byCentra(db: Session, central_id: int = None, skip: int = 0, limit: int = 100) -> List[schemas.ProcessedLeavesWithDriedDate]:
+def get_all_batches(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
     query = db.query(
-        models.ProcessedLeaves.ProductID,
-        models.ProcessedLeaves.CentraID,
-        models.ProcessedLeaves.Weight,
-        models.ProcessedLeaves.FlouredDate,
-        models.ProcessedLeaves.Shipped,
+        models.ProcessedLeaves,
         models.DriedLeaves.DriedDate
     ).join(
         models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id
@@ -238,19 +234,24 @@ def get_all_batches_byCentra(db: Session, central_id: int = None, skip: int = 0,
     
     if central_id is not None:
         query = query.filter(models.ProcessedLeaves.CentraID == central_id)
+        
+    result = query.offset(skip).limit(limit).all()
     
-    results = query.offset(skip).limit(limit).all()
+    # Format the result to include DriedDate in the response
+    formatted_result = []
+    for processed_leaves, dried_date in result:
+        processed_leaves_dict = {
+            "ProductID": processed_leaves.ProductID,
+            "CentraID": processed_leaves.CentraID,
+            "DriedID": processed_leaves.DriedID,
+            "Weight": processed_leaves.Weight,
+            "FlouredDate": processed_leaves.FlouredDate,
+            "Shipped": processed_leaves.Shipped,
+            "DriedDate": dried_date  # Add DriedDate to the dictionary
+        }
+        formatted_result.append(processed_leaves_dict)
     
-    return [
-        schemas.ProcessedLeavesWithDriedDate(
-            ProductID=result.ProductID,
-            CentraID=result.CentraID,
-            Weight=result.Weight,
-            FlouredDate=result.FlouredDate,
-            Shipped=result.Shipped,
-            DriedDate=result.DriedDate
-        ) for result in results
-    ]
+    return formatted_result
 
 
 
@@ -294,6 +295,7 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
         # MachineID=drying_machine.MachineID,
         CentraID=drying_machine.CentraID,
         Capacity=drying_machine.Capacity,
+        Load=drying_machine.Load,
         Status=drying_machine.Status,
         Duration=drying_machine.Duration
     )
@@ -470,6 +472,7 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
         # MachineID=flouring_machine.MachineID,
         CentraID=flouring_machine.CentraID,
         Capacity=flouring_machine.Capacity,
+        Load=flouring_machine.Load,
         Status=flouring_machine.Status,
         Duration=flouring_machine.Duration
     )
