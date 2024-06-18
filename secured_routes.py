@@ -95,11 +95,19 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
 def change_drying_machine_status(machine_id: int, status_update: schemas.DryingStatus, db: Session = Depends(get_db)):
     return crud.update_drying_machine_status(db, machine_id, status_update.status)
 
-@secured_router.get("/drying-machines/", response_model=List[schemas.DryingMachine])
+@secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
+
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    drying_machines = crud.get_all_drying_machines(db=db, central_id=central_id, skip=skip, limit=limit)
-    return drying_machines
+    try:
+        centra_id = user["centralID"]
+        drying_machines = crud.get_all_drying_machines(db=db, centra_id=centra_id, skip=skip, limit=limit)
+        if drying_machines is None:
+            raise HTTPException(status_code=404, detail="Drying machines not found")
+        return drying_machines
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid user data")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.get("/drying_machine/{machine_id}", response_model=schemas.DryingMachine)
 def read_drying_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -284,9 +292,9 @@ def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollect
 
 @secured_router.get("/wet-leaves-collections/", response_model=List[schemas.WetLeavesCollection])
 def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    if user["role"] == "admin":
+    if user["role"] == "Admin":
         wet_leaves_collections = crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
+    elif user["role"] == "Centra":
         wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
     else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
