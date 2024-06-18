@@ -369,13 +369,14 @@ class Centra(CentraBase):
 #notifications
 class NotificationBase(BaseModel):
     message: str
+    centraid: int
 
 class NotificationCreate(NotificationBase):
-    centraid: int
+    pass
 
 class Notification(NotificationBase):
     id: int
-    centraid: int
+    # centraid: int
     timestamp: datetime
     read: bool
 
@@ -388,13 +389,15 @@ Machine = Union[DryingMachine, FlouringMachine]
 #expeditionnotif
 class ExpeditionNotification(BaseModel):
     message: str
+    centraid: int
 
 class ExpeditionNotificationCreate(NotificationBase):
-    centraid: int
+    # centraid: int
+    pass
 
 class ExpeditionNotification(NotificationBase):
     id: int
-    centraid: int
+    # centraid: int
     timestamp: datetime
     read: bool
 

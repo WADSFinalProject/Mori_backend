@@ -15,8 +15,13 @@ async def protected_route(user: dict = Depends(get_current_user)):
 # Batches
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
+    if user["role"] == "Admin":
+        # If the user is an admin, fetch all batches regardless of central_id
+        batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
+    else:
+        # If the user is a Centra user, fetch batches specific to their central_id
+        central_id = user["centralID"]
+        batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
     return batches
 
 @secured_router.post("/batches/", response_model=schemas.ProcessedLeaves)
@@ -96,13 +101,19 @@ def change_drying_machine_status(machine_id: int, status_update: schemas.DryingS
     return crud.update_drying_machine_status(db, machine_id, status_update.status)
 
 @secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
-
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     try:
-        centra_id = user["centralID"]
-        drying_machines = crud.get_all_drying_machines(db=db, centra_id=centra_id, skip=skip, limit=limit)
-        if drying_machines is None:
+        if user["role"] == "Admin":
+            # If the user is an admin, fetch all drying machines
+            drying_machines = crud.get_all_drying_machines(db=db, skip=skip, limit=limit)
+        else:
+            # If the user is a Centra user, fetch drying machines specific to their centralID
+            centra_id = user["centralID"]
+            drying_machines = crud.get_all_drying_machines(db=db, centra_id=centra_id, skip=skip, limit=limit)
+
+        if not drying_machines:
             raise HTTPException(status_code=404, detail="Drying machines not found")
+
         return drying_machines
     except KeyError:
         raise HTTPException(status_code=400, detail="Invalid user data")
@@ -142,9 +153,23 @@ def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: di
 
 @secured_router.get("/drying_activity/", response_model=List[schemas.DryingActivity])
 def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    drying_activity = crud.get_all_drying_activity(db=db, central_id=central_id, skip=skip, limit=limit)
-    return drying_activity
+    try:
+        if user["role"] == "Admin":
+            # If the user is an admin, fetch all drying activities
+            drying_activity = crud.get_all_drying_activity(db=db, skip=skip, limit=limit)
+        else:
+            # If the user is a Centra user, fetch drying activities specific to their centralID
+            central_id = user["centralID"]
+            drying_activity = crud.get_all_drying_activity(db=db, central_id=central_id, skip=skip, limit=limit)
+
+        if not drying_activity:
+            raise HTTPException(status_code=404, detail="Drying activities not found")
+
+        return drying_activity
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid user data")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.put("/drying-activities/{drying_id}")
 def update_drying_activity(drying_id: int, drying_activity: schemas.DryingActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -480,8 +505,17 @@ def update_machine_status(machine_id: int, new_status: str, machine_type: str, d
         raise HTTPException(status_code=404, detail="Machine not found or invalid machine type")
     return machine
 
+@secured_router.get("/notifications/", response_model=List[schemas.Notification])
+def read_notifications(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    notifications = crud.get_all_notifications(db, skip=skip, limit=limit)
+    return notifications
 
 #expenotif
+
+@secured_router.get("/expedition_notifications/", response_model=List[schemas.ExpeditionNotification])
+def read_all_expedition_notifications(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    notifications = crud.get_all_expnotifications(db, skip=skip, limit=limit)
+    return notifications
 
 @secured_router.get("/expedition_notifications/", response_model=List[schemas.ExpeditionNotification])
 def read_expedition_notifications(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
