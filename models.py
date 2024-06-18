@@ -325,7 +325,9 @@ class Pickup(Base):
 
     expedition = relationship("Expedition", back_populates="pickup")
     xyz = relationship("XYZuser", back_populates="pickup")
+    
     warehouse = relationship("Warehouse", back_populates="pickup")
+    receipt = relationship("PackageReceipt", back_populates="pickuppackage")
 
 # class ReceivedPackage(Base):
 #     __tablename__ = 'ReceivedPackage'
@@ -340,14 +342,16 @@ class Pickup(Base):
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    xyzID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
+    # xyzID = Column(Integer, ForeignKey('XYZuser.id'), nullable=False)
+    PickupID = Column(Integer, ForeignKey('pickup.id'), nullable=False)
     # haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
     TotalWeight = Column(Integer)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
     Date = Column(DateTime)
 
-    user = relationship("User")
+    pickuppackage = relationship("Pickup", back_populates="receipt")
+    # xyz = relationship("XYZuser", back_populates="receipt")
     # received_package = relationship("ReceivedPackage")
 
 class ProductReceipt(Base):
@@ -390,8 +394,7 @@ class XYZuser(Base):
     warehouse = relationship("Warehouse", back_populates="xyzuser")
     user = relationship("User", back_populates="xyz")
     pickup = relationship("Pickup", back_populates="xyz")
-
-
+    # receipt = relationship("PackageReceipt", back_populates="xyz")
 class Admin(Base):
     __tablename__ = 'admins'
 
