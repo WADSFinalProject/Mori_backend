@@ -576,8 +576,13 @@ def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return harbor_guards
 
 # Warehouses
-@secured_router.get("/warehouses", response_model=List[schemas.Warehouse])
-async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+# @secured_router.get("/warehouses", response_model=List[schemas.Warehouse])
+# async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
+#     return warehouses
+
+@secured_router.get("/warehouses/", response_model=List[schemas.Warehouse])
+def read_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
     return warehouses
 
@@ -605,6 +610,21 @@ async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db), use
     if deleted_warehouse is None:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return {"message": "Warehouse deleted successfully"}
+
+@secured_router.put("/warehouses/{warehouse_id}/stock/")
+def update_stock(warehouse_id: int, new_stock: int, db: Session = Depends(get_db)):
+    try:
+        warehouse = crud.update_warehouse_stock(db, warehouse_id, new_stock)
+        return warehouse
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@secured_router.get("/warehouses/{warehouse_id}/stock_history/")
+def get_stock_history(warehouse_id: int, db: Session = Depends(get_db)):
+    history = crud.get_warehouse_stock_history(db, warehouse_id)
+    if not history:
+        raise HTTPException(status_code=404, detail="Warehouse not found or no stock history available")
+    return history
 
 #xyzuser
 @secured_router.get("/xyzusers/", response_model=List[schemas.XYZuser])
