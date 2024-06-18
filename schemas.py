@@ -416,19 +416,26 @@ class ExpeditionBase(BaseModel):
     EstimatedArrival: datetime
     TotalPackages: int
     TotalWeight: int
+    Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
 
 
 
-class ExpeditionCreate(ExpeditionBase):
-    pass
+class ExpeditionCreate(BaseModel):
+    AirwayBill: str
+    EstimatedArrival: datetime
+    TotalPackages: int
+    TotalWeight: int
+    ExpeditionDate: datetime
+    ExpeditionServiceDetails: str
 
 class ExpeditionUpdate(BaseModel):
     AirwayBill: Optional[str] = None
     EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
     TotalWeight: Optional[int] = None
+    Status:str
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
     
@@ -451,7 +458,10 @@ class ExpeditionWithBatches(BaseModel):
     checkpoint_statusdate: Optional[datetime]
 
 class StatusUpdate(BaseModel):
+    awb: str
     status: str
+
+
 
 
 #ExpeditionContent
