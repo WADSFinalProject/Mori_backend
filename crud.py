@@ -298,6 +298,24 @@ def update_drying_machine(db: Session, machine_id: str, update_data: schemas.Dry
         db.refresh(db_drying_machine)
     return db_drying_machine
 
+def update_drying_machine_status(db: Session, machine_id: int, new_status: str):
+    # Fetch the drying machine record by ID
+    machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Drying Machine not found")
+
+    # Validate the new status
+    valid_statuses = ['idle', 'running', 'finished']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    machine.Status = new_status
+    db.commit()
+    db.refresh(machine)
+    return machine
+
 def delete_drying_machine(db: Session, machine_id: str):
     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
     if db_drying_machine:
@@ -326,7 +344,7 @@ def start_drying_machine(db: Session, machine_id: str) -> bool:
 def stop_drying_machine(db: Session, machine_id: str) -> bool:
     machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
     if machine and machine.Status != 'idle':
-        machine.Status = 'idle'
+        machine.Status = 'finished'
         db.commit()
         db.refresh(machine)
         return True
@@ -436,6 +454,24 @@ def get_flouring_machine_status(db: Session, machine_id: str):
         return machine.Status
     return None
 
+def update_flouring_machine_status(db: Session, machine_id: int, new_status: str):
+    # Fetch the flouring machine record by ID
+    machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Flouring Machine not found")
+
+    # Validate the new status
+    valid_statuses = ['idle', 'running', 'finished']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    machine.Status = new_status
+    db.commit()
+    db.refresh(machine)
+    return machine
+
 def get_flouring_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.FlouringMachine).filter(models.FlouringMachine.creator_id == creator_id).offset(skip).limit(limit).all()
 
@@ -451,7 +487,7 @@ def start_flouring_machine(db: Session, machine_id: str) -> bool:
 def stop_flouring_machine(db: Session, machine_id: str) -> bool:
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
     if machine and machine.Status != 'idle':
-        machine.Status = 'idle'
+        machine.Status = 'finished'
         db.commit()
         db.refresh(machine)
         return True
@@ -709,6 +745,12 @@ def update_machine_status(db: Session, machine_id: int, new_status: str, machine
         db.commit()
         db.refresh(machine)
     return machine
+
+
+#expeditionNotif
+
+def get_expedition_notifications(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ExpeditionNotification).offset(skip).limit(limit).all()
 
 #userCentra
 
@@ -1068,6 +1110,24 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
     db.commit()
     db.refresh(db_expedition)
     return db_expedition
+
+def update_expedition_status(db: Session, expedition_id: int, new_status: str):
+    # Fetch the expedition record by ID
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    
+    if not expedition:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+
+    # Validate the new status
+    valid_statuses = ['PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    expedition.Status = new_status
+    db.commit()
+    db.refresh(expedition)
+    return expedition
 
 def delete_expedition(db: Session, expedition_id: int):
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()

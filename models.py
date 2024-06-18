@@ -167,6 +167,7 @@ class Centra(Base):
     Dmachine = relationship("DryingMachine", back_populates="centra")
     Fmachine = relationship("FlouringMachine", back_populates="centra")
     notification = relationship("Notification", back_populates="user")
+    notification_expedition = relationship("ExpeditionNotification", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
@@ -189,25 +190,42 @@ class Notification(Base):
 
     user = relationship("Centra", back_populates="notification")
 
+class ExpeditionNotification(Base):
+    __tablename__ = 'expedition_notifications'
+    id = Column(Integer, primary_key=True, index=True)
+    centraid = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
+    message = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    read = Column(Boolean, default=False)
+
+    centra = relationship("Centra", back_populates="notification_expedition")
+
 
 def after_update_listener(mapper, connection, target):
     db = SessionLocal(bind=connection)
-    if target.Status == 'running':
-        notification = Notification(
-            centraid=target.CentraID,
-            message=f"{target.__tablename__} with ID {target.MachineID} is now running."
-        )
-    elif target.status =='finished':
-        notification = Notification(
-            centraid=target.CentraID,
-            message=f"{target.__tablename__} with ID {target.MachineID} is finished."
-        )
-        db.add(notification)
-        db.commit()
-    db.close()
+    try:
+        if target.Status == 'running':
+            notification = Notification(
+                centraid=target.CentraID,
+                message=f"{target.__tablename__} with ID {target.MachineID} is now running."
+            )
+            db.add(notification)
+            db.commit()
+        elif target.Status == 'finished':
+            notification = Notification(
+                centraid=target.CentraID,
+                message=f"{target.__tablename__} with ID {target.MachineID} is finished."
+            )
+            db.add(notification)
+            db.commit()
+    finally:
+        db.close()
+
 
 listen(DryingMachine, 'after_update', after_update_listener)
 listen(FlouringMachine, 'after_update', after_update_listener)
+
+
 
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
@@ -230,14 +248,6 @@ class Stock(Base):
     # location = relationship("Location", back_populates="stocks")
 
 
-# class CentraShipment(Base):
-#     __tablename__ = 'CentraShipment'
-
-#     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-#     ShippingMethod = Column(String)
-#     AirwayBill = Column(String)
-
-#     batches = relationship("ProcessedLeaves", secondary=shipment_batch_association, back_populates="shipments")
 
 class Expedition(Base):
     __tablename__ = 'Expedition'
@@ -255,6 +265,32 @@ class Expedition(Base):
     content = relationship("ExpeditionContent", back_populates="expedition", cascade="all, delete-orphan")
     centra = relationship("Centra", back_populates="expedition")
     status = relationship("CheckpointStatus", back_populates="expeditionpoint")
+
+def after_update_expedition_listener(mapper, connection, target):
+    db = SessionLocal(bind=connection)
+    try:
+        # Create notification message based on status
+        if target.Status == 'PKG_Delivering':
+            message = f"Expedition with ID {target.ExpeditionID} is now delivering."
+        elif target.Status == 'PKG_Delivered':
+            message = f"Expedition with ID {target.ExpeditionID} has been delivered."
+        elif target.Status == 'XYZ_PickingUp':
+            message = f"Expedition with ID {target.ExpeditionID} is picking up."
+        elif target.Status == 'XYZ_Completed':
+            message = f"Expedition with ID {target.ExpeditionID} is completed."
+        elif target.Status == 'Missing':
+            message = f"Expedition with ID {target.ExpeditionID} is missing."
+
+        notification = ExpeditionNotification(
+            centraid=target.CentralID,
+            message=message
+        )
+        db.add(notification)
+        db.commit()
+    finally:
+        db.close()
+
+listen(Expedition, 'after_update', after_update_expedition_listener)
 
 #ExpeditionContents
 class ExpeditionContent(Base):
