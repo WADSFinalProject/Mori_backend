@@ -41,10 +41,13 @@ def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depend
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
 
+# @secured_router.get("/batchesDates/{batch_id}")
+# def getDatesBatch(batch_id:int, db:Session = Depends(get_db)):
+#     driedDate = 
 
 @secured_router.put("/batchesShipped/")
 def update_batch_shipped(request: schemas.BatchShippedRequest, db: Session = Depends(get_db)):
-    batch_ids = request.batch_ids  # This should be a list of integers
+    batch_ids = request.batch_ids  
     if not batch_ids:
         raise HTTPException(status_code=400, detail="Batch IDs list is empty")
     batches = crud.update_batch_shipped(db=db, batch_ids=batch_ids)
@@ -699,10 +702,8 @@ def delete_xyzuser(xyzuser_id: int, db: Session = Depends(get_db)):
 
 @secured_router.post("/expeditions/") # belum bener harus di kerjain
 def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-   
     try:
         expedition = crud.create_expedition(db, expedition,user)
-
         return {"expeditionId": expedition.ExpeditionID}
     except HTTPException as e:
         return {"error": str(e)}
