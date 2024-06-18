@@ -96,7 +96,7 @@ class DryingActivity(Base):
     # Date = Column(Date)  #delete
     Weight = Column(Integer)
     DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
-    Time = Column(Time)
+    EndTime = Column(DateTime)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
     centra = relationship("Centra")
     drying_machine = relationship("DryingMachine")
@@ -137,11 +137,12 @@ class FlouringActivity(Base):
     # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
-    Date = Column(Date) 
+    EndTime = Column(DateTime)
+    # Date = Column(Date) 
     Weight = Column(Integer)
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
     # DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
-    Time = Column(Time)
+    # Time = Column(Time)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     dried2=relationship("DriedLeaves", back_populates="dried2")

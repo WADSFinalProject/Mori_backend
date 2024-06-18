@@ -200,11 +200,28 @@ def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depen
 # def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 #     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
 
-@secured_router.get("/dried_leaves/", response_model=List[schemas.DriedLeaves])
-def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    dried_leaves = crud.get_dried_leaves(db=db, central_id=central_id, skip=skip, limit=limit)
-    return dried_leaves
+@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+def read_dried_leaves(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    user: dict = Depends(centra_user)  # Ensure only Centra and Admin users can access
+):
+    try:
+        # Check if user is admin to fetch all dried leaves
+        if user["role"] == "Admin":
+            dried_leaves = crud.get_all_dried_leaves(db=db, skip=skip, limit=limit)
+        else:
+            central_id = user["centralID"]
+            dried_leaves = crud.get_all_dried_leaves(db=db, central_id=central_id, skip=skip, limit=limit)
+        
+        if not dried_leaves:
+            raise HTTPException(status_code=404, detail="Dried leaves not found")
+        
+        return dried_leaves
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
@@ -248,10 +265,29 @@ def change_flouring_machine_status(machine_id: int, status_update: schemas.Flour
     return crud.update_flouring_machine_status(db, machine_id, status_update.status)
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
-def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    flouring_machines = crud.get_all_flouring_machines(db=db, central_id=central_id, skip=skip, limit=limit)
-    return flouring_machines
+def read_flouring_machines(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    user: dict = Depends(centra_user)  # Dependency updated to centra_or_admin_user
+):
+    try:
+        if user["role"] == "Admin":
+            # If the user is an admin, fetch all drying machines
+            flouring_machine = crud.get_all_flouring_machines(db=db, skip=skip, limit=limit)
+        else:
+            # If the user is a Centra user, fetch drying machines specific to their centralID
+            centra_id = user["centralID"]
+            flouring_machine = crud.get_all_flouring_machines(db=db, centra_id=centra_id, skip=skip, limit=limit)
+
+        if not flouring_machine:
+            raise HTTPException(status_code=404, detail="Drying machines not found")
+
+        return flouring_machine
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid user data")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.post("/flouring_machines/{machine_id}/start")
 def start_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -287,10 +323,29 @@ def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, 
         raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
 
 @secured_router.get("/flouring_activity/", response_model=List[schemas.FlouringActivity])
-def read_flouring_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    CentralID = user["centralID"]
-    flouring_activity = crud.get_all_flouring_activity(db=db, CentralID=CentralID, skip=skip, limit=limit)
-    return flouring_activity
+def read_flouring_activity(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    user: dict = Depends(centra_user)  # Dependency updated to centra_or_admin_user
+):
+    try:
+        if user["role"] == "Admin":
+            # If the user is an admin, fetch all flouring activities
+            flouring_activity = crud.get_all_flouring_activity(db=db, skip=skip, limit=limit)
+        else:
+            # If the user is a Centra user, fetch flouring activities specific to their centralID
+            central_id = user["centralID"]
+            flouring_activity = crud.get_all_flouring_activity(db=db, central_id=central_id, skip=skip, limit=limit)
+
+        if not flouring_activity:
+            raise HTTPException(status_code=404, detail="Flouring activities not found")
+
+        return flouring_activity
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid user data")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
 def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):

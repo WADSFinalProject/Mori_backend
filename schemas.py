@@ -236,7 +236,7 @@ class DryingActivityBase(BaseModel):
     # Date: date
     Weight: int
     DryingMachineID: int
-    Time: time
+    EndTime: datetime
 
 class DryingActivityCreate(DryingActivityBase):
     pass
@@ -248,7 +248,7 @@ class DryingActivityUpdate(BaseModel):
     # Date: Optional[date] = None
     Weight: Optional[int] = None
     DryingMachineID: Optional[str] = None
-    Time: Optional[time] = None
+    EndTime: Optional[datetime] = None
 
 class DryingActivity(DryingActivityBase):
     DryingID: int
@@ -305,12 +305,12 @@ class FlouringStatus(BaseModel):
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
     CentralID: Optional[int] = None
-    Date: Optional[date] = None
+    EndTime: Optional[datetime]
     Weight: Optional[int] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[int] = None
-    Time: Optional[time] = None
+    # Time: Optional[time] = None
 
 class FlouringActivityCreate(FlouringActivityBase):
     pass
@@ -319,12 +319,13 @@ class FlouringActivityUpdate(BaseModel):
     FlouringID: Optional[int] = None
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
-    Date: Optional[date] = None
+    EndTime: Optional[datetime]
+    # Date: Optional[date] = None
     Weight: Optional[int] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[str] = None
-    Time: Optional[time] = None
+    # Time: Optional[time] = None
 
 class FlouringActivity(FlouringActivityBase):
     FlouringID: int
