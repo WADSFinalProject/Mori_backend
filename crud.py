@@ -220,8 +220,11 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     db.refresh(db_batch)
     return db_batch
 
-def get_all_batches(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.CentraID == central_id).offset(skip).limit(limit).all()
+def get_all_batches(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.ProcessedLeaves)
+    if central_id is not None:
+        query = query.filter(models.ProcessedLeaves.CentraID == central_id)
+    return query.offset(skip).limit(limit).all()
 
 def get_batches_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -278,13 +281,11 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
     db.refresh(db_drying_machine)
     return db_drying_machine
 
-def get_all_drying_machines(db: Session, centra_id: int, skip: int = 0, limit: int = 100):
-    try:
-        return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == centra_id).offset(skip).limit(limit).all()
-    except Exception as e:
-        # Log the error or handle it appropriately
-        print(f"An error occurred: {e}")
-        return []
+def get_all_drying_machines(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.DryingMachine)
+    if centra_id is not None:
+        query = query.filter(models.DryingMachine.CentraID == centra_id)
+    return query.offset(skip).limit(limit).all()
 
 def get_drying_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.DryingMachine).filter(models.DryingMachine.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -369,8 +370,11 @@ def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivity
     db.refresh(db_drying_activity)
     return db_drying_activity
 
-def get_all_drying_activity(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingActivity).filter(models.DryingActivity.CentralID == central_id).offset(skip).limit(limit).all()
+def get_all_drying_activity(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.DryingActivity)
+    if central_id is not None:
+        query = query.filter(models.DryingActivity.CentralID == central_id)
+    return query.offset(skip).limit(limit).all()
 
 def get_drying_activity(db: Session, drying_id: int):
     drying= db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
@@ -717,6 +721,9 @@ def delete_centra(db: Session, CentralID: int):
     return {"message": "Centra deleted successfully"}
 
 #notifications
+def get_all_notifications(db: Session, skip: int = 0, limit: int = 100) -> List[schemas.Notification]:
+    return db.query(models.Notification).offset(skip).limit(limit).all()
+
 def get_notifications(db: Session, centraid: int):
     return db.query(models.Notification).filter(models.Notification.centraid == centraid).all()
 
@@ -751,6 +758,9 @@ def update_machine_status(db: Session, machine_id: int, new_status: str, machine
 
 
 #expeditionNotif
+
+def get_all_expnotifications(db: Session, skip: int = 0, limit: int = 100) -> List[models.ExpeditionNotification]:
+    return db.query(models.ExpeditionNotification).offset(skip).limit(limit).all()
 
 def get_expedition_notifications(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ExpeditionNotification).offset(skip).limit(limit).all()
