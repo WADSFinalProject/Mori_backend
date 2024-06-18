@@ -765,9 +765,9 @@ def update_expedition(expedition_id: int, expedition: schemas.ExpeditionUpdate, 
         raise HTTPException(status_code=404, detail="Expedition not found")
     return db_expedition
 
-@secured_router.put("/expedition/{expedition_id}/status", response_model=schemas.Expedition)
-def change_expedition_status(expedition_id: int, status_update: schemas.StatusUpdate, db: Session = Depends(get_db)):
-    return crud.update_expedition_status(db, expedition_id, status_update.status)
+@secured_router.put("/expedition/{awb}/status")
+def change_expedition_status(status_update: schemas.StatusUpdate, db: Session = Depends(get_db)):
+    return crud.update_expedition_status(db, status_update.awb, status_update.status)
 
 @secured_router.delete("/expeditions/{expedition_id}", response_model=schemas.Expedition)
 def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

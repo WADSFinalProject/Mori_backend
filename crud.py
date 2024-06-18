@@ -1170,7 +1170,7 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
                     AirwayBill=expedition.AirwayBill,
                     EstimatedArrival=expedition.EstimatedArrival,
                     TotalPackages=expedition.TotalPackages,
-                    TotalWeight=expedition.TotalWeight,
+                    TotalWeight=expedition.TotalWeight, 
                     Status=expedition.Status,
                     ExpeditionDate=expedition.ExpeditionDate,
                     ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
@@ -1205,9 +1205,8 @@ def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: d
     # Assuming you have a direct relationship to Centra or a method to fetch it
     
     centra_id = user["centralID"] 
-
     # Create the expedition object with CentraID included
-    db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id,  Status ='PKG_Delivered')
+    db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id,  Status ='PKG_Delivering')
     # Add to session, commit, and refresh
     db.add(db_expedition)
     db.commit()
@@ -1226,9 +1225,9 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
     db.refresh(db_expedition)
     return db_expedition
 
-def update_expedition_status(db: Session, expedition_id: int, new_status: str):
+def update_expedition_status(db: Session, awb:str, new_status: str):
     # Fetch the expedition record by ID
-    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == awb).first()
     
     if not expedition:
         raise HTTPException(status_code=404, detail="Expedition not found")
@@ -1242,7 +1241,7 @@ def update_expedition_status(db: Session, expedition_id: int, new_status: str):
     expedition.Status = new_status
     db.commit()
     db.refresh(expedition)
-    return expedition
+    return {"New status" : new_status}
 
 def delete_expedition(db: Session, expedition_id: int):
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
@@ -1253,13 +1252,13 @@ def delete_expedition(db: Session, expedition_id: int):
     else:
         raise HTTPException(status_code=404, detail="Expedition not found")
 
-def change_expedition_status(db: Session, expedition_id: int, new_status: str):
-    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-    if expedition:
-        expedition.Status = new_status
-        db.commit()
-        return expedition
-    return None
+# def change_expedition_status(db: Session, awb: str, new_status: str):
+#     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+#     if expedition:
+#         expedition.Status = new_status
+#         db.commit()
+#         return expedition
+#     return None
 
 def confirm_expedition(db: Session, expedition_id: int, TotalWeight: int):
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
