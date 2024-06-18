@@ -409,7 +409,6 @@ class ExpeditionBase(BaseModel):
     EstimatedArrival: datetime
     TotalPackages: int
     TotalWeight: int
-    Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
 
@@ -423,7 +422,6 @@ class ExpeditionUpdate(BaseModel):
     EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
     TotalWeight: Optional[int] = None
-    Status: Optional[str] = None
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
     
