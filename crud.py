@@ -248,16 +248,16 @@ def delete_batch(db: Session, batch_id: int):
         return {"message": "Batch successfully deleted"}
     return None
 
-def batch_get_dried_date(db: Session, drying_id: str):
-    activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == drying_id).first()
+def batch_get_dried_date(db: Session, productId: str):
+    activity = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == productId).first()
     if activity:
-        return activity.Date
+        db.query(models.DriedLeaves.DriedDate).join(models.ProcessedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id).filter(models.ProcessedLeaves.ProductID == productId).first()
     return None
 
-def batch_get_floured_date(db: Session, flouring_id: str):
-    activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
+def batch_get_floured_date(db: Session, productId: str):
+    activity = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == productId).first()
     if activity:
-        return activity.Date
+        return activity.FlouredDate
     return None
 
 # DRYING MACHINE
@@ -1188,17 +1188,16 @@ def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
 
-def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: schemas.User):
+def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: dict ):
     # Fetch the user including their related Centra
     
     
     # Assuming you have a direct relationship to Centra or a method to fetch it
     
-    centra_id = user["centralID"]
+    centra_id = user["centralID"] 
 
     # Create the expedition object with CentraID included
     db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id,  Status ='PKG_Delivered')
-    
     # Add to session, commit, and refresh
     db.add(db_expedition)
     db.commit()
