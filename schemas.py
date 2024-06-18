@@ -238,8 +238,11 @@ class DryingActivityBase(BaseModel):
     DryingMachineID: int
     EndTime: datetime
 
-class DryingActivityCreate(DryingActivityBase):
-    pass
+class DryingActivityCreate(BaseModel):
+    Weight: int
+    DryingMachineID: int
+    EndTime: datetime
+
 
 class DryingActivityUpdate(BaseModel):
     DryingID: Optional[int] = None

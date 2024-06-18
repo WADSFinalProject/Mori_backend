@@ -146,11 +146,11 @@ def delete_drying_machine(machine_id: str, db: Session = Depends(get_db), user: 
  #drying activity  
 @secured_router.post("/drying_activity/create")
 def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    dry_activity = crud.add_new_drying_activity(db, drying_activity)
+    dry_activity = crud.add_new_drying_activity(db, drying_activity,user)
     if dry_activity:
         return {"message": "Drying activity created successfully!"}
     else:
-        raise HTTPException(status_code=400, detail="Drying machine with the same ID already exists!")
+        raise HTTPException(status_code=400, detail="Drying activity already exists!")
 
 @secured_router.get("/drying-activities/{drying_id}")
 def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
