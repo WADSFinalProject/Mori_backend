@@ -37,9 +37,9 @@ def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depend
     return batch
 
 
-@secured_router.put("/batchesShipped/{batch_id}", response_model=schemas.ProcessedLeavesShipped)
-def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
-    batch = crud.update_batch_shipped(db=db,batch_id=batch_id)
+@secured_router.put("/batchesShipped/", response_model=schemas.ProcessedLeavesShipped)
+def update_batch_shipped(request: schemas.BatchShippedRequest, db: Session = Depends(get_db)):
+    batch = crud.update_batch_shipped(db=db,batch_ids=request)
     if batch is None:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch

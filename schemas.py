@@ -117,6 +117,9 @@ class ProcessedLeavesRescale(BaseModel):
 class ProcessedLeavesShipped(BaseModel):
     Shipped: bool
 
+class BatchShippedRequest(BaseModel):
+    batch_ids: List[int]
+
    
 
 class ProcessedLeaves(ProcessedLeavesBase):
