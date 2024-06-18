@@ -383,6 +383,19 @@ class Warehouse(Base):
 
     xyzuser = relationship("XYZuser", back_populates="warehouse")
     pickup = relationship("Pickup", back_populates="warehouse")
+    stock_history = relationship("WarehouseStockHistory", back_populates="warehouse")
+
+class WarehouseStockHistory(Base):
+    __tablename__ = 'warehouse_stock_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
+    old_stock = Column(Integer, nullable=False)
+    new_stock = Column(Integer, nullable=False)
+    change_amount = Column(String, nullable=False)  # New field to store the amount of change
+    change_date = Column(DateTime, default=datetime.utcnow)
+
+    warehouse = relationship("Warehouse", back_populates="stock_history")
 
 class XYZuser(Base):
     __tablename__ = 'XYZuser'
