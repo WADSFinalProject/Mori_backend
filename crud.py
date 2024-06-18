@@ -236,8 +236,15 @@ def get_all_batches(db: Session, central_id: int = None, skip: int = 0, limit: i
     # Format the result to include DriedDate in the response
     formatted_result = []
     for processed_leaves, dried_date in result:
-        processed_leaves_dict = processed_leaves.__dict__
-        processed_leaves_dict['DriedDate'] = dried_date
+        processed_leaves_dict = {
+            "ProductID": processed_leaves.ProductID,
+            "CentraID": processed_leaves.CentraID,
+            "DriedID": processed_leaves.DriedID,
+            "Weight": processed_leaves.Weight,
+            "FlouredDate": processed_leaves.FlouredDate,
+            "Shipped": processed_leaves.Shipped,
+            "DriedDate": dried_date  # Add DriedDate to the dictionary
+        }
         formatted_result.append(processed_leaves_dict)
     
     return formatted_result
