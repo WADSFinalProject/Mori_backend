@@ -108,6 +108,15 @@ class ProcessedLeavesBase(BaseModel):
     FlouredDate: date
     Shipped: Optional[bool] = False
 
+
+class ProcessedLeaves_DriedDate(BaseModel):
+    CentraID: Optional[int] = None
+    Weight: Optional[int] = None
+    DriedID: Optional[int] = None
+    DriedDate: date 
+    FlouredDate: date
+    Shipped: Optional[bool] = False
+
 class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 

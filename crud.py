@@ -221,10 +221,27 @@ def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     return db_batch
 
 def get_all_batches(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
-    query = db.query(models.ProcessedLeaves)
+    query = db.query(
+        models.ProcessedLeaves,
+        models.DriedLeaves.DriedDate
+    ).join(
+        models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id
+    )
+    
     if central_id is not None:
         query = query.filter(models.ProcessedLeaves.CentraID == central_id)
-    return query.offset(skip).limit(limit).all()
+        
+    result = query.offset(skip).limit(limit).all()
+    
+    # Format the result to include DriedDate in the response
+    formatted_result = []
+    for processed_leaves, dried_date in result:
+        processed_leaves_dict = processed_leaves.__dict__
+        processed_leaves_dict['DriedDate'] = dried_date
+        formatted_result.append(processed_leaves_dict)
+    
+    return formatted_result
+
 
 def get_batches_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.creator_id == creator_id).offset(skip).limit(limit).all()
