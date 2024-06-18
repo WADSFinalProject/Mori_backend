@@ -801,6 +801,29 @@ def get_expedition_notifications(db: Session, skip: int = 0, limit: int = 100):
 
 #userCentra
 
+def get_all_user_centra_with_user(db: Session) -> List[schemas.UserCentraWithUser]:
+    results = db.query(models.UserCentra, models.User) \
+                .join(models.User, models.UserCentra.userID == models.User.UserID) \
+                .all()
+    
+    user_centra_with_users = []
+    for user_centra, user in results:
+        user_centra_dict = {**user_centra.__dict__}
+        user_dict = {**user.__dict__}
+
+        # Remove SQLAlchemy-specific attribute
+        user_centra_dict.pop('_sa_instance_state', None)
+        user_dict.pop('_sa_instance_state', None)
+
+        # Extract only necessary fields for UserCentra and UserforCentra
+        user_centra_data = schemas.UserCentra(**user_centra_dict)
+        user_data = schemas.UserforCentra(**user_dict)
+
+        user_centra_with_user = schemas.UserCentraWithUser(usercentra=user_centra_data, user=user_data)
+        user_centra_with_users.append(user_centra_with_user)
+
+    return user_centra_with_users
+
 def get_user_centra(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.UserCentra).offset(skip).limit(limit).all()
 

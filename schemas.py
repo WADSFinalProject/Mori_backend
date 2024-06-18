@@ -62,6 +62,11 @@ class UserResetPassword(BaseModel):
     new_password : str
 
 
+class UserforCentra(BaseModel):
+    FirstName: str
+    LastName: str
+    Email: str
+
 # User (Admin)
 class AdminBase(BaseModel):
     PIC_name: str
@@ -222,6 +227,17 @@ class UserCentra(UserCentraBase):
     class Config:
         orm_mode = True
 
+class UserforCentra(BaseModel):
+    FirstName: str
+    LastName: str
+    Email: EmailStr
+
+class UserCentraWithUser(BaseModel):
+    usercentra: UserCentra
+    user: UserforCentra
+
+    class Config:
+        orm_mode = True
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
