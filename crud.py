@@ -1099,7 +1099,7 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
 
         if expedition.ExpeditionID not in expeditions_dict:
             expeditions_dict[expedition.ExpeditionID] = {
-                "expedition": schemas.ExpeditionBase(
+                "expedition": schemas.Expedition(
                     ExpeditionID=expedition.ExpeditionID,
                     AirwayBill=expedition.AirwayBill,
                     EstimatedArrival=expedition.EstimatedArrival,

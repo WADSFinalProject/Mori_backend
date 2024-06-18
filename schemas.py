@@ -440,7 +440,7 @@ class Batch(BaseModel):
     Weight: int
 
 class ExpeditionWithBatches(BaseModel):
-    expedition: ExpeditionBase
+    expedition: Expedition
     batches: List[Batch]
     checkpoint_status: Optional[str]
     checkpoint_statusdate: Optional[datetime]
