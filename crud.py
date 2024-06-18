@@ -275,8 +275,13 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
     db.refresh(db_drying_machine)
     return db_drying_machine
 
-def get_all_drying_machines(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == central_id).offset(skip).limit(limit).all()
+def get_all_drying_machines(db: Session, centra_id: int, skip: int = 0, limit: int = 100):
+    try:
+        return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == centra_id).offset(skip).limit(limit).all()
+    except Exception as e:
+        # Log the error or handle it appropriately
+        print(f"An error occurred: {e}")
+        return []
 
 def get_drying_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.DryingMachine).filter(models.DryingMachine.creator_id == creator_id).offset(skip).limit(limit).all()
