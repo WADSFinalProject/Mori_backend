@@ -19,10 +19,10 @@ def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
     batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
     return batches
 
-# @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
-# def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
-#     return batches
+@secured_router.post("/batches/", response_model=schemas.ProcessedLeaves)
+def create_batch(batch: schemas.ProcessedLeavesCreate, db: Session = Depends(get_db)):
+    created_batch = crud.create_batch(db=db, batch=batch)
+    return created_batch
 
 @secured_router.get("/batches/", response_model=List[schemas.ProcessedLeaves])
 def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -90,11 +90,24 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
-@secured_router.get("/drying-machines/", response_model=List[schemas.DryingMachine])
+
+@secured_router.put("/dryingmachine/{machine_id}/status", response_model=schemas.DryingMachine)
+def change_drying_machine_status(machine_id: int, status_update: schemas.DryingStatus, db: Session = Depends(get_db)):
+    return crud.update_drying_machine_status(db, machine_id, status_update.status)
+
+@secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
+
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    central_id = user["centralID"]
-    drying_machines = crud.get_all_drying_machines(db=db, central_id=central_id, skip=skip, limit=limit)
-    return drying_machines
+    try:
+        centra_id = user["centralID"]
+        drying_machines = crud.get_all_drying_machines(db=db, centra_id=centra_id, skip=skip, limit=limit)
+        if drying_machines is None:
+            raise HTTPException(status_code=404, detail="Drying machines not found")
+        return drying_machines
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid user data")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.get("/drying_machine/{machine_id}", response_model=schemas.DryingMachine)
 def read_drying_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -199,6 +212,10 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
+@secured_router.put("/flouringmachine/{machine_id}/status", response_model=schemas.FlouringMachine)
+def change_flouring_machine_status(machine_id: int, status_update: schemas.FlouringStatus, db: Session = Depends(get_db)):
+    return crud.update_flouring_machine_status(db, machine_id, status_update.status)
+
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     central_id = user["centralID"]
@@ -275,9 +292,9 @@ def create_wet_leaves_collection(wet_leaves_collection: schemas.WetLeavesCollect
 
 @secured_router.get("/wet-leaves-collections/", response_model=List[schemas.WetLeavesCollection])
 def read_wet_leaves_collections(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    if user["role"] == "admin":
+    if user["role"] == "Admin":
         wet_leaves_collections = crud.get_all_wet_leaves_collections(db=db, skip=skip, limit=limit)
-    elif user["role"] == "centra":
+    elif user["role"] == "Centra":
         wet_leaves_collections = crud.get_wet_leaves_collections_by_creator(db=db, creator_id=user["centralID"], skip=skip, limit=limit)
     else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
@@ -344,69 +361,6 @@ def get_dry_leaves_conversion(centraId: int, db: Session = Depends(get_db), user
     
     except HTTPException as e:
         return { "error": str(e)}
-
-
-# # Shipments (Centra)
-# @secured_router.post("/shipments")
-# async def add_shipment(shipment_data: schemas.ShipmentCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     added_shipment = crud.add_shipment(db, shipment_data)
-#     return added_shipment
-
-
-
-# @secured_router.put("/shipments/{shipment_id}")
-# async def update_shipment(shipment_id: int, shipment_update: schemas.ShipmentUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     updated_shipment = crud.update_shipment(db, shipment_id, shipment_update)
-#     if updated_shipment:
-#         return updated_shipment
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.get("/notifications")
-# async def show_notifications(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     notifications = crud.get_notifications(db)
-#     return {"notifications": notifications}
-
-# @secured_router.get("/shipments", response_model=List[schemas.Shipment])
-# def read_shipments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     shipments = crud.get_all_shipments(db=db, skip=skip, limit=limit)
-#     return shipments
-
-# @secured_router.get("/shipments/{shipment_id}")
-# async def get_shipment_details(shipment_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     shipment = crud.get_shipment_details(db, shipment_id)
-#     if shipment:
-#         return shipment
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.delete("/shipments/{shipment_id}")
-# async def delete_shipment(shipment_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     if crud.delete_shipment(db, shipment_id):
-#         return {"message": "Shipment deleted"}
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.post("/shipments/{shipment_id}/confirm")
-# async def confirm_shipment(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     if crud.confirm_shipment(db, shipment_id, confirmation.weight):
-#         return {"message": "Shipment confirmed"}
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.post("/shipments/{shipment_id}/report")
-# async def report_shipment_issue(shipment_id: int, issue: schemas.ShipmentIssue, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     if crud.report_shipment_issue(db, shipment_id, issue.description):
-#         return {"message": "Issue reported successfully"}
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.post("/shipments/{shipment_id}/confirm")
-# async def confirm_shipment_arrival(shipment_id: int, confirmation: schemas.ShipmentConfirmation, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     if crud.confirm_shipment(db, shipment_id, confirmation.weight):
-#         return {"message": "Shipment confirmed"}
-#     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# @secured_router.put("/shipments/{shipment_id}/rescale")
-# async def rescale_shipment(shipment_id: int, rescale: schemas.ShipmentRescale, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     if crud.rescale_shipment(db, shipment_id, rescale.new_weight):
-#         return {"message": "Shipment weight updated"}
-#     raise HTTPException(status_code=404, detail="Shipment not found")
 
 #pickup
 @secured_router.get("/pickup/{pickup_id}", response_model=schemas.Pickup)
@@ -526,6 +480,13 @@ def update_machine_status(machine_id: int, new_status: str, machine_type: str, d
         raise HTTPException(status_code=404, detail="Machine not found or invalid machine type")
     return machine
 
+
+#expenotif
+
+@secured_router.get("/expedition_notifications/", response_model=List[schemas.ExpeditionNotification])
+def read_expedition_notifications(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    notifications = crud.get_expedition_notifications(db, skip=skip, limit=limit)
+    return notifications
 #userCentra
 @secured_router.get("/usercentra/", response_model=List[schemas.UserCentra])
 def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -744,6 +705,10 @@ def update_expedition(expedition_id: int, expedition: schemas.ExpeditionUpdate, 
     if db_expedition is None:
         raise HTTPException(status_code=404, detail="Expedition not found")
     return db_expedition
+
+@secured_router.put("/expedition/{expedition_id}/status", response_model=schemas.Expedition)
+def change_expedition_status(expedition_id: int, status_update: schemas.StatusUpdate, db: Session = Depends(get_db)):
+    return crud.update_expedition_status(db, expedition_id, status_update.status)
 
 @secured_router.delete("/expeditions/{expedition_id}", response_model=schemas.Expedition)
 def delete_expedition(expedition_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

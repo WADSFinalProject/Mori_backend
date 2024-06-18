@@ -99,13 +99,12 @@ class Admin(AdminBase):
 
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
-    # ProductID: int
-    # Description: Optional[str] = None
     CentraID: Optional[int] = None
     Weight: Optional[int] = None
-    DryingID: Optional[int] = None
-    FlouringID: Optional[int] = None
-    DriedDate: date
+    DriedID: Optional[int] = None
+    # DryingID: Optional[int] = None
+    # FlouringID: Optional[int] = None
+    # DriedDate: Optional[date] = None
     FlouredDate: date
     Shipped: Optional[bool] = False
 
@@ -223,6 +222,11 @@ class DryingMachine(DryingMachineBase):
     class Config:
         orm_mode = True
 
+class DryingStatus(BaseModel):
+    status: str
+
+
+
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
     CentralID: int
@@ -292,11 +296,15 @@ class FlouringMachine(FlouringMachineBase):
     class Config:
         from_attributes = True
 
+class FlouringStatus(BaseModel):
+    status: str
+
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
     CentralID: Optional[int] = None
     Date: Optional[date] = None
     Weight: Optional[int] = None
+    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[int] = None
     Time: Optional[time] = None
@@ -310,6 +318,7 @@ class FlouringActivityUpdate(BaseModel):
     CentralID: Optional[int] = None
     Date: Optional[date] = None
     Weight: Optional[int] = None
+    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[str] = None
     Time: Optional[time] = None
@@ -375,6 +384,24 @@ class Notification(NotificationBase):
 
 Machine = Union[DryingMachine, FlouringMachine]
 
+
+#expeditionnotif
+class ExpeditionNotification(BaseModel):
+    message: str
+
+class ExpeditionNotificationCreate(NotificationBase):
+    centraid: int
+
+class ExpeditionNotification(NotificationBase):
+    id: int
+    centraid: int
+    timestamp: datetime
+    read: bool
+
+    class Config:
+        orm_mode: True
+
+
 #Expedition schemas
 
 class ExpeditionBase(BaseModel):
@@ -417,6 +444,8 @@ class ExpeditionWithBatches(BaseModel):
     status: str
     statusdate: datetime
 
+class StatusUpdate(BaseModel):
+    status: str
 
 
 #ExpeditionContent

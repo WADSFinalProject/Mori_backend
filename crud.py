@@ -201,16 +201,17 @@ def set_user_password(db: Session, Email: str, new_password: str):
 # BATCHES
 def create_batch(db: Session, batch: schemas.ProcessedLeavesCreate):
     # drying_activity = db.query(models.DryingActivity).filter(models.DryingActivity.DryingID == batch.DryingID).first()
-    flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == batch.FlouringID).first()
-    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.DriedDate == batch.DriedDate).first()
+    # flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == batch.FlouringID).first()
+    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == batch.DriedID).first()
     
     db_batch = models.ProcessedLeaves(
         CentraID=batch.CentraID,
         Weight=batch.Weight,
-        DryingID=batch.DryingID,
-        FlouringID=batch.FlouringID,
-        DriedDate=dried_leaves.DriedDate if dried_leaves else None,
-        FlouredDate=flouring_activity.Date if flouring_activity else None,
+        # DriedID=batch.DriedID,
+        # DryingID=batch.DryingID,
+        # FlouringID=batch.FlouringID,
+        DriedID=dried_leaves.id if dried_leaves else None,
+        FlouredDate=batch.FlouredDate,
         Shipped=batch.Shipped
         # dried_leaf=dried_leaves  # Assign the fetched DriedLeaves instance
     )
@@ -274,8 +275,13 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
     db.refresh(db_drying_machine)
     return db_drying_machine
 
-def get_all_drying_machines(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == central_id).offset(skip).limit(limit).all()
+def get_all_drying_machines(db: Session, centra_id: int, skip: int = 0, limit: int = 100):
+    try:
+        return db.query(models.DryingMachine).filter(models.DryingMachine.CentraID == centra_id).offset(skip).limit(limit).all()
+    except Exception as e:
+        # Log the error or handle it appropriately
+        print(f"An error occurred: {e}")
+        return []
 
 def get_drying_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.DryingMachine).filter(models.DryingMachine.creator_id == creator_id).offset(skip).limit(limit).all()
@@ -291,6 +297,24 @@ def update_drying_machine(db: Session, machine_id: str, update_data: schemas.Dry
         db.commit()
         db.refresh(db_drying_machine)
     return db_drying_machine
+
+def update_drying_machine_status(db: Session, machine_id: int, new_status: str):
+    # Fetch the drying machine record by ID
+    machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Drying Machine not found")
+
+    # Validate the new status
+    valid_statuses = ['idle', 'running', 'finished']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    machine.Status = new_status
+    db.commit()
+    db.refresh(machine)
+    return machine
 
 def delete_drying_machine(db: Session, machine_id: str):
     db_drying_machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
@@ -320,7 +344,7 @@ def start_drying_machine(db: Session, machine_id: str) -> bool:
 def stop_drying_machine(db: Session, machine_id: str) -> bool:
     machine = db.query(models.DryingMachine).filter(models.DryingMachine.MachineID == machine_id).first()
     if machine and machine.Status != 'idle':
-        machine.Status = 'idle'
+        machine.Status = 'finished'
         db.commit()
         db.refresh(machine)
         return True
@@ -430,6 +454,24 @@ def get_flouring_machine_status(db: Session, machine_id: str):
         return machine.Status
     return None
 
+def update_flouring_machine_status(db: Session, machine_id: int, new_status: str):
+    # Fetch the flouring machine record by ID
+    machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Flouring Machine not found")
+
+    # Validate the new status
+    valid_statuses = ['idle', 'running', 'finished']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    machine.Status = new_status
+    db.commit()
+    db.refresh(machine)
+    return machine
+
 def get_flouring_machines_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.FlouringMachine).filter(models.FlouringMachine.creator_id == creator_id).offset(skip).limit(limit).all()
 
@@ -445,7 +487,7 @@ def start_flouring_machine(db: Session, machine_id: str) -> bool:
 def stop_flouring_machine(db: Session, machine_id: str) -> bool:
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
     if machine and machine.Status != 'idle':
-        machine.Status = 'idle'
+        machine.Status = 'finished'
         db.commit()
         db.refresh(machine)
         return True
@@ -463,6 +505,7 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
         CentralID=flouring_activity.CentralID,
         Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
+        DriedID=flouring_activity.DriedID,
         FlouringMachineID=flouring_activity.FlouringMachineID,
         Time=flouring_activity.Time
     )
@@ -702,6 +745,12 @@ def update_machine_status(db: Session, machine_id: int, new_status: str, machine
         db.commit()
         db.refresh(machine)
     return machine
+
+
+#expeditionNotif
+
+def get_expedition_notifications(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ExpeditionNotification).offset(skip).limit(limit).all()
 
 #userCentra
 
@@ -993,7 +1042,7 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
             models.Expedition,
             models.ExpeditionContent.BatchID,
             models.ProcessedLeaves.Weight,
-            models.ProcessedLeaves.DriedDate,
+            models.DriedLeaves.DriedDate,
             models.ProcessedLeaves.FlouredDate,
             models.CheckpointStatus.status, # Include CheckpointStatus in the query
             models.CheckpointStatus.statusdate  # Include CheckpointStatus in the query
@@ -1006,14 +1055,14 @@ def get_expedition_with_batches(db: Session, expedition_id: int):
         .all()
     )
 
-def get_all_expedition_with_batches(db: Session):
+def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100):
  
   return (
         db.query(
             models.Expedition,
             models.ExpeditionContent.BatchID,
             models.ProcessedLeaves.Weight,
-            models.ProcessedLeaves.DriedDate,
+            models.DriedLeaves.DriedDate,
             models.ProcessedLeaves.FlouredDate,
             models.CheckpointStatus.status,
             models.CheckpointStatus.statusdate
@@ -1061,6 +1110,24 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
     db.commit()
     db.refresh(db_expedition)
     return db_expedition
+
+def update_expedition_status(db: Session, expedition_id: int, new_status: str):
+    # Fetch the expedition record by ID
+    expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
+    
+    if not expedition:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+
+    # Validate the new status
+    valid_statuses = ['PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
+    # Update the status
+    expedition.Status = new_status
+    db.commit()
+    db.refresh(expedition)
+    return expedition
 
 def delete_expedition(db: Session, expedition_id: int):
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()

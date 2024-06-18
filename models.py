@@ -44,22 +44,18 @@ class URLToken(Base):
 class ProcessedLeaves(Base):
     __tablename__ = 'ProcessedLeaves'
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
-    # creator_id = Column(Integer, ForeignKey("Centra.CentralID"), nullable=True)
-    # Description = Column(String(100)) #drop
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
+    DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
     Weight = Column(Integer)
-    FlouringID = Column(Integer, ForeignKey('FlouringActivity.FlouringID'))
-    DryingID = DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
-    DriedDate = Column(Date, ForeignKey('DriedLeaves.DriedDate'))
     FlouredDate = Column(Date)
     Shipped = Column(Boolean)
 
-    drying_activity = relationship("DryingActivity", backref="processed_leaves")
-    flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
-
+    # drying_activity = relationship("DryingActivity", backref="processed_leaves")
+    # flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
+    dried=relationship("DriedLeaves", back_populates="dried")
     stocks = relationship("Stock", backref="processed_leaves")
     creator = relationship("Centra", back_populates="processed_leaves", overlaps="centra,batch")
-    date = relationship("DriedLeaves", back_populates="dried")
+    # date = relationship("DriedLeaves", back_populates="dried")
     expeditioncontent = relationship("ExpeditionContent", back_populates="batch")
     centra = relationship("Centra", back_populates="batch", overlaps="creator,processed_leaves")
     
@@ -87,7 +83,7 @@ class DryingMachine(Base):
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
     Duration = Column(Interval)
-    Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
+    Status = Column(Enum('idle', 'running', 'finished', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     # creator = relationship("User", back_populates="drying_machines")
@@ -115,9 +111,11 @@ class DriedLeaves (Base):
     DriedDate = Column (Date)
     Floured = Column(Boolean, default=False)
 
-
-    dried = relationship("ProcessedLeaves", back_populates="date")
+    # id=relationship("ProcessedLeaves", back_populates="dried")
+    # dried = relationship("ProcessedLeaves", back_populates="date")
     centra = relationship("Centra", back_populates="driedleaves")
+    dried = relationship("ProcessedLeaves", back_populates="dried")
+    dried2=relationship("FlouringActivity", back_populates="dried2")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
@@ -125,7 +123,7 @@ class FlouringMachine(Base):
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
     Duration = Column(Interval)
-    Status = Column(Enum('idle', 'running', name='machine_status'), default='idle')
+    Status = Column(Enum('idle', 'running', 'finished',name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
     # creator = relationship("User", back_populates="flouring_machines")
@@ -138,6 +136,7 @@ class FlouringActivity(Base):
     FlouringID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
+    DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
     Date = Column(Date) 
     Weight = Column(Integer)
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
@@ -145,7 +144,8 @@ class FlouringActivity(Base):
     Time = Column(Time)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
-    centra = relationship("Centra")
+    dried2=relationship("DriedLeaves", back_populates="dried2")
+    centra = relationship("Centra", back_populates="dried")
     # user = relationship("User")
     # drying_activity = relationship("DryingActivity")
     flouring_machine = relationship("FlouringMachine", back_populates="activity")
@@ -157,7 +157,7 @@ class Centra(Base):
     Address = Column(String(100))
     # FlouringSchedule = Column(String(100))
 
-
+    dried=relationship("FlouringActivity", back_populates="centra")
     usercentra = relationship("UserCentra", back_populates="centra")
     processed_leaves = relationship("ProcessedLeaves", back_populates="creator")
     driedleaves = relationship("DriedLeaves", back_populates="centra")
@@ -167,6 +167,7 @@ class Centra(Base):
     Dmachine = relationship("DryingMachine", back_populates="centra")
     Fmachine = relationship("FlouringMachine", back_populates="centra")
     notification = relationship("Notification", back_populates="user")
+    notification_expedition = relationship("ExpeditionNotification", back_populates="centra")
 
 class UserCentra(Base):
     __tablename__ = 'UserCentra'
@@ -189,20 +190,42 @@ class Notification(Base):
 
     user = relationship("Centra", back_populates="notification")
 
+class ExpeditionNotification(Base):
+    __tablename__ = 'expedition_notifications'
+    id = Column(Integer, primary_key=True, index=True)
+    centraid = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
+    message = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    read = Column(Boolean, default=False)
+
+    centra = relationship("Centra", back_populates="notification_expedition")
+
 
 def after_update_listener(mapper, connection, target):
     db = SessionLocal(bind=connection)
-    if target.Status == 'running':
-        notification = Notification(
-            centraid=target.CentraID,
-            message=f"{target.__tablename__} with ID {target.MachineID} is now running."
-        )
-        db.add(notification)
-        db.commit()
-    db.close()
+    try:
+        if target.Status == 'running':
+            notification = Notification(
+                centraid=target.CentraID,
+                message=f"{target.__tablename__} with ID {target.MachineID} is now running."
+            )
+            db.add(notification)
+            db.commit()
+        elif target.Status == 'finished':
+            notification = Notification(
+                centraid=target.CentraID,
+                message=f"{target.__tablename__} with ID {target.MachineID} is finished."
+            )
+            db.add(notification)
+            db.commit()
+    finally:
+        db.close()
+
 
 listen(DryingMachine, 'after_update', after_update_listener)
 listen(FlouringMachine, 'after_update', after_update_listener)
+
+
 
 class HarborGuard(Base):
     __tablename__ = 'HarborGuard'
@@ -225,14 +248,6 @@ class Stock(Base):
     # location = relationship("Location", back_populates="stocks")
 
 
-# class CentraShipment(Base):
-#     __tablename__ = 'CentraShipment'
-
-#     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-#     ShippingMethod = Column(String)
-#     AirwayBill = Column(String)
-
-#     batches = relationship("ProcessedLeaves", secondary=shipment_batch_association, back_populates="shipments")
 
 class Expedition(Base):
     __tablename__ = 'Expedition'
@@ -250,6 +265,32 @@ class Expedition(Base):
     content = relationship("ExpeditionContent", back_populates="expedition", cascade="all, delete-orphan")
     centra = relationship("Centra", back_populates="expedition")
     status = relationship("CheckpointStatus", back_populates="expeditionpoint")
+
+def after_update_expedition_listener(mapper, connection, target):
+    db = SessionLocal(bind=connection)
+    try:
+        # Create notification message based on status
+        if target.Status == 'PKG_Delivering':
+            message = f"Expedition with ID {target.ExpeditionID} is now delivering."
+        elif target.Status == 'PKG_Delivered':
+            message = f"Expedition with ID {target.ExpeditionID} has been delivered."
+        elif target.Status == 'XYZ_PickingUp':
+            message = f"Expedition with ID {target.ExpeditionID} is picking up."
+        elif target.Status == 'XYZ_Completed':
+            message = f"Expedition with ID {target.ExpeditionID} is completed."
+        elif target.Status == 'Missing':
+            message = f"Expedition with ID {target.ExpeditionID} is missing."
+
+        notification = ExpeditionNotification(
+            centraid=target.CentralID,
+            message=message
+        )
+        db.add(notification)
+        db.commit()
+    finally:
+        db.close()
+
+listen(Expedition, 'after_update', after_update_expedition_listener)
 
 #ExpeditionContents
 class ExpeditionContent(Base):
