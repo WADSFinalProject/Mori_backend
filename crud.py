@@ -1164,10 +1164,13 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
             models.CheckpointStatus.status,
             models.CheckpointStatus.statusdate
         )
-        .join(models.Expedition.content)
-        .join(models.ExpeditionContent.batch)
-        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)
-        .options(joinedload(models.Expedition.content))
+        .join(models.Expedition.content)  # Join with ExpeditionContent
+        .join(models.ExpeditionContent.batch)  # Join with ProcessedLeaves
+        .join(models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id)  # Join with DriedLeaves
+        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Optional join with CheckpointStatus
+        .options(joinedload(models.Expedition.content))  # Optimize loading of related content
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 
@@ -1183,7 +1186,7 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
                     AirwayBill=expedition.AirwayBill,
                     EstimatedArrival=expedition.EstimatedArrival,
                     TotalPackages=expedition.TotalPackages,
-                    TotalWeight=expedition.TotalWeight, 
+                    TotalWeight=expedition.TotalWeight,
                     Status=expedition.Status,
                     ExpeditionDate=expedition.ExpeditionDate,
                     ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
@@ -1198,12 +1201,13 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
         expeditions_dict[expedition.ExpeditionID]["batches"].append(
             schemas.Batch(
                 BatchID=batch_id,
-                Weight=weight
+                Weight=weight,
+                DriedDate=dried_date,
+                FlouredDate=floured_date
             )
         )
 
     return [schemas.ExpeditionWithBatches(**data) for data in expeditions_dict.values()]
-
 
 
 
