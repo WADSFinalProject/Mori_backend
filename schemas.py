@@ -765,3 +765,20 @@ class XYZuser(XYZuserBase):
 
     class Config:
         orm_mode = True
+
+class WetLeaves(BaseModel):
+    totalWeight: float
+    proportions: List[float]
+
+class DriedLeaves(BaseModel):
+    totalWeight: float
+    proportions: List[float]
+
+class FlouredLeaves(BaseModel):
+    totalWeight: float
+    proportions: List[float]
+
+class LeavesStatus(BaseModel):
+    wetLeaves: WetLeaves
+    driedLeaves: DriedLeaves
+    flouredLeaves: FlouredLeaves

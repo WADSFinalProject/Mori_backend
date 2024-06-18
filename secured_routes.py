@@ -1071,3 +1071,9 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict 
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+# Leaves (Combined API)
+@secured_router.get("/leaves", response_model=schemas.LeavesStatus)
+def get_leaves_status(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    leaves_summary = crud.get_leaves_summary(db, centra_id)
+    return leaves_summary
