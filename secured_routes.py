@@ -809,6 +809,14 @@ def get_expedition_with_batches(expedition_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Expedition not found")
     return expeditions_with_batches
 
+
+@secured_router.get("/expedition/airwaybill/{airwaybill}", response_model=schemas.ExpeditionWithBatches)
+def read_expedition_by_airwaybill(airwaybill: str, db: Session = Depends(get_db)):
+    expedition_data = crud.get_expedition_with_batches_by_airwaybill(db=db,airwaybill=airwaybill)
+    if not expedition_data:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return expedition_data
+
 # @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
 # def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 #     expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
