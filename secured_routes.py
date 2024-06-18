@@ -783,9 +783,9 @@ def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depend
 # def get_expeditions(db: Session, skip: int = 0, limit: int = 100):
 #     return db.query(models.Expedition).offset(skip).limit(limit).all()
 
-@secured_router.get("/expeditions_by_central/{central_id}", response_model=List[schemas.Expedition])
-def get_expeditions_by_central(central_id: int, db: Session = Depends(get_db)):
-    expeditions = crud.get_expeditions_by_central_id(db, central_id)
+@secured_router.get("/expeditions_by_centra/{centra_id}", response_model=List[schemas.ExpeditionWithBatches])
+def get_expeditions_by_centra(centra_id: int,skip:int = 0, limit:int = 100, db: Session = Depends(get_db)):
+    expeditions = crud.get_expeditions_with_batches_by_centra(db=db,centra_id=centra_id, skip=skip, limit=limit)
     return expeditions
 
 @secured_router.get("/all_expeditions", response_model=List[schemas.ExpeditionWithBatches])
