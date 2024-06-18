@@ -113,23 +113,24 @@ class ProcessedLeavesBase(BaseModel):
     FlouredDate: date
     Shipped: Optional[bool] = False
 
-
-class GetBatches(BaseModel):
-    Weight: float
+class ProcessedLeaves_DriedDate(BaseModel):
+    CentraID: Optional[int] = None
+    Weight: Optional[int] = None
+    DriedID: Optional[int] = None
+    DriedDate: date 
     FlouredDate: date
-    DriedDate : date
-    Shipped : bool
+    Shipped: Optional[bool] = False
 
-class ProcessedLeavesWithDriedDate(BaseModel):
-    ProductID: int
-    CentraID: int
-    Weight: float
-    FlouredDate: Optional[date]
-    Shipped: Optional[bool]
-    DriedDate: Optional[date]
+# class ProcessedLeavesWithDriedDate(BaseModel):
+#     ProductID: int
+#     CentraID: int
+#     Weight: float
+#     FlouredDate: Optional[date]
+#     Shipped: Optional[bool]
+#     DriedDate: Optional[date]
 
-    class Config:
-        true_config = True
+#     class Config:
+#         true_config = True
 
 
 class ProcessedLeavesCreate(ProcessedLeavesBase):

@@ -108,7 +108,7 @@ class DriedLeaves (Base):
 
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
-    Weight = Column(Integer)
+    Weight = Column(Float)
     DriedDate = Column (Date)
     Floured = Column(Boolean, default=False)
 
