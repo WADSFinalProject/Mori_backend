@@ -233,13 +233,16 @@ def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
 #update batch
-def update_batch_shipped(db: Session, batch_id: int):
-    db_batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
-    if db_batch:
-        db_batch.Shipped = True
-        db.commit()
-        db.refresh(db_batch)
-    return db_batch
+def update_batch_shipped(db: Session, batch_ids: List[int]):
+    updated_batches = []
+    for batch_id in batch_ids:
+        batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
+        if batch:
+            batch.Shipped = True
+            db.commit()
+            db.refresh(batch)
+            updated_batches.append(batch)
+    return updated_batches
 
 def delete_batch(db: Session, batch_id: int):
     batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
@@ -832,8 +835,29 @@ def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
     db.refresh(db_warehouse)
     return db_warehouse
 
-def get_all_warehouses(db: Session, skip: int = 0, limit: int = 100) -> List[models.Warehouse]:
-    return db.query(models.Warehouse).offset(skip).limit(limit).all()
+# def get_all_warehouses(db: Session, skip: int = 0, limit: int = 100) -> List[models.Warehouse]:
+#     return db.query(models.Warehouse).offset(skip).limit(limit).all()
+
+def get_all_warehouses(db: Session, skip: int = 0, limit: int = 100) -> List[schemas.Warehouse]:
+    warehouses = (
+        db.query(models.Warehouse)
+        .options(joinedload(models.Warehouse.stock_history))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    # Convert SQLAlchemy models to Pydantic models
+    warehouses_data = []
+    for warehouse in warehouses:
+        stock_history_data = [
+            schemas.WarehouseStockHistoryBase.from_orm(history) for history in warehouse.stock_history
+        ]
+        warehouse_data = schemas.Warehouse.from_orm(warehouse).dict()
+        warehouse_data['stock_history'] = stock_history_data
+        warehouses_data.append(schemas.Warehouse(**warehouse_data))
+
+    return warehouses_data
 
 def get_warehouse(db: Session, warehouse_id: int) -> Optional[models.Warehouse]:
     return db.query(models.Warehouse).filter(models.Warehouse.id == warehouse_id).first()
@@ -853,6 +877,42 @@ def delete_warehouse(db: Session, warehouse_id: str) -> Optional[models.Warehous
         db.delete(db_warehouse)
         db.commit()
     return db_warehouse
+
+def update_warehouse_stock(db: Session, warehouse_id: int, new_stock: int):
+    # Fetch the warehouse
+    warehouse = db.query(models.Warehouse).filter(models.Warehouse.id == warehouse_id).first()
+    if not warehouse:
+        raise ValueError("Warehouse not found")
+
+    # Calculate the change amount
+    change_amount = new_stock - warehouse.TotalStock
+
+    # Format the change amount to include + or - sign
+    formatted_change_amount = f"{change_amount:+d}"
+
+    # Log the old and new stock in the history table
+    stock_history_entry = models.WarehouseStockHistory(
+        warehouse_id=warehouse.id,
+        old_stock=warehouse.TotalStock,
+        new_stock=new_stock,
+        change_amount=formatted_change_amount,
+        change_date=datetime.utcnow()
+    )
+    db.add(stock_history_entry)
+
+    # Update the total stock
+    warehouse.TotalStock = new_stock
+
+    # Commit the transaction
+    db.commit()
+    db.refresh(warehouse)
+
+    return warehouse
+
+def get_warehouse_stock_history(db: Session, warehouse_id: int):
+    # Fetch the stock history for the warehouse
+    stock_history = db.query(models.WarehouseStockHistory).filter(models.WarehouseStockHistory.warehouse_id == warehouse_id).all()
+    return stock_history
 
 #xyzuser
 
