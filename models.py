@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval
+from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Date, Time, Interval, Float
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from database import Base
@@ -46,7 +46,7 @@ class ProcessedLeaves(Base):
     ProductID = Column(Integer, primary_key=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'))
     DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
-    Weight = Column(Integer)
+    Weight = Column(Float)
     FlouredDate = Column(Date)
     Shipped = Column(Boolean)
 
@@ -67,7 +67,7 @@ class WetLeavesCollection(Base):
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Date = Column(Date)
     Time = Column(Time)
-    Weight = Column(Integer)
+    Weight = Column(Float)
     Expired = Column(Boolean)
     Dried = Column(Boolean)
     Status = Column(Enum('Fresh', 'Near expiry', 'Exceeded', 'Expired', 'Processed', name='wet_status'), default='Fresh')
@@ -82,6 +82,7 @@ class DryingMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
+    Load=Column(Float)
     Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', 'finished', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
@@ -94,7 +95,7 @@ class DryingActivity(Base):
     DryingID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     # Date = Column(Date)  #delete
-    Weight = Column(Integer)
+    Weight = Column(Float)
     DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
     EndTime = Column(DateTime)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
@@ -122,6 +123,7 @@ class FlouringMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True,autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
+    Load = Column(Float)
     Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', 'finished',name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
@@ -139,7 +141,7 @@ class FlouringActivity(Base):
     DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
     EndTime = Column(DateTime)
     # Date = Column(Date) 
-    Weight = Column(Integer)
+    Weight = Column(Float)
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
     # DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
     # Time = Column(Time)
@@ -242,7 +244,7 @@ class Stock(Base):
     __tablename__ = 'stocks'
     id = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     product_id = Column(Integer, ForeignKey('ProcessedLeaves.ProductID'))
-    weight = Column(Integer)
+    weight = Column(Float)
     # location_id = Column(Integer, ForeignKey('locations.id'))
 
     # product = relationship("processed_leaves", backref="stock")
@@ -256,7 +258,7 @@ class Expedition(Base):
     AirwayBill = Column(String)
     EstimatedArrival = Column(DateTime) 
     TotalPackages = Column(Integer) 
-    TotalWeight = Column(Integer)
+    TotalWeight = Column(Float)
     Status = Column(Enum('PKG_Delivered', 'PKG_Delivering', 'XYZ_PickingUp', 'XYZ_Completed', 'Missing', name='expedition_status'), default='PKG_Delivering')
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
@@ -346,7 +348,7 @@ class PackageReceipt(Base):
     # xyzID = Column(Integer, ForeignKey('XYZuser.id'), nullable=False)
     PickupID = Column(Integer, ForeignKey('pickup.id'), nullable=False)
     # haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
-    TotalWeight = Column(Integer)
+    TotalWeight = Column(Float)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
     Date = Column(DateTime)

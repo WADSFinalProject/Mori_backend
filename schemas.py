@@ -105,7 +105,7 @@ class Admin(AdminBase):
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
     CentraID: Optional[int] = None
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     DriedID: Optional[int] = None
     # DryingID: Optional[int] = None
     # FlouringID: Optional[int] = None
@@ -115,7 +115,7 @@ class ProcessedLeavesBase(BaseModel):
 
 
 class GetBatches(BaseModel):
-    Weight: int
+    Weight: float
     FlouredDate: date
     DriedDate : date
     Shipped : bool
@@ -123,7 +123,7 @@ class GetBatches(BaseModel):
 class ProcessedLeavesWithDriedDate(BaseModel):
     ProductID: int
     CentraID: int
-    Weight: int
+    Weight: float
     FlouredDate: Optional[date]
     Shipped: Optional[bool]
     DriedDate: Optional[date]
@@ -136,7 +136,7 @@ class ProcessedLeavesCreate(ProcessedLeavesBase):
     pass
 
 class ProcessedLeavesRescale(BaseModel):
-    Weight: int
+    Weight: float
 
 class ProcessedLeavesShipped(BaseModel):
     Shipped: bool
@@ -160,7 +160,7 @@ class WetLeavesCollectionBase(BaseModel):
     CentralID: int
     Date: date
     Time: time
-    Weight: int
+    Weight: float
     Status: str
     Expired: Optional[bool] = False
     Dried: Optional [bool] = False
@@ -174,7 +174,7 @@ class WetLeavesCollectionCreate(WetLeavesCollectionBase):
 class WetLeavesCollectionUpdate(BaseModel):
     Date: Optional[date] = None
     Time: Optional[time] = None
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     Status: Optional[str] = None
     Expired: Optional[bool] = False
     Dried: Optional [bool] = False
@@ -243,6 +243,7 @@ class UserCentraWithUser(BaseModel):
 class DryingMachineBase(BaseModel):
     CentraID: int
     Capacity: str
+    Load: float
     Status: str
     Duration: Optional[timedelta]
 
@@ -269,12 +270,12 @@ class DryingStatus(BaseModel):
 class DryingActivityBase(BaseModel):
     CentralID: int
     # Date: date
-    Weight: int
+    Weight: float
     DryingMachineID: int
     EndTime: datetime
 
 class DryingActivityCreate(BaseModel):
-    Weight: int
+    Weight: float
     DryingMachineID: int
     EndTime: datetime
 
@@ -284,7 +285,7 @@ class DryingActivityUpdate(BaseModel):
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
     # Date: Optional[date] = None
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     DryingMachineID: Optional[str] = None
     EndTime: Optional[datetime] = None
 
@@ -298,7 +299,7 @@ class DryingActivity(DryingActivityBase):
 #driedleaves
 class DriedLeavesBase(BaseModel):
     CentraID: int
-    Weight: int
+    Weight: float
     DriedDate: date
     Floured: Optional[bool] = False
 
@@ -307,7 +308,7 @@ class DriedLeavesCreate(DriedLeavesBase):
 
 class DriedLeavesUpdate(BaseModel):
     CentraID: Optional[int] = None
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     DriedDate: Optional[date] = None
     Floured: Optional[bool] = None
 
@@ -321,6 +322,7 @@ class DriedLeaves(DriedLeavesBase):
 class FlouringMachineBase(BaseModel):
     CentraID: int
     Capacity: str
+    Load: float
     Status: str
     Duration: Optional[timedelta]
 
@@ -344,7 +346,7 @@ class FlouringStatus(BaseModel):
 class FlouringActivityBase(BaseModel):
     CentralID: Optional[int] = None
     EndTime: Optional[datetime]
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[int] = None
@@ -359,7 +361,7 @@ class FlouringActivityUpdate(BaseModel):
     CentralID: Optional[int] = None
     EndTime: Optional[datetime]
     # Date: Optional[date] = None
-    Weight: Optional[int] = None
+    Weight: Optional[float] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[str] = None
@@ -375,7 +377,7 @@ class FlouringActivity(FlouringActivityBase):
 #stocks
 class StockBase(BaseModel):
     product_id: int
-    weight: int
+    weight: float
 
 class StockCreate(StockBase):
     pass
@@ -453,7 +455,7 @@ class ExpeditionBase(BaseModel):
     AirwayBill: str
     EstimatedArrival: datetime
     TotalPackages: int
-    TotalWeight: int
+    TotalWeight: float
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
@@ -464,7 +466,7 @@ class ExpeditionCreate(BaseModel):
     AirwayBill: str
     EstimatedArrival: datetime
     TotalPackages: int
-    TotalWeight: int
+    TotalWeight: float
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
 
@@ -472,7 +474,7 @@ class ExpeditionUpdate(BaseModel):
     AirwayBill: Optional[str] = None
     EstimatedArrival: Optional[datetime] = None
     TotalPackages: Optional[int] = None
-    TotalWeight: Optional[int] = None
+    TotalWeight: Optional[float] = None
     Status:str
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
@@ -487,7 +489,7 @@ class Expedition(ExpeditionBase):
 
 class Batch(BaseModel):
     BatchID: int
-    Weight: int
+    Weight: float
     FlouredDate: datetime
     DriedDate: datetime
 
@@ -573,7 +575,7 @@ class CheckpointStatus(CheckpointStatusBase):
 class PackageReceiptBase(BaseModel):
     # xyzid: int
     PickupID: int
-    TotalWeight: int
+    TotalWeight: float
     TimeAccepted: datetime
     Note: str
     Date: datetime
@@ -584,7 +586,7 @@ class PackageReceiptCreate(PackageReceiptBase):
 class PackageReceiptUpdate(BaseModel):
     # xyzid: Optional[int] = None
     PickupID: Optional[int] = None
-    TotalWeight: Optional[int] = None
+    TotalWeight: Optional[float] = None
     TimeAccepted: Optional[datetime] = None
     Note: Optional[str] = None
     Date: Optional[datetime] = None
@@ -655,7 +657,7 @@ class Pickup(PickupBase):
 class ProductReceiptBase(BaseModel):
     ProductID: int
     ReceiptID: int
-    RescaledWeight: int
+    RescaledWeight: float
 
 class ProductReceiptCreate(ProductReceiptBase):
     pass

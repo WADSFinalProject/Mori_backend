@@ -294,6 +294,7 @@ def create_drying_machine(db: Session, drying_machine: schemas.DryingMachineCrea
         # MachineID=drying_machine.MachineID,
         CentraID=drying_machine.CentraID,
         Capacity=drying_machine.Capacity,
+        Load=drying_machine.Load,
         Status=drying_machine.Status,
         Duration=drying_machine.Duration
     )
@@ -470,6 +471,7 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
         # MachineID=flouring_machine.MachineID,
         CentraID=flouring_machine.CentraID,
         Capacity=flouring_machine.Capacity,
+        Load=flouring_machine.Load,
         Status=flouring_machine.Status,
         Duration=flouring_machine.Duration
     )
