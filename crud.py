@@ -1604,7 +1604,7 @@ def get_leaves_summary(db: Session, centra_id: int):
     ).scalar() or 0
 
     dried_proportions = [
-        total_dried_weight - floured_dried_weight / total_dried_weight if total_dried_weight else 0,
+        (total_dried_weight - floured_dried_weight) / total_dried_weight if total_dried_weight else 0,
         floured_dried_weight / total_dried_weight if total_dried_weight else 0
     ]
 
@@ -1619,21 +1619,21 @@ def get_leaves_summary(db: Session, centra_id: int):
     ).scalar() or 0
 
     floured_proportions = [
-        total_floured_weight - shipped_floured_weight / total_floured_weight if total_floured_weight else 0,
+        (total_floured_weight - shipped_floured_weight) / total_floured_weight if total_floured_weight else 0,
         shipped_floured_weight / total_floured_weight if total_floured_weight else 0
     ]
 
     return {
         "wetLeaves": {
             "totalWeight": total_wet_weight,
-            "proportions": wet_proportions,
+            "proportions": [round(p, 2) for p in wet_proportions],
         },
         "driedLeaves": {
             "totalWeight": total_dried_weight,
-            "proportions": dried_proportions,
+            "proportions": [round(p, 2) for p in dried_proportions],
         },
         "flouredLeaves": {
             "totalWeight": total_floured_weight,
-            "proportions": floured_proportions,
+            "proportions": [round(p, 2) for p in floured_proportions],
         }
     }
