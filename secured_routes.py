@@ -192,7 +192,7 @@ def delete_drying_activity(drying_id: int, db: Session = Depends(get_db), user: 
     return db_drying_activity
 
 #driedleaves
-@secured_router.post("/dried_leaves/", response_model=schemas.DriedLeaves)
+@secured_router.post("/dried_leaves/", response_model=schemas.DriedLeavesBase)
 def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     return crud.create_dried_leaf(db=db, dried_leaf=dried_leaf)
 
@@ -200,7 +200,7 @@ def create_dried_leaf(dried_leaf: schemas.DriedLeavesCreate, db: Session = Depen
 # def read_dried_leaves(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 #     return crud.get_dried_leaves(db=db, skip=skip, limit=limit)
 
-@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeaves])
+@secured_router.get("/dried_leaves/", response_model=list[schemas.DriedLeavesBase])
 def read_dried_leaves(
     skip: int = 0,
     limit: int = 100,
@@ -223,7 +223,7 @@ def read_dried_leaves(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
+@secured_router.get("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeavesBase)
 def read_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
     db_dried_leaf = crud.get_dried_leaf(db=db, leaf_id=leaf_id)
     if db_dried_leaf is None:

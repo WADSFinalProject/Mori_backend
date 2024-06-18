@@ -430,7 +430,7 @@ def get_all_dried_leaves(db: Session, central_id: int = None, skip: int = 0, lim
     query = db.query(models.DriedLeaves)
     
     if central_id is not None:
-        query = query.filter(models.DriedLeaves.CentralID == central_id)
+        query = query.filter(models.DriedLeaves.CentraID == central_id)
     
     return query.offset(skip).limit(limit).all()
 

@@ -299,13 +299,17 @@ class DryingActivity(DryingActivityBase):
 
 #driedleaves
 class DriedLeavesBase(BaseModel):
+    id:int
     CentraID: int
     Weight: float
     DriedDate: date
     Floured: Optional[bool] = False
 
-class DriedLeavesCreate(DriedLeavesBase):
-    pass
+class DriedLeavesCreate(BaseModel):
+    CentraID: int
+    Weight: float
+    DriedDate: date
+    Floured: Optional[bool] = False
 
 class DriedLeavesUpdate(BaseModel):
     CentraID: Optional[int] = None
@@ -317,7 +321,7 @@ class DriedLeaves(DriedLeavesBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
