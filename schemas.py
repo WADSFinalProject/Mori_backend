@@ -435,14 +435,15 @@ class Expedition(ExpeditionBase):
         orm_mode = True
         # from_attributes = True  # Enable from_orm support
 
-class ExpeditionWithBatches(BaseModel):
-    Expedition: ExpeditionBase
+class Batch(BaseModel):
     BatchID: int
     Weight: int
-    FlouredDate: date
-    DriedDate: date
-    status: str
-    statusdate: datetime
+
+class ExpeditionWithBatches(BaseModel):
+    expedition: Expedition
+    batches: List[Batch]
+    checkpoint_status: Optional[str]
+    checkpoint_statusdate: Optional[datetime]
 
 class StatusUpdate(BaseModel):
     status: str
