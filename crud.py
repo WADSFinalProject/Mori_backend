@@ -233,13 +233,16 @@ def get_batch_by_id(db: Session, batch_id: int):
     return db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
 
 #update batch
-def update_batch_shipped(db: Session, batch_id: int):
-    db_batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
-    if db_batch:
-        db_batch.Shipped = True
-        db.commit()
-        db.refresh(db_batch)
-    return db_batch
+def update_batch_shipped(db: Session, batch_ids: List[int]):
+    updated_batches = []
+    for batch_id in batch_ids:
+        batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
+        if batch:
+            batch.Shipped = True
+            db.commit()
+            db.refresh(batch)
+            updated_batches.append(batch)
+    return updated_batches
 
 def delete_batch(db: Session, batch_id: int):
     batch = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.ProductID == batch_id).first()
