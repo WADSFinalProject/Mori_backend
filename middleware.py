@@ -36,10 +36,10 @@ from security import verify_token
 #     except Exception as e:
 #         raise HTTPException(status_code=401, detail=str(e))
 
-def get_current_user(request: Request):
+def get_current_user():
     # Temporarily bypass authentication
     token_data = {"id": 1, "role": "Admin", "name": "test_user", "centralID": 12}  # Mock user data
-    request.state.user = token_data  # Attach user payload to request state
+    # request.state.user = token_data  # Attach user payload to request state
     return token_data
 
 def centra_user(user: dict = Depends(get_current_user)):
