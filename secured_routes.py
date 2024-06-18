@@ -37,12 +37,15 @@ def read_batch(batch_id: int, db: Session = Depends(get_db), user: dict = Depend
     return batch
 
 
-@secured_router.put("/batchesShipped/", response_model=schemas.ProcessedLeavesShipped)
+@secured_router.put("/batchesShipped/")
 def update_batch_shipped(request: schemas.BatchShippedRequest, db: Session = Depends(get_db)):
-    batch = crud.update_batch_shipped(db=db,batch_ids=request)
-    if batch is None:
-        raise HTTPException(status_code=404, detail="Batch not found")
-    return batch
+    batch_ids = request.batch_ids  # This should be a list of integers
+    if not batch_ids:
+        raise HTTPException(status_code=400, detail="Batch IDs list is empty")
+    batches = crud.update_batch_shipped(db=db, batch_ids=batch_ids)
+    if not batches:
+        raise HTTPException(status_code=404, detail="No batches found for the given IDs")
+    return {"message": "Batches updated successfully"}
 
 # @router.put("/update_batch_shipped/{batch_id}", response_model=schemas.ProcessedLeaves)
 # def update_batch_shipped(batch_id: int, db: Session = Depends(get_db)):
@@ -665,6 +668,7 @@ def create_expedition(expedition: schemas.ExpeditionCreate, db: Session = Depend
    
     try:
         expedition = crud.create_expedition(db, expedition,user)
+
         return {"expeditionId": expedition.ExpeditionID}
     except HTTPException as e:
         return {"error": str(e)}
