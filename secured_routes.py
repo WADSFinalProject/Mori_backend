@@ -348,8 +348,8 @@ def read_flouring_activity(
         raise HTTPException(status_code=500, detail=str(e))
 
 @secured_router.get("/flouring_activity/{flouring_id}", response_model=schemas.FlouringActivity)
-def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    flouring_activity = crud.get_flouring_activity(db=db, flouring_id=flouring_id)
+def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db)):
+    flouring_activity = crud.get_flouring_activity_by_id(db=db, flouring_id=flouring_id)
     if not flouring_activity:
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return flouring_activity

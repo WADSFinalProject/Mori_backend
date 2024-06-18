@@ -96,7 +96,7 @@ class DryingActivity(Base):
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     # Date = Column(Date)  #delete
     Weight = Column(Float)
-    DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID'))
+    DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID',  ondelete='CASCADE'))
     EndTime = Column(DateTime)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
     centra = relationship("Centra")
@@ -324,8 +324,6 @@ class Pickup(Base):
     expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     warehouseid = Column(Integer, ForeignKey('warehouses.id'))
     pickup_time = Column(Time)
-
-
     expedition = relationship("Expedition", back_populates="pickup")
     xyz = relationship("XYZuser", back_populates="pickup")
     
@@ -363,7 +361,6 @@ class ProductReceipt(Base):
     ProductID = Column(Integer)
     ReceiptID = Column(Integer, ForeignKey('PackageReceipt.ReceiptID'))
     RescaledWeight = Column(Integer)
-    
     package_receipt = relationship("PackageReceipt")
 
 # class PackageType(Base):

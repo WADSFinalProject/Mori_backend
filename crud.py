@@ -586,6 +586,9 @@ def delete_flouring_activity(db: Session, flouring_id: int):
         db.commit()
     return db_flouring_activity
 
+def get_flouring_activity_by_id(flouring_id: int, db: Session):
+    return db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
+
 # SHIPMENTS
 # def add_shipment(db: Session, shipment_data: schemas.ShipmentCreate):
 #     db_shipment_data = models.Shipment(
