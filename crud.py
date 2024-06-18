@@ -1141,7 +1141,7 @@ def create_expedition(db: Session, expedition: schemas.ExpeditionCreate, user: s
     centra_id = user["centralID"]
 
     # Create the expedition object with CentraID included
-    db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id)
+    db_expedition = models.Expedition(**expedition.dict(), CentralID=centra_id,  Status ='PKG_Delivered')
     
     # Add to session, commit, and refresh
     db.add(db_expedition)
