@@ -1564,3 +1564,76 @@ def delete_admin(db: Session, admin_id: int):
         db.delete(db_admin)
         db.commit()
     return db_admin
+
+def get_leaves_summary(db: Session, centra_id: int):
+    # Wet leaves
+    total_wet_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centra_id,
+        models.WetLeavesCollection.Status.in_(['Fresh', 'Processed', 'Near expiry'])
+    ).scalar() or 0
+
+    fresh_wet_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centra_id,
+        models.WetLeavesCollection.Status == 'Fresh'
+    ).scalar() or 0
+
+    drying_wet_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centra_id,
+        models.WetLeavesCollection.Status == 'Processed'
+    ).scalar() or 0
+
+    near_expiry_wet_weight = db.query(func.sum(models.WetLeavesCollection.Weight)).filter(
+        models.WetLeavesCollection.CentralID == centra_id,
+        models.WetLeavesCollection.Status == 'Near expiry'
+    ).scalar() or 0
+
+    wet_proportions = [
+        fresh_wet_weight / total_wet_weight if total_wet_weight else 0,
+        drying_wet_weight / total_wet_weight if total_wet_weight else 0,
+        near_expiry_wet_weight / total_wet_weight if total_wet_weight else 0
+    ]
+
+    # Dried leaves
+    total_dried_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centra_id
+    ).scalar() or 0
+
+    floured_dried_weight = db.query(func.sum(models.DriedLeaves.Weight)).filter(
+        models.DriedLeaves.CentraID == centra_id,
+        models.DriedLeaves.Floured == True
+    ).scalar() or 0
+
+    dried_proportions = [
+        total_dried_weight - floured_dried_weight / total_dried_weight if total_dried_weight else 0,
+        floured_dried_weight / total_dried_weight if total_dried_weight else 0
+    ]
+
+    # Floured leaves
+    total_floured_weight = db.query(func.sum(models.ProcessedLeaves.Weight)).filter(
+        models.ProcessedLeaves.CentraID == centra_id
+    ).scalar() or 0
+
+    shipped_floured_weight = db.query(func.sum(models.ProcessedLeaves.Weight)).filter(
+        models.ProcessedLeaves.CentraID == centra_id,
+        models.ProcessedLeaves.Shipped == True
+    ).scalar() or 0
+
+    floured_proportions = [
+        total_floured_weight - shipped_floured_weight / total_floured_weight if total_floured_weight else 0,
+        shipped_floured_weight / total_floured_weight if total_floured_weight else 0
+    ]
+
+    return {
+        "wetLeaves": {
+            "totalWeight": total_wet_weight,
+            "proportions": wet_proportions,
+        },
+        "driedLeaves": {
+            "totalWeight": total_dried_weight,
+            "proportions": dried_proportions,
+        },
+        "flouredLeaves": {
+            "totalWeight": total_floured_weight,
+            "proportions": floured_proportions,
+        }
+    }

@@ -1058,38 +1058,6 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict 
 
 # Leaves (Combined API)
 @secured_router.get("/leaves", response_model=schemas.LeavesStatus)
-def get_leaves_status(central_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
-    # Dummy data for now
-    return {
-        "wetLeaves": [
-            {
-                "WetLeavesBatchID": 1,
-                "CentralID": central_id,
-                "Date": "2024-03-13",
-                "Time": "14:30:00",
-                "Weight": 28,
-                "Expired": False,
-                "Dried": False,
-                "Status": "Fresh"
-            }
-        ],
-        "driedLeaves": [
-            {
-                "id": 1,
-                "CentraID": central_id,
-                "Weight": 26,
-                "DriedDate": "2024-03-13",
-                "Floured": False
-            }
-        ],
-        "flouredLeaves": [
-            {
-                "ProductID": 1,
-                "CentraID": central_id,
-                "DriedID": 1,
-                "Weight": 25,
-                "FlouredDate": "2024-03-13",
-                "Shipped": False
-            }
-        ]
-    }
+def get_leaves_status(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+    leaves_summary = crud.get_leaves_summary(db, centra_id)
+    return leaves_summary
