@@ -362,7 +362,7 @@ def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivity
         # Date=drying_activity.Date,
         Weight=drying_activity.Weight,
         DryingMachineID=drying_activity.DryingMachineID,
-        Time=drying_activity.Time
+        EndTime=drying_activity.EndTime
     )
 
     db.add(db_drying_activity)
@@ -403,8 +403,13 @@ def delete_drying_activity(db: Session, drying_id: str):
 
 #driedleaves
 
-def get_dried_leaves(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == central_id).offset(skip).limit(limit).all()
+def get_all_dried_leaves(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.DriedLeaves)
+    
+    if central_id is not None:
+        query = query.filter(models.DriedLeaves.CentralID == central_id)
+    
+    return query.offset(skip).limit(limit).all()
 
 def get_dried_leaf(db: Session, leaf_id: int):
     return db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
@@ -452,8 +457,11 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
     db.refresh(db_flouring_machine)
     return db_flouring_machine
 
-def get_all_flouring_machines(db: Session, central_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringMachine).filter(models.FlouringMachine.CentraID == central_id).offset(skip).limit(limit).all()
+def get_all_flouring_machines(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.FlouringMachine)
+    if central_id is not None:
+        query = query.filter(models.FlouringMachine.CentralID == central_id)
+    return query.offset(skip).limit(limit).all()
 
 def get_flouring_machine_status(db: Session, machine_id: str):
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
@@ -510,11 +518,11 @@ def delete_flouring_machine(db: Session, machine_id: str):
 def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringActivityCreate):
     db_flouring_activity = models.FlouringActivity(
         CentralID=flouring_activity.CentralID,
-        Date=flouring_activity.Date,
+        # Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
         DriedID=flouring_activity.DriedID,
         FlouringMachineID=flouring_activity.FlouringMachineID,
-        Time=flouring_activity.Time
+        EndTime=flouring_activity.EndTime
     )
     db.add(db_flouring_activity)
     db.commit()
@@ -524,8 +532,13 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
 # def get_all_flouring_activity(db: Session, CentralID: int, skip: int = 0, limit: int = 100):
 #     return db.query(models.FlouringActivity).filter(models.FlouringActivity.CentralID == CentralID).offset(skip).limit(limit).all()
 
-def get_all_flouring_activity(db: Session, CentralID: int, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringActivity).filter(models.FlouringActivity.CentralID == CentralID).offset(skip).limit(limit).all()
+def get_all_flouring_activity(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(models.FlouringActivity)
+    
+    if central_id is not None:
+        query = query.filter(models.FlouringActivity.CentralID == central_id)
+    
+    return query.offset(skip).limit(limit).all()
 
 def get_flouring_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.FlouringActivity).filter(models.FlouringActivity.creator_id == creator_id).offset(skip).limit(limit).all()
