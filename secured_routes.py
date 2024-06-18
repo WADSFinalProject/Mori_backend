@@ -583,10 +583,18 @@ def read_expedition_notifications(skip: int = 0, limit: int = 100, db: Session =
     notifications = crud.get_expedition_notifications(db, skip=skip, limit=limit)
     return notifications
 #userCentra
-@secured_router.get("/usercentra/", response_model=List[schemas.UserCentra])
-def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    user_centra = crud.get_user_centra(db=db, skip=skip, limit=limit)
+
+@secured_router.get("/usercentra/", response_model=List[schemas.UserCentraWithUser])
+def read_user_centra_name_email(db: Session = Depends(get_db)):
+    user_centra = crud.get_all_user_centra_with_user(db)
+    if not user_centra:
+        raise HTTPException(status_code=404, detail="UserCentra not found")
     return user_centra
+
+# @secured_router.get("/usercentra/", response_model=List[schemas.UserCentra])
+# def read_user_centra(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+#     user_centra = crud.get_user_centra(db=db, skip=skip, limit=limit)
+#     return user_centra
 
 @secured_router.get("/usercentra/{user_centra_id}", response_model=schemas.UserCentra)
 def read_user_centra_by_id(user_centra_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
