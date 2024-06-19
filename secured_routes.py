@@ -103,7 +103,7 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
 
 
 @secured_router.put("/dryingmachine/{machine_id}/status")
-def change_drying_machine_status(machine_id: int, status_update: schemas.DryingStatus, db: Session = Depends(get_db)):
+def change_drying_machine_status(machine_id: int, status_update: str, db: Session = Depends(get_db)):
     return crud.update_drying_machine_status(db, machine_id, status_update.status)
 
 
