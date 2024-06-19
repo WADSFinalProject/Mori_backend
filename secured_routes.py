@@ -282,8 +282,8 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
     return status
 
 @secured_router.put("/flouringmachine/{machine_id}/status", response_model=schemas.FlouringMachine)
-def change_flouring_machine_status(machine_id: int, status_update: schemas.FlouringStatus, db: Session = Depends(get_db)):
-    return crud.update_flouring_machine_status(db, machine_id, status_update.status)
+def change_flouring_machine_status(machine_id: int, status: str, db: Session = Depends(get_db)):
+    return crud.update_flouring_machine_status(db, machine_id=machine_id, new_status=status)
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(
@@ -1056,12 +1056,26 @@ def update_package_receipt(receipt_id: int, package_receipt: schemas.PackageRece
         raise HTTPException(status_code=404, detail="Package receipt not found")
     return db_package_receipt
 
-@secured_router.delete("/package_receipts/{receipt_id}", response_model=schemas.PackageReceipt)
+@secured_router.delete("/package_receipts/{receipt_id}")
 def delete_package_receipt(receipt_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     db_package_receipt = crud.delete_package_receipt(db, receipt_id)
     if db_package_receipt is None:
         raise HTTPException(status_code=404, detail="Package receipt not found")
     return db_package_receipt
+
+# @secured_router.delete("/package_receipts/{expedition_id}")
+# def delete_package_receipt(expedition_id: int, db: Session = Depends(get_db)):
+#     package_receipt = crud.delete_package_receipt_by_expeditionid(db, expedition_id)
+#     if package_receipt is None:
+#         raise HTTPException(status_code=404, detail="Package receipt not found")
+#     return package_receipt
+
+# @secured_router.get("/package_receipts/expedition/{expedition_id}", response_model=List[schemas.PackageReceipt])
+# def get_package_receipts(expedition_id: int, db: Session = Depends(get_db)):
+#     package_receipts = crud.get_package_receipts_by_expeditionid(db, expedition_id)
+#     if not package_receipts:
+#         raise HTTPException(status_code=404, detail="No package receipts found for the given ExpeditionID")
+#     return package_receipts
 
 #product receipt
 @secured_router.post("/product_receipts/", response_model=schemas.ProductReceipt)

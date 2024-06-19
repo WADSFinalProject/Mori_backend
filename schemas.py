@@ -263,7 +263,7 @@ class DryingMachine(DryingMachineBase):
     class Config:
         orm_mode = True
 
-class DryingStatus(BaseModel):
+class MachineStatus(BaseModel):
     status: str
 
 
