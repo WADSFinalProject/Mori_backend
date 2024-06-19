@@ -1,11 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 import models, schemas
 from fastapi import HTTPException
-from schemas import CentraDetails
-# from .schemas import 
-
 from typing import List, Optional
-import bcrypt
 from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
