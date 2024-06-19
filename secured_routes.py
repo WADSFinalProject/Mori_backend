@@ -384,6 +384,15 @@ def get_flouring_activity(flouring_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Flouring activity not found")
     return flouring_activity
 
+
+@secured_router.get("/flouring-activities/machine/{machine_id}")
+def get_flouring_activity_Machine(machine_id: int, db: Session = Depends(get_db)):
+    flouring = crud.get_flouring_activities_by_machine_id(db, machine_id)
+    if flouring:
+        return flouring
+    else:
+        raise HTTPException(status_code=400, detail="Drying activity does not exist for this machine")
+
 @secured_router.put("/flouring_activity/update/{flouring_id}", response_model=schemas.FlouringActivity)
 def update_flouring_activity(flouring_id: int, flouring_activity: schemas.FlouringActivityUpdate, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     updated_flouring = crud.update_flouring_activity(db, flouring_id, flouring_activity)

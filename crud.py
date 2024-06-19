@@ -570,7 +570,10 @@ def get_all_flouring_activity(db: Session, central_id: int = None, skip: int = 0
     return query.offset(skip).limit(limit).all()
 
 def get_flouring_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.FlouringActivity).filter(models.FlouringActivity.creator_id == creator_id).offset(skip).limit(limit).all()
+    return db.query(models.FlouringActivity).filter(models.FlouringActivity.CentralID == creator_id).offset(skip).limit(limit).all()
+
+def get_flouring_activities_by_machine_id(db: Session, machine_id: int):
+    return db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringMachineID == machine_id).all()
 
 def update_flouring_activity(db: Session, flouring_id: int, flouring_activity: schemas.FlouringActivityUpdate):
     db_flouring_activity = db.query(models.FlouringActivity).filter(models.FlouringActivity.FlouringID == flouring_id).first()
