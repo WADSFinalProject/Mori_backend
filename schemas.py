@@ -114,6 +114,7 @@ class ProcessedLeavesBase(BaseModel):
     Shipped: Optional[bool] = False
 
 class ProcessedLeaves_DriedDate(BaseModel):
+    ProductID: int
     CentraID: Optional[int] = None
     Weight: Optional[int] = None
     DriedID: Optional[int] = None
