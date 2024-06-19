@@ -545,9 +545,9 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
         CentralID=flouring_activity.CentralID,
         # Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
-        DriedID=flouring_activity.DriedID,
         FlouringMachineID=flouring_activity.FlouringMachineID,
         EndTime=flouring_activity.EndTime,
+        DriedDate=flouring_activity.DriedDate,
         InUse=flouring_activity.InUse
     )
     db.add(db_flouring_activity)

@@ -354,9 +354,9 @@ class FlouringActivityBase(BaseModel):
     CentralID: Optional[int] = None
     EndTime: Optional[datetime]
     Weight: Optional[float] = None
-    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     InUse:Optional[bool] = False
+    DriedDate: Optional[datetime]
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
 
@@ -368,9 +368,9 @@ class FlouringActivityUpdate(BaseModel):
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
     EndTime: Optional[datetime]
+    DriedDate: Optional[datetime]
     InUse:Optional[bool] = False
     Weight: Optional[float] = None
-    DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
     # DryingID: Optional[str] = None
     # Time: Optional[time] = None
