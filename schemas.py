@@ -270,7 +270,7 @@ class DryingStatus(BaseModel):
 # DryingActivity schemas
 class DryingActivityBase(BaseModel):
     CentralID: int
-    # Date: date
+    InUse: Optional[bool] = False
     Weight: float
     DryingMachineID: int
     EndTime: datetime
@@ -279,13 +279,14 @@ class DryingActivityCreate(BaseModel):
     Weight: float
     DryingMachineID: int
     EndTime: datetime
+    InUse: Optional[bool] = False
 
 
 class DryingActivityUpdate(BaseModel):
     DryingID: Optional[int] = None
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
-    # Date: Optional[date] = None
+    InUse: Optional[bool] = False
     Weight: Optional[float] = None
     DryingMachineID: Optional[str] = None
     EndTime: Optional[datetime] = None
@@ -354,6 +355,7 @@ class FlouringActivityBase(BaseModel):
     Weight: Optional[float] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None
+    InUse:Optional[bool] = False
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
 
@@ -365,7 +367,7 @@ class FlouringActivityUpdate(BaseModel):
     UserID: Optional[int] = None
     CentralID: Optional[int] = None
     EndTime: Optional[datetime]
-    # Date: Optional[date] = None
+    InUse:Optional[bool] = False
     Weight: Optional[float] = None
     DriedID: Optional[int] = None
     FlouringMachineID: Optional[int] = None

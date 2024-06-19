@@ -385,7 +385,8 @@ def add_new_drying_activity(db: Session, drying_activity: schemas.DryingActivity
         # Date=drying_activity.Date,
         Weight=drying_activity.Weight,
         DryingMachineID=drying_activity.DryingMachineID,
-        EndTime=drying_activity.EndTime
+        EndTime=drying_activity.EndTime,
+        InUse=drying_activity.InUse
     )
 
     db.add(db_drying_activity)
@@ -546,7 +547,8 @@ def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringAc
         Weight=flouring_activity.Weight,
         DriedID=flouring_activity.DriedID,
         FlouringMachineID=flouring_activity.FlouringMachineID,
-        EndTime=flouring_activity.EndTime
+        EndTime=flouring_activity.EndTime,
+        InUse=flouring_activity.InUse
     )
     db.add(db_flouring_activity)
     db.commit()
