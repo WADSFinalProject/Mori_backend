@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, aliased
 import models, schemas
 from fastapi import HTTPException
 from schemas import CentraDetails
@@ -10,9 +10,9 @@ from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from datetime import datetime
-
+from collections import defaultdict
 
 from datetime import datetime, timedelta
 
@@ -1184,67 +1184,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 import models, schemas
 
-def get_expedition_with_batches_by_airwaybill(db: Session, airwaybill: str) -> Optional[schemas.ExpeditionWithBatches]:
-    results = (
-        db.query(
-            models.Expedition,
-            models.ExpeditionContent.BatchID,
-            models.ProcessedLeaves.Weight,
-            models.DriedLeaves.DriedDate,
-            models.ProcessedLeaves.FlouredDate,
-            models.CheckpointStatus.status,
-            models.CheckpointStatus.statusdate
-        )
-        .join(models.Expedition.content)  # Join with ExpeditionContent
-        .join(models.ExpeditionContent.batch)  # Join with ProcessedLeaves
-        .join(models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id)  # Join with DriedLeaves
-        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Outer join with CheckpointStatus
-        .filter(models.Expedition.AirwayBill == airwaybill)  # Filter by AirwayBill
-        .options(joinedload(models.Expedition.content))  # Optimize loading of related content
-        .all()
-    )
-
-    if not results:
-        return None
-
-    expedition_data = None
-    batches = []
-
-    for result in results:
-        expedition, batch_id, weight, dried_date, floured_date, status, statusdate = result
-
-        if not expedition_data:
-            expedition_data = schemas.Expedition(
-                ExpeditionID=expedition.ExpeditionID,
-                AirwayBill=expedition.AirwayBill,
-                EstimatedArrival=expedition.EstimatedArrival,
-                TotalPackages=expedition.TotalPackages,
-                TotalWeight=expedition.TotalWeight,
-                Status=expedition.Status,
-                ExpeditionDate=expedition.ExpeditionDate,
-                ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
-                CentralID=expedition.CentralID,
-            )
-
-        batches.append(
-            schemas.Batch(
-                BatchID=batch_id,
-                Weight=weight,
-                DriedDate=dried_date,
-                FlouredDate=floured_date
-            )
-        )
-
-    return schemas.ExpeditionWithBatches(
-        expedition=expedition_data,
-        batches=batches,
-        checkpoint_status=status,
-        checkpoint_statusdate=statusdate
-    )
-
-
-    
-# def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100) -> List[schemas.ExpeditionWithBatches]:
+# def get_expedition_with_batches_by_airwaybill(db: Session, airwaybill: str) -> Optional[schemas.ExpeditionWithBatches]:
 #     results = (
 #         db.query(
 #             models.Expedition,
@@ -1258,50 +1198,197 @@ def get_expedition_with_batches_by_airwaybill(db: Session, airwaybill: str) -> O
 #         .join(models.Expedition.content)  # Join with ExpeditionContent
 #         .join(models.ExpeditionContent.batch)  # Join with ProcessedLeaves
 #         .join(models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id)  # Join with DriedLeaves
-#         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Optional join with CheckpointStatus
+#         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Outer join with CheckpointStatus
+#         .filter(models.Expedition.AirwayBill == airwaybill)  # Filter by AirwayBill
 #         .options(joinedload(models.Expedition.content))  # Optimize loading of related content
-#         .offset(skip)
-#         .limit(limit)
 #         .all()
 #     )
 
-#     expeditions_dict = {}
+#     if not results:
+#         return None
+
+#     expedition_data = None
+#     batches = []
 
 #     for result in results:
 #         expedition, batch_id, weight, dried_date, floured_date, status, statusdate = result
 
-#         if expedition.ExpeditionID not in expeditions_dict:
-#             expeditions_dict[expedition.ExpeditionID] = {
-#                 "expedition": schemas.Expedition(
-#                     ExpeditionID=expedition.ExpeditionID,
-#                     AirwayBill=expedition.AirwayBill,
-#                     EstimatedArrival=expedition.EstimatedArrival,
-#                     TotalPackages=expedition.TotalPackages,
-#                     TotalWeight=expedition.TotalWeight,
-#                     Status=expedition.Status,
-#                     ExpeditionDate=expedition.ExpeditionDate,
-#                     ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
-#                     CentralID=expedition.CentralID,
-#                     # Destination=expedition.Destination  # Assuming this field exists
-#                 ),
-#                 "batches": [],
-#                 "checkpoint_status": status if status else None,
-#                 "checkpoint_statusdate": statusdate if statusdate else None
-#             }
-
-#         expeditions_dict[expedition.ExpeditionID]["batches"].append(
-#             schemas.Batch(
-#                 BatchID=batch_id,
-#                 Weight=weight,
-#                 DriedDate=dried_date,
-#                 FlouredDate=floured_date
+#         if not expedition_data:
+#             expedition_data = schemas.Expedition(
+#                 ExpeditionID=expedition.ExpeditionID,
+#                 AirwayBill=expedition.AirwayBill,
+#                 EstimatedArrival=expedition.EstimatedArrival,
+#                 TotalPackages=expedition.TotalPackages,
+#                 TotalWeight=expedition.TotalWeight,
+#                 Status=expedition.Status,
+#                 ExpeditionDate=expedition.ExpeditionDate,
+#                 ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
+#                 CentralID=expedition.CentralID,
 #             )
-#         )
 
-#     return [schemas.ExpeditionWithBatches(**data) for data in expeditions_dict.values()]
+#         if not any(batch.BatchID == batch_id):
+#             batches.append(
+#                 schemas.Batch(
+#                     BatchID=batch_id,
+#                     Weight=weight,
+#                     DriedDate=dried_date,
+#                     FlouredDate=floured_date
+#                 )
+#             )
+
+#     return schemas.ExpeditionWithBatches(
+#         expedition=expedition_data,
+#         batches=batches,
+#         checkpoint_status=status,
+#         checkpoint_statusdate=statusdate
+#     )
+
+def get_expedition_with_batches_by_airwaybill(db: Session, airwaybill: str) -> Optional[schemas.ExpeditionWithBatches]:
+    # Subquery to get the latest statusdate for each expeditionid
+    latest_status_subquery = (
+        db.query(
+            models.CheckpointStatus.expeditionid,
+            func.max(models.CheckpointStatus.statusdate).label("latest_statusdate")
+        )
+        .group_by(models.CheckpointStatus.expeditionid)
+        .subquery()
+    )
+
+    # Subquery to get the latest CheckpointStatus based on the latest statusdate
+    latest_status = (
+        db.query(
+            models.CheckpointStatus
+        )
+        .join(
+            latest_status_subquery,
+            and_(
+                models.CheckpointStatus.expeditionid == latest_status_subquery.c.expeditionid,
+                models.CheckpointStatus.statusdate == latest_status_subquery.c.latest_statusdate
+            )
+        )
+        .subquery()
+    )
+
+    # Main query to get the expeditions with batches and the latest checkpoint status
+    results = (
+        db.query(
+            models.Expedition,
+            models.ExpeditionContent.BatchID,
+            models.ProcessedLeaves.Weight,
+            models.DriedLeaves.DriedDate,
+            models.ProcessedLeaves.FlouredDate,
+            latest_status.c.status,
+            latest_status.c.statusdate
+        )
+        .join(models.Expedition.content)  # Join with ExpeditionContent
+        .join(models.ExpeditionContent.batch)  # Join with ProcessedLeaves
+        .join(models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id)  # Join with DriedLeaves
+        .outerjoin(latest_status, latest_status.c.expeditionid == models.Expedition.ExpeditionID)  # Join with the latest CheckpointStatus
+        .filter(models.Expedition.AirwayBill == airwaybill)  # Filter by AirwayBill
+        .options(joinedload(models.Expedition.content))  # Optimize loading of related content
+        .all()
+    )
+
+    if not results:
+        return None
+
+    expeditions_dict = defaultdict(lambda: {
+        "expedition": None,
+        "batches": [],
+        "checkpoint_status": None,
+        "checkpoint_statusdate": None
+    })
+
+    for result in results:
+        expedition, batch_id, weight, dried_date, floured_date, status, statusdate = result
+        expedition_id = expedition.ExpeditionID
+
+        if expeditions_dict[expedition_id]["expedition"] is None:
+            expeditions_dict[expedition_id]["expedition"] = schemas.Expedition(
+                ExpeditionID=expedition.ExpeditionID,
+                AirwayBill=expedition.AirwayBill,
+                EstimatedArrival=expedition.EstimatedArrival,
+                TotalPackages=expedition.TotalPackages,
+                TotalWeight=expedition.TotalWeight,
+                Status=expedition.Status,
+                ExpeditionDate=expedition.ExpeditionDate,
+                ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
+                CentralID=expedition.CentralID,
+            )
+
+        if status is not None:
+            expeditions_dict[expedition_id]["checkpoint_status"] = status
+            expeditions_dict[expedition_id]["checkpoint_statusdate"] = statusdate
+
+        # Check if the batch is already in the list before appending
+        if not any(batch.BatchID == batch_id for batch in expeditions_dict[expedition_id]["batches"]):
+            expeditions_dict[expedition_id]["batches"].append(schemas.Batch(
+                BatchID=batch_id,
+                Weight=weight,
+                DriedDate=dried_date,
+                FlouredDate=floured_date
+            ))
+
+    return next(iter([schemas.ExpeditionWithBatches(**data) for data in expeditions_dict.values()]), None)
+    
+def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100) -> List[schemas.ExpeditionWithBatches]:
+    results = (
+        db.query(
+            models.Expedition,
+            models.ExpeditionContent.BatchID,
+            models.ProcessedLeaves.Weight,
+            models.DriedLeaves.DriedDate,
+            models.ProcessedLeaves.FlouredDate,
+            models.CheckpointStatus.status,
+            models.CheckpointStatus.statusdate
+        )
+        .join(models.Expedition.content)  # Join with ExpeditionContent
+        .join(models.ExpeditionContent.batch)  # Join with ProcessedLeaves
+        .join(models.DriedLeaves, models.ProcessedLeaves.DriedID == models.DriedLeaves.id)  # Join with DriedLeaves
+        .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Optional join with CheckpointStatus
+        .options(joinedload(models.Expedition.content))  # Optimize loading of related content
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    expeditions_dict = {}
+
+    for result in results:
+        expedition, batch_id, weight, dried_date, floured_date, status, statusdate = result
+
+        if expedition.ExpeditionID not in expeditions_dict:
+            expeditions_dict[expedition.ExpeditionID] = {
+                "expedition": schemas.Expedition(
+                    ExpeditionID=expedition.ExpeditionID,
+                    AirwayBill=expedition.AirwayBill,
+                    EstimatedArrival=expedition.EstimatedArrival,
+                    TotalPackages=expedition.TotalPackages,
+                    TotalWeight=expedition.TotalWeight,
+                    Status=expedition.Status,
+                    ExpeditionDate=expedition.ExpeditionDate,
+                    ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
+                    CentralID=expedition.CentralID,
+                    # Destination=expedition.Destination  # Assuming this field exists
+                ),
+                "batches": [],
+                "checkpoint_status": status if status else None,
+                "checkpoint_statusdate": statusdate if statusdate else None
+            }
+
+        expeditions_dict[expedition.ExpeditionID]["batches"].append(
+            schemas.Batch(
+                BatchID=batch_id,
+                Weight=weight,
+                DriedDate=dried_date,
+                FlouredDate=floured_date
+            )
+        )
+
+    return [schemas.ExpeditionWithBatches(**data) for data in expeditions_dict.values()]
 
 
-from collections import defaultdict
+
 
 def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100) -> List[schemas.ExpeditionWithBatches]:
     results = (
@@ -1362,6 +1449,7 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
             ))
 
     return [schemas.ExpeditionWithBatches(**data) for data in expeditions_dict.values()]
+
 
 
 def get_expeditions_with_batches_by_centra(db: Session, centra_id: int, skip: int = 0, limit: int = 100) -> List[schemas.ExpeditionWithBatches]:
@@ -1481,14 +1569,6 @@ def delete_expedition(db: Session, expedition_id: int):
         return {"message": "Expedition deleted successfully"}
     else:
         raise HTTPException(status_code=404, detail="Expedition not found")
-
-# def change_expedition_status(db: Session, awb: str, new_status: str):
-#     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-#     if expedition:
-#         expedition.Status = new_status
-#         db.commit()
-#         return expedition
-#     return None
 
 def confirm_expedition(db: Session, expedition_id: int, TotalWeight: int):
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
