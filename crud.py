@@ -546,7 +546,6 @@ def delete_flouring_machine(db: Session, machine_id: str):
 def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringActivityCreate):
     db_flouring_activity = models.FlouringActivity(
         CentralID=flouring_activity.CentralID,
-        # Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
         FlouringMachineID=flouring_activity.FlouringMachineID,
         EndTime=flouring_activity.EndTime,

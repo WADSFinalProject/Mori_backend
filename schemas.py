@@ -362,9 +362,11 @@ class FlouringActivityBase(BaseModel):
     DriedDate: Optional[datetime]
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
+    
 
 class FlouringActivityCreate(FlouringActivityBase):
     pass
+
 
 class FlouringActivityUpdate(BaseModel):
     FlouringID: Optional[int] = None
