@@ -3,6 +3,7 @@ from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
 import schemas, crud, models
+from datetime import time
 from middleware import get_current_user, centra_user, harbour_user
 
 secured_router = APIRouter()
@@ -505,6 +506,14 @@ def read_pickups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
 @secured_router.post("/pickup/", response_model=schemas.Pickup)
 def create_pickup(pickup: schemas.PickupCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.create_pickup(db=db, pickup=pickup)
+
+#pickup by airway
+@secured_router.post("/pickups/{AirwayBill}", response_model=schemas.Pickup)
+def create_pickup(airwaybill: str, pickup: schemas.PickupCreateAirway, db: Session = Depends(get_db)):
+        pickup = crud.create_pickup_by_airwaybill(db, airwaybill, pickup)
+        if pickup is None:
+            raise HTTPException(status_code=404, detail="airwaybill not found")
+        return pickup
 
 @secured_router.put("/pickup/{pickup_id}", response_model=schemas.Pickup)
 def update_pickup(pickup_id: int, pickup: schemas.PickupBase, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

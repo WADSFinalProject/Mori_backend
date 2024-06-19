@@ -598,7 +598,6 @@ class PackageReceipt(PackageReceiptBase):
 
 
 class PickupBase(BaseModel):
-    xyzID: int
     expeditionID: int
     warehouseid: int
     pickup_time: time
@@ -612,6 +611,9 @@ class Pickup(PickupBase):
     class Config:
         orm_mode = True
 
+class PickupCreateAirway(BaseModel):
+    warehouseid:int
+    pickup_time: time
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
