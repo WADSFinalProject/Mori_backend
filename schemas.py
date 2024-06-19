@@ -255,6 +255,7 @@ class DryingMachineCreate(DryingMachineBase):
 
 class DryingMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
+    Load: float
 
 class DryingMachine(DryingMachineBase):
     MachineID: int
@@ -328,6 +329,9 @@ class DriedLeaves(DriedLeavesBase):
     class Config:
         from_attributes = True
 
+class DriedLeavesUpdateInMachine(BaseModel):
+    in_machine: bool
+
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
     CentraID: int
@@ -341,6 +345,7 @@ class FlouringMachineCreate(FlouringMachineBase):
 
 class FlouringMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
+    Load: float
 
 class FlouringMachine(FlouringMachineBase):
     MachineID: int

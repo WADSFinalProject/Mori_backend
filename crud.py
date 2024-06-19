@@ -462,6 +462,16 @@ def update_dried_leaf(db: Session, leaf_id: int, dried_leaf: schemas.DriedLeaves
     db.refresh(db_dried_leaf)
     return db_dried_leaf
 
+def update_in_machine_status(db: Session, leaf_id: int, in_machine: bool):
+    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
+    if not dried_leaves:
+        raise Exception(f"No dried leaves found with id {id}")
+    
+    dried_leaves.InMachine = in_machine
+    db.commit()
+    db.refresh(dried_leaves)
+    return dried_leaves
+
 def delete_dried_leaf(db: Session, leaf_id: int):
     db_dried_leaf = db.query(models.DriedLeaves).filter(models.DriedLeaves.id == leaf_id).first()
     if db_dried_leaf:
@@ -497,6 +507,22 @@ def get_flouring_machine_status(db: Session, machine_id: str):
         return machine.Status
     return None
 
+def update_flouring_machine(db: Session, machine_id: int, machine_update: schemas.FlouringMachineUpdate):
+    # Fetch the FlouringMachine record by ID
+    machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Flouring Machine not found")
+
+    # Update the fields
+    if machine_update.Capacity is not None:
+        machine.Capacity = machine_update.Capacity
+    machine.Load = machine_update.Load
+
+    db.commit()
+    db.refresh(machine)
+    return machine
+    
 def update_flouring_machine_status(db: Session, machine_id: int, new_status: str):
     # Fetch the flouring machine record by ID
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()

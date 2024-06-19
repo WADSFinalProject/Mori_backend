@@ -107,7 +107,12 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
 def change_drying_machine_status(machine_id: int, status_update: str, db: Session = Depends(get_db)):
     return crud.update_drying_machine_status(db, machine_id, status_update.status)
 
-
+@secured_router.put("/dryingmachines/{machine_id}", response_model=schemas.DryingMachine)
+def update_drying_machine(machine_id: int, machine_update: schemas.DryingMachineUpdate, db: Session = Depends(get_db)):
+    updated_machine = crud.update_drying_machine(db, machine_id, machine_update)
+    if not updated_machine:
+        raise HTTPException(status_code=404, detail="Drying Machine not found")
+    return updated_machine
 
 @secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -259,8 +264,12 @@ def update_dried_leaf(leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate, db: S
         raise HTTPException(status_code=404, detail="Dried leaf not found")
     return db_dried_leaf
 
+@secured_router.put("/driedleaves/{dried_leaves_id}/inmachine", response_model=schemas.DriedLeavesBase)
+def update_in_machine_status(leaf_id: int, in_machine_status: schemas.DriedLeavesUpdateInMachine, db: Session = Depends(get_db)):
+        return crud.update_in_machine_status(db, leaf_id, in_machine_status.in_machine)
+
 @secured_router.delete("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
-def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
     db_dried_leaf = crud.delete_dried_leaf(db=db, leaf_id=leaf_id)
     if db_dried_leaf is None:
         raise HTTPException(status_code=404, detail="Dried leaf not found")
@@ -285,6 +294,17 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
 @secured_router.put("/flouringmachine/{machine_id}/status", response_model=schemas.FlouringMachine)
 def change_flouring_machine_status(machine_id: int, status: str, db: Session = Depends(get_db)):
     return crud.update_flouring_machine_status(db, machine_id=machine_id, new_status=status)
+
+@secured_router.put("/flouringmachines/{machine_id}", response_model=schemas.FlouringMachineUpdate)
+def update_flouring_machine(machine_id: int, machine_update: schemas.FlouringMachineUpdate, db: Session = Depends(get_db)):
+    try:
+        updated_machine = crud.update_flouring_machine(db, machine_id, machine_update)
+        return updated_machine
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(
