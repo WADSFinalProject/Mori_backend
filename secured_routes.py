@@ -114,7 +114,7 @@ def update_drying_machine(machine_id: int, machine_update: schemas.DryingMachine
     if not updated_machine:
         raise HTTPException(status_code=404, detail="Drying Machine not found")
     return updated_machine
-=======
+
 @secured_router.put("/dryingmachine/status")
 def change_drying_machine_status( status_update: schemas.StatusUpdateRequest, db: Session = Depends(get_db)):
     return crud.update_drying_machine_status(db, machine_id=status_update.machine_id, new_status=status_update.status)
