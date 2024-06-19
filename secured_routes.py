@@ -919,6 +919,13 @@ def delete_expedition_content(expedition_content_id: int, db: Session = Depends(
 def create_checkpoint(checkpoint_status: schemas.CheckpointStatusCreate, db: Session = Depends(get_db)):
     return crud.create_checkpoint_status(db, checkpoint_status)
 
+@secured_router.post("/checkpoint_statuses/", response_model=schemas.CheckpointStatus)
+def create_checkpoint_status(airwaybill: str, checkpoint_status_data: schemas.CheckpointStatusCreateAirway, db: Session = Depends(get_db)):
+    checkpoint_status = crud.create_checkpoint_status_by_airwaybill(db, airwaybill, checkpoint_status_data)
+    if checkpoint_status is None:
+        raise HTTPException(status_code=404, detail="Expedition not found")
+    return checkpoint_status
+
 @secured_router.get("/checkpointstatus/{checkpoint_id}", response_model=schemas.CheckpointStatus)
 def read_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
     db_checkpoint = crud.get_checkpoint_status(db, checkpoint_id)

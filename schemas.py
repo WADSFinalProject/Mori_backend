@@ -555,6 +555,12 @@ class CheckpointStatusBase(BaseModel):
 class CheckpointStatusCreate(CheckpointStatusBase):
     pass
 
+class CheckpointStatusCreateAirway(BaseModel):
+    status: str
+    statusdate: Optional[datetime] = None  # This field represents the status date
+
+
+
 class CheckpointStatus(CheckpointStatusBase):
     id: int
 

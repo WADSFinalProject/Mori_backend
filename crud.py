@@ -1171,43 +1171,6 @@ def get_expeditions_by_central_id(db: Session, central_id: int):
     return db.query(models.Expedition).filter(models.Expedition.CentralID == central_id).all()
 
 
-# def get_expedition_with_batches(db: Session, expedition_id: int):
-#     return (
-#         db.query(
-#             models.Expedition,
-#             models.ExpeditionContent.BatchID,
-#             models.ProcessedLeaves.Weight,
-#             models.DriedLeaves.DriedDate,
-#             models.ProcessedLeaves.FlouredDate,
-#             models.CheckpointStatus.status, # Include CheckpointStatus in the query
-#             models.CheckpointStatus.statusdate  # Include CheckpointStatus in the query
-#         )
-#         .join(models.Expedition.content)  # Join to ExpeditionContent through the relationship
-#         .join(models.ExpeditionContent.batch)  # Join to ProcessedLeaves through the relationship
-#         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)  # Outer join to CheckpointStatus
-#         .filter(models.Expedition.ExpeditionID == expedition_id)
-#         .options(joinedload(models.Expedition.content))  # Ensure content relationship is loaded
-#         .all()
-#     )
-
-# def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100):
- 
-#   return (
-#         db.query(
-#             models.Expedition,
-#             models.ExpeditionContent.BatchID,
-#             models.ProcessedLeaves.Weight,
-#             models.DriedLeaves.DriedDate,
-#             models.ProcessedLeaves.FlouredDate,
-#             models.CheckpointStatus.status,
-#             models.CheckpointStatus.statusdate
-#         )
-#         .join(models.Expedition.content)
-#         .join(models.ExpeditionContent.batch)
-#         .outerjoin(models.CheckpointStatus, models.CheckpointStatus.expeditionid == models.Expedition.ExpeditionID)
-#         .options(joinedload(models.Expedition.content))
-#         .all()
-#     )
 
 
 
@@ -1523,6 +1486,26 @@ def get_checkpoints_statuses_by_airwaybill(db: Session, airwaybill: str):
     checkpoint_statuses = db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition.ExpeditionID).all()
     
     return checkpoint_statuses
+
+def create_checkpoint_status_by_airwaybill(db: Session, airwaybill: str, checkpoint_status_data: schemas.CheckpointStatusCreateAirway):
+    # First, get the expedition ID based on the provided airway bill
+    expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == airwaybill).first()
+    
+    if not expedition:
+        return None  # or raise an exception if the expedition is not found
+    
+    # Create a new CheckpointStatus entry for the found expedition ID
+    new_checkpoint_status = models.CheckpointStatus(
+        expeditionid=expedition.ExpeditionID,
+        status=checkpoint_status_data.status,
+        statusdate=checkpoint_status_data.statusdate or datetime.utcnow()
+    )
+    
+    db.add(new_checkpoint_status)
+    db.commit()
+    db.refresh(new_checkpoint_status)
+    
+    return new_checkpoint_status
 
 # Update operation
 def update_checkpoint_status(db: Session, checkpoint_id: int, checkpoint_status: schemas.CheckpointStatusCreate):
