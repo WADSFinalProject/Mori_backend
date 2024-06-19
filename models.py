@@ -258,7 +258,9 @@ class Expedition(Base):
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
+    WarehouseID = Column(Integer, ForeignKey('warehouses.id'), default=0)
 
+    warehouse = relationship("Warehouse", back_populates="expedition")
     pickup = relationship("Pickup", back_populates="expedition")
     content = relationship("ExpeditionContent", back_populates="expedition", cascade="all, delete-orphan")
     centra = relationship("Centra", back_populates="expedition")
@@ -374,6 +376,7 @@ class Warehouse(Base):
     xyzuser = relationship("XYZuser", back_populates="warehouse")
     pickup = relationship("Pickup", back_populates="warehouse")
     stock_history = relationship("WarehouseStockHistory", back_populates="warehouse")
+    expedition = relationship("Expedition", back_populates="warehouse")
 
 class WarehouseStockHistory(Base):
     __tablename__ = 'warehouse_stock_history'
