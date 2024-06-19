@@ -1510,6 +1510,18 @@ def get_checkpoint_status(db: Session, checkpoint_id: int):
 def get_all_checkpoint_statuses(db: Session) -> List[models.CheckpointStatus]:
     return db.query(models.CheckpointStatus).all()
 
+def get_checkpoints_statuses_by_airwaybill(db: Session, airwaybill: str):
+    # First, get the expedition ID based on the provided airway bill
+    expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == airwaybill).first()
+    
+    if not expedition:
+        return None  # or raise an exception if the expedition is not found
+    
+    # Get all checkpoint statuses for the found expedition ID
+    checkpoint_statuses = db.query(models.CheckpointStatus).filter(models.CheckpointStatus.expeditionid == expedition.ExpeditionID).all()
+    
+    return checkpoint_statuses
+
 # Update operation
 def update_checkpoint_status(db: Session, checkpoint_id: int, checkpoint_status: schemas.CheckpointStatusCreate):
     db_checkpoint_status = db.query(models.CheckpointStatus).filter(models.CheckpointStatus.id == checkpoint_id).first()

@@ -926,6 +926,14 @@ def read_checkpoint(checkpoint_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Checkpoint status not found")
     return db_checkpoint
 
+@secured_router.get("/checkpointstatus/airwaybill/{awb}")
+def getAllCheckpoint_byAWB(awb:str, db:Session = Depends(get_db)):
+    checkpoints = crud.get_checkpoints_statuses_by_airwaybill(db=db,airwaybill=awb)
+
+    if checkpoints is None:
+        raise HTTPException(status_code=404, detail="Checkpoint status not found")
+    return checkpoints
+
 @secured_router.get("/checkpointstatus/", response_model=List[schemas.CheckpointStatus])
 def read_all_checkpoints(db: Session = Depends(get_db)):
     return crud.get_all_checkpoint_statuses(db=db)

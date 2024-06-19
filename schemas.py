@@ -542,6 +542,13 @@ class CheckpointStatusBase(BaseModel):
     status: str
     statusdate: datetime
 
+
+# class CheckpointStatusALL(BaseModel):
+#     id: int
+#     expeditionid: int
+#     status: str
+#     statusdate: datetime
+
 class CheckpointStatusCreate(CheckpointStatusBase):
     pass
 
