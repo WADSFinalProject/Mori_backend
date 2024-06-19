@@ -126,6 +126,17 @@ def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@secured_router.get("/drying_machines/centra/{centraId}", response_model=List[schemas.DryingMachine])
+def read_drying_machines_byCentra(centraId:int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    try:
+        machines = crud.get_all_drying_machines(db=db, centra_id=centraId, skip=skip, limit=limit)
+        return machines
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @secured_router.get("/drying_machine/{machine_id}", response_model=schemas.DryingMachine)
 def read_drying_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     db_drying_machine = crud.delete_drying_machine(db, machine_id)
@@ -156,6 +167,14 @@ def create_drying_activity(drying_activity: schemas.DryingActivityCreate, db: Se
 def show_drying_activity(drying_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     drying = crud.get_drying_activity(db, drying_id)
     return drying
+
+@secured_router.get("/drying-activities/machine/{machine_id}")
+def show_drying_activity(machine_id: int, db: Session = Depends(get_db)):
+    drying = crud.get_drying_activities_by_machine_id(db, machine_id)
+    if drying:
+        return drying
+    else:
+        raise HTTPException(status_code=400, detail="Drying activity does not exist")
 
 @secured_router.get("/drying_activity/", response_model=List[schemas.DryingActivity])
 def read_drying_activity(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
@@ -288,6 +307,17 @@ def read_flouring_machines(
         raise HTTPException(status_code=400, detail="Invalid user data")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@secured_router.get("/flouring_machines/centra/{centraId}", response_model=List[schemas.FlouringMachine])   
+def get_flouring_machines_byCentra(centraId:int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    try:
+        flouring_machines = crud.get_all_flouring_machines(db=db, central_id=centraId, skip=skip, limit=limit)
+
+        return flouring_machines
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @secured_router.post("/flouring_machines/{machine_id}/start")
 def start_flouring_machine(machine_id: str, db: Session = Depends(get_db), user: dict = Depends(centra_user)):

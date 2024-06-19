@@ -406,6 +406,9 @@ def get_drying_activity(db: Session, drying_id: int):
         raise HTTPException(status_code=404, detail="Drying Activity not found")
     return drying
 
+def get_drying_activities_by_machine_id(db: Session, machine_id: int):
+    return db.query(models.DryingActivity).filter(models.DryingActivity.DryingMachineID == machine_id).all()
+
 # def get_drying_activity_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100):
 #     return db.query(models.DryingActivity).filter(models.DryingActivity.creator_id == creator_id).offset(skip).limit(limit).all()
 
@@ -485,7 +488,7 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
 def get_all_flouring_machines(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
     query = db.query(models.FlouringMachine)
     if central_id is not None:
-        query = query.filter(models.FlouringMachine.CentralID == central_id)
+        query = query.filter(models.FlouringMachine.CentraID == central_id)
     return query.offset(skip).limit(limit).all()
 
 def get_flouring_machine_status(db: Session, machine_id: str):
