@@ -48,7 +48,7 @@ class ProcessedLeaves(Base):
     DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
     Weight = Column(Float)
     FlouredDate = Column(Date)
-    Shipped = Column(Boolean)
+    Shipped = Column(Boolean) 
 
     # drying_activity = relationship("DryingActivity", backref="processed_leaves")
     # flouring_activity = relationship("FlouringActivity", backref="processed_leaves")
@@ -134,26 +134,20 @@ class FlouringMachine(Base):
     centra = relationship("Centra", back_populates="Fmachine")
 
 
+# models.py
 class FlouringActivity(Base):
     __tablename__ = 'FlouringActivity'
     FlouringID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     DriedDate = Column(DateTime)
     EndTime = Column(DateTime)
     InUse = Column(Boolean) 
     Weight = Column(Float)
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
-    # DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
-    # Time = Column(Time)
-    # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
-
-    # dried2=relationship("DriedLeaves", back_populates="dried2")
+    
     centra = relationship("Centra", back_populates="dried")
-    # user = relationship("User")
-    # drying_activity = relationship("DryingActivity")
     flouring_machine = relationship("FlouringMachine", back_populates="activity")
-    # creator = relationship("User", back_populates="flouring_activity")
+
 
 class Centra(Base):
     __tablename__ = 'Centra'
