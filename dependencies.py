@@ -39,3 +39,8 @@ def xyz_user(user: dict = Depends(get_current_user)):
     if user["role"] not in ["XYZ", "Admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     return user
+
+def admin_user(user: dict = Depends(get_current_user)):
+    if user["role"] != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return user
