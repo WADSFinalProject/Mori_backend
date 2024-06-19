@@ -311,7 +311,7 @@ class DriedLeavesBase(BaseModel):
 class DriedLeavesCreate(BaseModel):
     CentraID: int
     Weight: float
-    DriedDate: date
+    DriedDate: str
     Floured: Optional[bool] = False
     InMachine: Optional[bool] = False
 
