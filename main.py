@@ -1,14 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, Cookie
 from sqlalchemy.orm import Session
 from database import get_db, engine 
-from typing import Optional, List
-from datetime import datetime
-from security import create_access_token,verify_otp, create_refresh_token, verify_token
+from utils import create_access_token, create_refresh_token, verify_token
+from security import verify_otp
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from secured_routes import secured_router
 import crud, models, schemas  
-import SMTP, security
+import SMTP
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -31,17 +30,7 @@ app.add_middleware(
 async def welcome():
     return {"message": "Welcome to our API!"}
 
-# Users
-@app.post("/users/register")
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
-    db_user = crud.create_user(db, user)
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail="User already registered or integrity error")
-    
-    SMTP.send_setPassEmail(db_user,db)
-    return {"message": "User registered successfully"}
     
 @app.get("/users/validate-link") #for setpass
 async def validate_token(token:str, db: Session = Depends(get_db)):
@@ -114,15 +103,13 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
     db_user = crud.get_user_by_email(db,verification.Email)
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        access_token = create_access_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
-        refresh_token = create_refresh_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
+        access_token = create_access_token(db, db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
+        refresh_token = create_refresh_token(db,db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         response = JSONResponse(content={"access_token": access_token})
-        response.set_cookie(key="refresh_token",max_age= 720, value=refresh_token, httponly=True, secure=False,  path="/")
-        response.headers["Set-Cookie"] += "; SameSite=Lax"
-      
+        response.set_cookie(key="refresh_token", max_age= 720, value=refresh_token, httponly=True, secure=False)
+
+        response.headers["Set-cookie"] += "; SameSite=None"
         return response
-        # response.headers["Set-cookie"] += "; SameSite=None"
-        # return response
         
     raise HTTPException(status_code=404, detail="Verification failed")
 

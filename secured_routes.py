@@ -2,9 +2,8 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Query, Depends
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
-import schemas, crud, models
-from datetime import time
-from middleware import get_current_user, centra_user, harbour_user
+import schemas, crud, models, SMTP
+from dependencies import get_current_user, centra_user, harbour_user, admin_user
 
 secured_router = APIRouter()
 
@@ -1162,11 +1161,13 @@ def delete_product_receipt(product_receipt_id: int, db: Session = Depends(get_db
 
 # Users in admin page
 @secured_router.post("/users", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    db_user = crud.create_user(db=db, user=user)
+def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db), user: dict = Depends(admin_user)):
+    db_user = crud.create_user(db=db, user=new_user)
     if db_user is None:
         raise HTTPException(status_code=400, detail="Email already registered")
-    return db_user
+    else:
+        SMTP.send_setPassEmail(db_user,db)
+        return db_user
 
 @secured_router.get("/users", response_model=List[schemas.User])
 def read_users(skip: int = 0, limit: int = 100, sort_by: str = Query('Name'), sort_order: str = Query('asc'), role: str = Query(None), db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):

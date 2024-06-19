@@ -1,11 +1,7 @@
 from sqlalchemy.orm import Session, joinedload, aliased
 import models, schemas
 from fastapi import HTTPException
-from schemas import CentraDetails
-# from .schemas import 
-
 from typing import List, Optional
-import bcrypt
 from passlib.context import CryptContext
 from security import get_hash, generate_key,  decrypt_token, encrypt_token
 import traceback
@@ -47,6 +43,8 @@ def create_user(db: Session, user: schemas.UserCreate):
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+       
+
         return new_user
     except IntegrityError:
         db.rollback()
@@ -1958,6 +1956,18 @@ def get_leaves_summary(db: Session, centra_id: int):
         }
     }
 
+
+def get_centra_id(db: Session, user_id: int) -> Optional[int]:
+    centra_user = db.query(models.UserCentra).filter(models.UserCentra.userID == user_id, models.UserCentra.Active == True).first()
+    if centra_user:
+        return centra_user.CentraID
+    return None
+
+def get_warehouse_id(db: Session, user_id: int) -> Optional[int]:
+    xyz_user = db.query(models.XYZuser).filter(models.XYZuser.userID == user_id).first()
+    if xyz_user:
+        return xyz_user.WarehouseID
+    return None
 def calculate_conversion_rates(db: Session, centra_id: int) -> schemas.ConversionRateResponse:
     wet_leaves = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == centra_id).all()
     dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == centra_id).all()
