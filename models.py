@@ -111,6 +111,7 @@ class DriedLeaves (Base):
     Weight = Column(Float)
     DriedDate = Column (Date)
     Floured = Column(Boolean, default=False)
+    InMachine = Column (Boolean)
 
     # id=relationship("ProcessedLeaves", back_populates="dried")
     # dried = relationship("ProcessedLeaves", back_populates="date")
