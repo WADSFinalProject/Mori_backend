@@ -349,8 +349,11 @@ class FlouringMachine(FlouringMachineBase):
     class Config:
         from_attributes = True
 
-class FlouringStatus(BaseModel):
+class StatusUpdateRequest(BaseModel):
+    machine_id :int
     status: str
+
+
 
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
@@ -362,7 +365,7 @@ class FlouringActivityBase(BaseModel):
     DriedDate: Optional[datetime]
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
-    
+
 
 class FlouringActivityCreate(FlouringActivityBase):
     pass
