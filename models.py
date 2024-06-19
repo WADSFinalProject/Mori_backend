@@ -94,7 +94,7 @@ class DryingActivity(Base):
     __tablename__ = 'DryingActivity'
     DryingID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
-    # Date = Column(Date)  #delete
+    InUse= Column(Boolean)
     Weight = Column(Float)
     DryingMachineID = Column(Integer, ForeignKey('DryingMachine.MachineID',  ondelete='CASCADE'))
     EndTime = Column(DateTime)
@@ -140,7 +140,7 @@ class FlouringActivity(Base):
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
     EndTime = Column(DateTime)
-    # Date = Column(Date) 
+    InUse = Column(Boolean) 
     Weight = Column(Float)
     FlouringMachineID = Column(Integer, ForeignKey('FlouringMachine.MachineID'))
     # DryingID = Column(Integer, ForeignKey('DryingActivity.DryingID'))
