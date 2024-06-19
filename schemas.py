@@ -567,31 +567,6 @@ class CheckpointStatus(CheckpointStatusBase):
     class Config:
         orm_mode = True
 
-# ReceivedPackage schemas
-# class ReceivedPackageBase(BaseModel):
-#     ExpeditionID: int
-#     UserID: int
-#     PackageType: str
-
-#     ReceivedDate: datetime
-#     WarehouseDestination: str
-
-# class ReceivedPackageCreate(ReceivedPackageBase):
-#     pass
-
-# class ReceivedPackageUpdate(BaseModel):
-#     ExpeditionID: Optional[int] = None
-#     UserID: Optional[int] = None
-#     PackageType: Optional[str] = None
-#     ReceivedDate: Optional[datetime] = None
-#     WarehouseDestination: Optional[str] = None
-
-# class ReceivedPackage(ReceivedPackageBase):
-#     PackageID: int
-
-#     class Config:
-#         from_attributes = True
-
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
     # xyzid: int
@@ -618,46 +593,6 @@ class PackageReceipt(PackageReceiptBase):
     class Config:
         from_attributes = True
 
-# Shipment
-# class ShipmentPickupSchedule(BaseModel):
-#     # shipment_id: int
-#     pickup_time: datetime
-#     location: str
-
-# class ShipmentBase(BaseModel):
-#     batch_id: Optional[int] = None
-#     description: Optional[str] = None
-#     status: Optional[str] = None
-#     weight: Optional[float] = None
-#     issue_description: Optional[str] = None
-
-# class ShipmentCreate(ShipmentBase):
-#     pass
-
-# class ShipmentUpdate(BaseModel):
-#     shipment_id: Optional[int] = None
-#     batch_id: Optional[int] = None
-#     description: Optional[str] = None
-#     status: Optional[str] = None
-#     weight: Optional[int] = None
-#     issue_description: Optional[str] = None
-
-# class Shipment(ShipmentBase):
-#     shipment_id: int
-#     # created_at: Optional[datetime] = None
-#     # updated_at: Optional[datetime] = None
-
-#     class Config:
-#         from_attributes = True
-
-# class ShipmentIssue(BaseModel):
-#     description: str
-
-# class ShipmentRescale(BaseModel):
-#     new_weight: float
-
-# class ShipmentConfirmation(BaseModel):
-#     weight: float
 
 class PickupBase(BaseModel):
     xyzID: int
@@ -673,6 +608,7 @@ class Pickup(PickupBase):
 
     class Config:
         orm_mode = True
+
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -693,22 +629,6 @@ class ProductReceipt(ProductReceiptBase):
 
     class Config:
         from_attributes = True
-
-# PackageType schemas
-# class PackageTypeBase(BaseModel):
-#     Description: str
-
-# class PackageTypeCreate(PackageTypeBase):
-#     pass
-
-# class PackageTypeUpdate(BaseModel):
-#     Description: Optional[str] = None
-
-# class PackageType(PackageTypeBase):
-#     PackageTypeID: int
-
-#     class Config:
-#         from_attributes = True
 
 class HarborGuardBase(BaseModel):
     HarbourName: str
