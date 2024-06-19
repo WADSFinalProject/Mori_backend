@@ -728,3 +728,9 @@ class LeavesStatus(BaseModel):
     wetLeaves: WetLeaves
     driedLeaves: DriedLeaves
     flouredLeaves: FlouredLeaves
+
+class ConversionRateResponse(BaseModel):
+    id: int
+    conversionRate: float
+    wetToDry: float
+    dryToFloured: float

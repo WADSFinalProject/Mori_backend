@@ -1146,3 +1146,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict 
 def get_leaves_status(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     leaves_summary = crud.get_leaves_summary(db, centra_id)
     return leaves_summary
+
+@secured_router.get("/conversion_rates/{centra_id}", response_model=schemas.ConversionRateResponse)
+def get_conversion_rates(centra_id: int, db: Session = Depends(get_db)):
+    conversion_rate = crud.calculate_conversion_rates(db, centra_id)
+    return conversion_rate

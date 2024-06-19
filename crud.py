@@ -1812,3 +1812,24 @@ def get_leaves_summary(db: Session, centra_id: int):
             "proportions": [round(p, 2) for p in floured_proportions],
         }
     }
+
+def calculate_conversion_rates(db: Session, centra_id: int) -> schemas.ConversionRateResponse:
+    wet_leaves = db.query(models.WetLeavesCollection).filter(models.WetLeavesCollection.CentralID == centra_id).all()
+    dried_leaves = db.query(models.DriedLeaves).filter(models.DriedLeaves.CentraID == centra_id).all()
+    processed_leaves = db.query(models.ProcessedLeaves).filter(models.ProcessedLeaves.CentraID == centra_id).all()
+
+    total_wet_weight = sum(wet.Weight for wet in wet_leaves)
+    total_dried_weight = sum(dried.Weight for dried in dried_leaves)
+    total_floured_weight = sum(processed.Weight for processed in processed_leaves)
+    total_weight = total_wet_weight + total_dried_weight + total_floured_weight
+
+    wet_to_dried_rate = round((total_dried_weight / total_weight)*100, 2) if total_weight else 0
+    wet_to_floured_rate = round((total_floured_weight / total_weight)*100, 2) if total_weight else 0
+    conversion_rate = wet_to_dried_rate + wet_to_floured_rate
+
+    return schemas.ConversionRateResponse(
+        id=centra_id,
+        conversionRate=conversion_rate,
+        wetToDry=wet_to_dried_rate,
+        dryToFloured=wet_to_floured_rate
+    )
