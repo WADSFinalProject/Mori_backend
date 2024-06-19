@@ -1735,3 +1735,16 @@ def get_leaves_summary(db: Session, centra_id: int):
             "proportions": [round(p, 2) for p in floured_proportions],
         }
     }
+
+
+def get_centra_id(db: Session, user_id: int) -> Optional[int]:
+    centra_user = db.query(models.UserCentra).filter(models.UserCentra.userID == user_id, models.UserCentra.Active == True).first()
+    if centra_user:
+        return centra_user.CentraID
+    return None
+
+def get_warehouse_id(db: Session, user_id: int) -> Optional[int]:
+    xyz_user = db.query(models.XYZuser).filter(models.XYZuser.userID == user_id).first()
+    if xyz_user:
+        return xyz_user.WarehouseID
+    return None

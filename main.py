@@ -1,14 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, Cookie
 from sqlalchemy.orm import Session
 from database import get_db, engine 
-from typing import Optional, List
-from datetime import datetime
-from security import create_access_token,verify_otp, create_refresh_token, verify_token
+from utils import create_access_token, create_refresh_token, verify_token
+from security import verify_otp
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from secured_routes import secured_router
 import crud, models, schemas  
-import SMTP, security
+import SMTP
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -117,12 +116,10 @@ async def verify_user(verification: schemas.UserVerification,  db: Session = Dep
         access_token = create_access_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         refresh_token = create_refresh_token(db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
         response = JSONResponse(content={"access_token": access_token})
-        response.set_cookie(key="refresh_token",max_age= 720, value=refresh_token, httponly=True, secure=False,  path="/")
-        response.headers["Set-Cookie"] += "; SameSite=Lax"
-      
+        response.set_cookie(key="refresh_token", max_age= 720, value=refresh_token, httponly=True, secure=False)
+
+        response.headers["Set-cookie"] += "; SameSite=None"
         return response
-        # response.headers["Set-cookie"] += "; SameSite=None"
-        # return response
         
     raise HTTPException(status_code=404, detail="Verification failed")
 

@@ -1,8 +1,6 @@
 from typing import Optional, List, Union
-from pydantic import BaseModel, EmailStr, constr, ValidationError, Field
+from pydantic import BaseModel, EmailStr
 from datetime import datetime, date, time, timedelta
-from typing_extensions import Annotated
-from sqlalchemy import Interval
 
 import re
 
@@ -263,8 +261,8 @@ class DryingMachine(DryingMachineBase):
     class Config:
         orm_mode = True
 
-class MachineStatus(BaseModel):
-    status: str
+# class MachineStatus(BaseModel):
+#     status: str
 
 
 

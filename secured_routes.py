@@ -3,7 +3,7 @@ from database import get_db
 from sqlalchemy.orm import Session
 from typing import List
 import schemas, crud, models
-from middleware import get_current_user, centra_user, harbour_user
+from dependencies import get_current_user, centra_user, harbour_user
 
 secured_router = APIRouter()
 
