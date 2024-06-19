@@ -102,9 +102,9 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
     return status
 
 
-@secured_router.put("/dryingmachine/{machine_id}/status", response_model=schemas.DryingMachine)
-def change_drying_machine_status(machine_id: int, status_update: schemas.DryingStatus, db: Session = Depends(get_db)):
-    return crud.update_drying_machine_status(db, machine_id, status_update.status)
+@secured_router.put("/dryingmachine/{machine_id}/status")
+def change_drying_machine_status(status_update: schemas.DryingStatus, db: Session = Depends(get_db)):
+    return crud.update_drying_machine_status(db, status_update.machine_id, status_update.status)
 
 @secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
 def read_drying_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
