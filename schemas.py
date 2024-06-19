@@ -587,7 +587,7 @@ class CheckpointStatus(CheckpointStatusBase):
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
     # xyzid: int
-    PickupID: int
+    ExpeditionID: int
     TotalWeight: float
     TimeAccepted: datetime
     Note: str
@@ -598,7 +598,7 @@ class PackageReceiptCreate(PackageReceiptBase):
 
 class PackageReceiptUpdate(BaseModel):
     # xyzid: Optional[int] = None
-    PickupID: Optional[int] = None
+    ExpeditionID: Optional[int] = None
     TotalWeight: Optional[float] = None
     TimeAccepted: Optional[datetime] = None
     Note: Optional[str] = None
