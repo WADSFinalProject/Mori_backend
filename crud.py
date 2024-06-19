@@ -1660,8 +1660,19 @@ def delete_package_receipt(db: Session, receipt_id: int):
     if db_package_receipt:
         db.delete(db_package_receipt)
         db.commit()
+        return {"message": "Reception deleted successfully"}
     return db_package_receipt
 
+def delete_package_receipt_by_expeditionid(db: Session, expedition_id: int):
+    package_receipt = db.query(models.PackageReceipt).filter(models.PackageReceipt.ExpeditionID == expedition_id).first()
+    
+    if package_receipt:
+        db.delete(package_receipt)
+        db.commit()
+    return package_receipt
+
+def get_package_receipts_by_expeditionid(db: Session, expedition_id: int):
+    return db.query(models.PackageReceipt).filter(models.PackageReceipt.ExpeditionID == expedition_id).all()
 
 #product receipt
 
