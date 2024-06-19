@@ -268,6 +268,7 @@ class Expedition(Base):
     content = relationship("ExpeditionContent", back_populates="expedition", cascade="all, delete-orphan")
     centra = relationship("Centra", back_populates="expedition")
     status = relationship("CheckpointStatus", back_populates="expeditionpoint")
+    receipt = relationship("PackageReceipt", back_populates="expedition")
 
 def after_update_expedition_listener(mapper, connection, target):
     db = SessionLocal(bind=connection)
@@ -328,7 +329,7 @@ class Pickup(Base):
     xyz = relationship("XYZuser", back_populates="pickup")
     
     warehouse = relationship("Warehouse", back_populates="pickup")
-    receipt = relationship("PackageReceipt", back_populates="pickuppackage")
+    # receipt = relationship("PackageReceipt", back_populates="pickuppackage")
 
 # class ReceivedPackage(Base):
 #     __tablename__ = 'ReceivedPackage'
@@ -343,17 +344,13 @@ class Pickup(Base):
 class PackageReceipt(Base):
     __tablename__ = 'PackageReceipt'
     ReceiptID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
-    # xyzID = Column(Integer, ForeignKey('XYZuser.id'), nullable=False)
-    PickupID = Column(Integer, ForeignKey('pickup.id'), nullable=False)
-    # haborId = Column(Integer, ForeignKey('ReceivedPackage.PackageID'))
+    ExpeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     TotalWeight = Column(Float)
     TimeAccepted = Column(DateTime)
     Note = Column(String(100))
     Date = Column(DateTime)
 
-    pickuppackage = relationship("Pickup", back_populates="receipt")
-    # xyz = relationship("XYZuser", back_populates="receipt")
-    # received_package = relationship("ReceivedPackage")
+    expedition = relationship("Expedition", back_populates="receipt")
 
 class ProductReceipt(Base):
     __tablename__ = 'ProductReceipt'
