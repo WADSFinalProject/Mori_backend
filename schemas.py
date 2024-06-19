@@ -478,6 +478,7 @@ class ExpeditionBase(BaseModel):
     Status: str
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
+    WarehouseID: int
 
 
 
@@ -488,6 +489,7 @@ class ExpeditionCreate(BaseModel):
     TotalWeight: float
     ExpeditionDate: datetime
     ExpeditionServiceDetails: str
+    WarehouseID: int
 
 class ExpeditionUpdate(BaseModel):
     AirwayBill: Optional[str] = None
@@ -497,6 +499,7 @@ class ExpeditionUpdate(BaseModel):
     Status:str
     ExpeditionDate: Optional[datetime] = None
     ExpeditionServiceDetails: Optional[str] = None
+    warehouseid: int
     
 
 class Expedition(ExpeditionBase):
@@ -522,7 +525,8 @@ class StatusUpdate(BaseModel):
     awb: str
     status: str
 
-
+class WarehouseIDUpdate(BaseModel):
+    warehouse_id: int
 
 
 #ExpeditionContent
