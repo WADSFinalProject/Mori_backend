@@ -1812,11 +1812,13 @@ def calculate_conversion_rates(db: Session, centra_id: int) -> schemas.Conversio
     total_floured_weight = sum(processed.Weight for processed in processed_leaves)
     total_weight = total_wet_weight + total_dried_weight + total_floured_weight
 
-    wet_to_dried_rate = (total_dried_weight / total_weight) if total_weight else 0
-    wet_to_floured_rate = (total_floured_weight / total_weight) if total_weight else 0
+    wet_to_dried_rate = round((total_dried_weight / total_weight)*100, 2) if total_weight else 0
+    wet_to_floured_rate = round((total_floured_weight / total_weight)*100, 2) if total_weight else 0
+    conversion_rate = wet_to_dried_rate + wet_to_floured_rate
 
     return schemas.ConversionRateResponse(
-        centra_id=centra_id,
-        wet_to_dried_rate=wet_to_dried_rate,
-        wet_to_floured_rate=wet_to_floured_rate
+        id=centra_id,
+        conversionRate=conversion_rate,
+        wetToDry=wet_to_dried_rate,
+        dryToFloured=wet_to_floured_rate
     )

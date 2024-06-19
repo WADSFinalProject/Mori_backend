@@ -730,6 +730,7 @@ class LeavesStatus(BaseModel):
     flouredLeaves: FlouredLeaves
 
 class ConversionRateResponse(BaseModel):
-    centra_id: int
-    wet_to_dried_rate: float
-    wet_to_floured_rate: float
+    id: int
+    conversionRate: float
+    wetToDry: float
+    dryToFloured: float
