@@ -306,18 +306,21 @@ class DriedLeavesBase(BaseModel):
     Weight: float
     DriedDate: date
     Floured: Optional[bool] = False
+    InMachine: Optional[bool] = False
 
 class DriedLeavesCreate(BaseModel):
     CentraID: int
     Weight: float
     DriedDate: date
     Floured: Optional[bool] = False
+    InMachine: Optional[bool] = False
 
 class DriedLeavesUpdate(BaseModel):
     CentraID: Optional[int] = None
     Weight: Optional[float] = None
     DriedDate: Optional[date] = None
     Floured: Optional[bool] = None
+    InMachine: Optional[bool] = False
 
 class DriedLeaves(DriedLeavesBase):
     id: int
