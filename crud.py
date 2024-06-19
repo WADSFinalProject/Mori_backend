@@ -498,18 +498,14 @@ def get_flouring_machine_status(db: Session, machine_id: str):
     return None
 
 def update_flouring_machine_status(db: Session, machine_id: int, new_status: str):
-    # Fetch the flouring machine record by ID
     machine = db.query(models.FlouringMachine).filter(models.FlouringMachine.MachineID == machine_id).first()
-    
     if not machine:
         raise HTTPException(status_code=404, detail="Flouring Machine not found")
 
-    # Validate the new status
     valid_statuses = ['idle', 'running', 'finished']
     if new_status not in valid_statuses:
         raise HTTPException(status_code=400, detail="Invalid status value")
 
-    # Update the status
     machine.Status = new_status
     db.commit()
     db.refresh(machine)
@@ -546,7 +542,6 @@ def delete_flouring_machine(db: Session, machine_id: str):
 def add_new_flouring_activity(db: Session, flouring_activity: schemas.FlouringActivityCreate):
     db_flouring_activity = models.FlouringActivity(
         CentralID=flouring_activity.CentralID,
-        # Date=flouring_activity.Date,
         Weight=flouring_activity.Weight,
         FlouringMachineID=flouring_activity.FlouringMachineID,
         EndTime=flouring_activity.EndTime,

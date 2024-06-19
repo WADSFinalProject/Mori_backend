@@ -311,7 +311,7 @@ class DriedLeavesBase(BaseModel):
 class DriedLeavesCreate(BaseModel):
     CentraID: int
     Weight: float
-    DriedDate: date
+    DriedDate: str
     Floured: Optional[bool] = False
     InMachine: Optional[bool] = False
 
@@ -349,8 +349,11 @@ class FlouringMachine(FlouringMachineBase):
     class Config:
         from_attributes = True
 
-class FlouringStatus(BaseModel):
+class StatusUpdateRequest(BaseModel):
+    machine_id :int
     status: str
+
+
 
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
@@ -363,8 +366,10 @@ class FlouringActivityBase(BaseModel):
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
 
+
 class FlouringActivityCreate(FlouringActivityBase):
     pass
+
 
 class FlouringActivityUpdate(BaseModel):
     FlouringID: Optional[int] = None
