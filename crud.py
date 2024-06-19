@@ -1543,14 +1543,6 @@ def delete_expedition(db: Session, expedition_id: int):
     else:
         raise HTTPException(status_code=404, detail="Expedition not found")
 
-# def change_expedition_status(db: Session, awb: str, new_status: str):
-#     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
-#     if expedition:
-#         expedition.Status = new_status
-#         db.commit()
-#         return expedition
-#     return None
-
 def confirm_expedition(db: Session, expedition_id: int, TotalWeight: int):
     expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
     if expedition:
