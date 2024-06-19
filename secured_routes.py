@@ -679,15 +679,15 @@ def read_harbor_guards(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return harbor_guards
 
 # Warehouses
-# @secured_router.get("/warehouses", response_model=List[schemas.Warehouse])
-# async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-#     warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
-#     return warehouses
-
-@secured_router.get("/warehouses/", response_model=List[schemas.Warehouse])
-def read_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@secured_router.get("/warehouses", response_model=List[schemas.Warehouse])
+async def show_all_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
     return warehouses
+
+# @secured_router.get("/warehouses/", response_model=List[schemas.Warehouse])
+# def read_warehouses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     warehouses = crud.get_all_warehouses(db, skip=skip, limit=limit)
+#     return warehouses
 
 @secured_router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse)
 async def get_warehouse(warehouse_id: int, db: Session = Depends(get_db)):
