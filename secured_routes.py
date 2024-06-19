@@ -102,10 +102,21 @@ def read_machine_status(machine_id: int, db: Session = Depends(get_db), user: di
     return status
 
 
-@secured_router.put("/dryingmachine/{machine_id}/status")
-def change_drying_machine_status(machine_id : int, status: str , db: Session = Depends(get_db)):
-    return crud.update_drying_machine_status(db, machine_id=machine_id, new_status=status)
 
+# @secured_router.put("/dryingmachine/{machine_id}/status")
+# def change_drying_machine_status(machine_id: int, status_update: str, db: Session = Depends(get_db)):
+#     return crud.update_drying_machine_status(db, machine_id, status_update.status)
+
+@secured_router.put("/dryingmachines/{machine_id}", response_model=schemas.DryingMachine)
+def update_drying_machine(machine_id: int, machine_update: schemas.DryingMachineUpdate, db: Session = Depends(get_db)):
+    updated_machine = crud.update_drying_machine(db, machine_id, machine_update)
+    if not updated_machine:
+        raise HTTPException(status_code=404, detail="Drying Machine not found")
+    return updated_machine
+
+@secured_router.put("/dryingmachine/status")
+def change_drying_machine_status( status_update: schemas.StatusUpdateRequest, db: Session = Depends(get_db)):
+    return crud.update_drying_machine_status(db, machine_id=status_update.machine_id, new_status=status_update.status)
 
 
 @secured_router.get("/drying_machines/", response_model=List[schemas.DryingMachine])
@@ -258,8 +269,12 @@ def update_dried_leaf(leaf_id: int, dried_leaf: schemas.DriedLeavesUpdate, db: S
         raise HTTPException(status_code=404, detail="Dried leaf not found")
     return db_dried_leaf
 
+@secured_router.put("/driedleaves/{dried_leaves_id}/inmachine", response_model=schemas.DriedLeavesBase)
+def update_in_machine_status(leaf_id: int, in_machine_status: schemas.DriedLeavesUpdateInMachine, db: Session = Depends(get_db)):
+        return crud.update_in_machine_status(db, leaf_id, in_machine_status.in_machine)
+
 @secured_router.delete("/dried_leaves/{leaf_id}", response_model=schemas.DriedLeaves)
-def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
+def delete_dried_leaf(leaf_id: int, db: Session = Depends(get_db)):
     db_dried_leaf = crud.delete_dried_leaf(db=db, leaf_id=leaf_id)
     if db_dried_leaf is None:
         raise HTTPException(status_code=404, detail="Dried leaf not found")
@@ -281,9 +296,25 @@ def read_flouring_machine_status(machine_id: str, db: Session = Depends(get_db),
         raise HTTPException(status_code=404, detail="Machine not found")
     return status
 
-@secured_router.put("/flouringmachine/{machine_id}/status", response_model=schemas.FlouringMachine)
-def change_flouring_machine_status(machine_id: int, status: str, db: Session = Depends(get_db)):
-    return crud.update_flouring_machine_status(db, machine_id=machine_id, new_status=status)
+
+
+@secured_router.put("/flouringmachine/status", response_model=schemas.FlouringMachine)
+def change_flouring_machine_status(
+    status_update: schemas.StatusUpdateRequest, 
+    db: Session = Depends(get_db)
+):
+    return crud.update_flouring_machine_status(db, machine_id=status_update.machine_id, new_status=status_update.status)
+
+@secured_router.put("/flouringmachines/{machine_id}", response_model=schemas.FlouringMachineUpdate)
+def update_flouring_machine(machine_id: int, machine_update: schemas.FlouringMachineUpdate, db: Session = Depends(get_db)):
+    try:
+        updated_machine = crud.update_flouring_machine(db, machine_id, machine_update)
+        return updated_machine
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 @secured_router.get("/flouring_machines/", response_model=List[schemas.FlouringMachine])
 def read_flouring_machines(
@@ -353,6 +384,7 @@ def create_flouring_activity(flouring_activity: schemas.FlouringActivityCreate, 
         return {"message": "Flouring activity created successfully!"}
     else:
         raise HTTPException(status_code=400, detail="Flouring machine with the same ID already exists!")
+
 
 @secured_router.get("/flouring_activity/", response_model=List[schemas.FlouringActivity])
 def read_flouring_activity(
@@ -505,6 +537,14 @@ def read_pickups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
 @secured_router.post("/pickup/", response_model=schemas.Pickup)
 def create_pickup(pickup: schemas.PickupCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return crud.create_pickup(db=db, pickup=pickup)
+
+#pickup by airway
+@secured_router.post("/pickups/{AirwayBill}", response_model=schemas.Pickup)
+def create_pickup(airwaybill: str, pickup: schemas.PickupCreateAirway, db: Session = Depends(get_db)):
+        pickup = crud.create_pickup_by_airwaybill(db, airwaybill, pickup)
+        if pickup is None:
+            raise HTTPException(status_code=404, detail="airwaybill not found")
+        return pickup
 
 @secured_router.put("/pickup/{pickup_id}", response_model=schemas.Pickup)
 def update_pickup(pickup_id: int, pickup: schemas.PickupBase, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -1056,12 +1096,26 @@ def update_package_receipt(receipt_id: int, package_receipt: schemas.PackageRece
         raise HTTPException(status_code=404, detail="Package receipt not found")
     return db_package_receipt
 
-@secured_router.delete("/package_receipts/{receipt_id}", response_model=schemas.PackageReceipt)
+@secured_router.delete("/package_receipts/{receipt_id}")
 def delete_package_receipt(receipt_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     db_package_receipt = crud.delete_package_receipt(db, receipt_id)
     if db_package_receipt is None:
         raise HTTPException(status_code=404, detail="Package receipt not found")
     return db_package_receipt
+
+# @secured_router.delete("/package_receipts/{expedition_id}")
+# def delete_package_receipt(expedition_id: int, db: Session = Depends(get_db)):
+#     package_receipt = crud.delete_package_receipt_by_expeditionid(db, expedition_id)
+#     if package_receipt is None:
+#         raise HTTPException(status_code=404, detail="Package receipt not found")
+#     return package_receipt
+
+# @secured_router.get("/package_receipts/expedition/{expedition_id}", response_model=List[schemas.PackageReceipt])
+# def get_package_receipts(expedition_id: int, db: Session = Depends(get_db)):
+#     package_receipts = crud.get_package_receipts_by_expeditionid(db, expedition_id)
+#     if not package_receipts:
+#         raise HTTPException(status_code=404, detail="No package receipts found for the given ExpeditionID")
+#     return package_receipts
 
 #product receipt
 @secured_router.post("/product_receipts/", response_model=schemas.ProductReceipt)
@@ -1134,3 +1188,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict 
 def get_leaves_status(centra_id: int, db: Session = Depends(get_db), user: dict = Depends(centra_user)):
     leaves_summary = crud.get_leaves_summary(db, centra_id)
     return leaves_summary
+
+@secured_router.get("/conversion_rates/{centra_id}", response_model=schemas.ConversionRateResponse)
+def get_conversion_rates(centra_id: int, db: Session = Depends(get_db)):
+    conversion_rate = crud.calculate_conversion_rates(db, centra_id)
+    return conversion_rate

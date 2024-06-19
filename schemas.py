@@ -253,6 +253,7 @@ class DryingMachineCreate(DryingMachineBase):
 
 class DryingMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
+    Load: float
 
 class DryingMachine(DryingMachineBase):
     MachineID: int
@@ -309,7 +310,7 @@ class DriedLeavesBase(BaseModel):
 class DriedLeavesCreate(BaseModel):
     CentraID: int
     Weight: float
-    DriedDate: date
+    DriedDate: str
     Floured: Optional[bool] = False
     InMachine: Optional[bool] = False
 
@@ -326,6 +327,9 @@ class DriedLeaves(DriedLeavesBase):
     class Config:
         from_attributes = True
 
+class DriedLeavesUpdateInMachine(BaseModel):
+    in_machine: bool
+
 # FlouringMachine schemas
 class FlouringMachineBase(BaseModel):
     CentraID: int
@@ -339,6 +343,7 @@ class FlouringMachineCreate(FlouringMachineBase):
 
 class FlouringMachineUpdate(BaseModel):
     Capacity: Optional[str] = None
+    Load: float
 
 class FlouringMachine(FlouringMachineBase):
     MachineID: int
@@ -347,8 +352,11 @@ class FlouringMachine(FlouringMachineBase):
     class Config:
         from_attributes = True
 
-class FlouringStatus(BaseModel):
+class StatusUpdateRequest(BaseModel):
+    machine_id :int
     status: str
+
+
 
 # FlouringActivity schemas
 class FlouringActivityBase(BaseModel):
@@ -361,8 +369,10 @@ class FlouringActivityBase(BaseModel):
     # DryingID: Optional[int] = None
     # Time: Optional[time] = None
 
+
 class FlouringActivityCreate(FlouringActivityBase):
     pass
+
 
 class FlouringActivityUpdate(BaseModel):
     FlouringID: Optional[int] = None
@@ -596,7 +606,6 @@ class PackageReceipt(PackageReceiptBase):
 
 
 class PickupBase(BaseModel):
-    xyzID: int
     expeditionID: int
     warehouseid: int
     pickup_time: time
@@ -610,6 +619,9 @@ class Pickup(PickupBase):
     class Config:
         orm_mode = True
 
+class PickupCreateAirway(BaseModel):
+    warehouseid:int
+    pickup_time: time
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -726,3 +738,9 @@ class LeavesStatus(BaseModel):
     wetLeaves: WetLeaves
     driedLeaves: DriedLeaves
     flouredLeaves: FlouredLeaves
+
+class ConversionRateResponse(BaseModel):
+    id: int
+    conversionRate: float
+    wetToDry: float
+    dryToFloured: float
