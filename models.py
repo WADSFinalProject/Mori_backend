@@ -116,7 +116,7 @@ class DriedLeaves (Base):
     # dried = relationship("ProcessedLeaves", back_populates="date")
     centra = relationship("Centra", back_populates="driedleaves")
     dried = relationship("ProcessedLeaves", back_populates="dried")
-    dried2=relationship("FlouringActivity", back_populates="dried2")
+    # dried2=relationship("FlouringActivity", back_populates="dried2")
 
 class FlouringMachine(Base):
     __tablename__ = 'FlouringMachine'
@@ -138,7 +138,7 @@ class FlouringActivity(Base):
     FlouringID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     # UserID = Column(Integer, ForeignKey('users.UserID'), nullable=False)
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
-    DriedID = Column(Integer, ForeignKey('DriedLeaves.id'))
+    DriedDate = Column(DateTime)
     EndTime = Column(DateTime)
     InUse = Column(Boolean) 
     Weight = Column(Float)
@@ -147,7 +147,7 @@ class FlouringActivity(Base):
     # Time = Column(Time)
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
 
-    dried2=relationship("DriedLeaves", back_populates="dried2")
+    # dried2=relationship("DriedLeaves", back_populates="dried2")
     centra = relationship("Centra", back_populates="dried")
     # user = relationship("User")
     # drying_activity = relationship("DryingActivity")
