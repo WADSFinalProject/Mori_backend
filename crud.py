@@ -981,6 +981,25 @@ def get_all_warehouses(db: Session, skip: int = 0, limit: int = 100) -> List[sch
 def get_warehouse(db: Session, warehouse_id: int) -> Optional[models.Warehouse]:
     return db.query(models.Warehouse).filter(models.Warehouse.id == warehouse_id).first()
 
+def update_warehouse_id_by_airway_bill(db: Session, airway_bill: str, warehouse_id: int):
+    # Query the Expedition based on AirwayBill
+    expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == airway_bill).first()
+    
+    if not expedition:
+        # Handle case where Expedition with given AirwayBill is not found
+        return None
+    
+    # Update the WarehouseID
+    expedition.WarehouseID = warehouse_id
+    
+    # Commit the transaction to persist the changes
+    db.commit()
+    
+    # Refresh the expedition object to reflect the updated state
+    db.refresh(expedition)
+    
+    return expedition
+    
 def update_warehouse(db: Session, warehouse_id: str, update_data: schemas.WarehouseUpdate) -> Optional[models.Warehouse]:
     db_warehouse = db.query(models.Warehouse).filter(models.Warehouse.id == warehouse_id).first()
     if db_warehouse:
@@ -1352,6 +1371,7 @@ def get_expedition_with_batches_by_airwaybill(db: Session, airwaybill: str) -> O
                 ExpeditionDate=expedition.ExpeditionDate,
                 ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
                 CentralID=expedition.CentralID,
+                WarehouseID=expedition.WarehouseID
             )
 
         if status is not None:
@@ -1470,6 +1490,7 @@ def get_all_expedition_with_batches(db: Session, skip: int = 0, limit: int = 100
                 Status=expedition.Status,
                 ExpeditionDate=expedition.ExpeditionDate,
                 ExpeditionServiceDetails=expedition.ExpeditionServiceDetails,
+                WarehouseID=expedition.WarehouseID,
                 CentralID=expedition.CentralID,
             )
 
@@ -1575,8 +1596,14 @@ def update_expedition(db: Session, expedition_id: int, expedition: schemas.Exped
     db_expedition = db.query(models.Expedition).filter(models.Expedition.ExpeditionID == expedition_id).first()
     if not db_expedition:
         return None
+    
+    # Update the fields
     for key, value in expedition.dict(exclude_unset=True).items():
+        # Handle 'warehouseid' to 'WarehouseID' mapping
+        if key == 'warehouseid':
+            key = 'WarehouseID'
         setattr(db_expedition, key, value)
+    
     db.commit()
     db.refresh(db_expedition)
     return db_expedition

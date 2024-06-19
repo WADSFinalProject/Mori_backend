@@ -789,6 +789,7 @@ async def update_warehouse(warehouse_id: int, warehouse_data: schemas.WarehouseU
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return updated_warehouse
 
+
 @secured_router.delete("/warehouses/{warehouse_id}")
 async def delete_warehouse(warehouse_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     deleted_warehouse = crud.delete_warehouse(db, warehouse_id=warehouse_id)
@@ -898,6 +899,16 @@ def read_expedition_by_airwaybill(airwaybill: str, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Expedition not found")
     return expedition_data
 
+@secured_router.put("/expedition/warehouse/{airway_bill}", response_model=schemas.Expedition)
+def update_warehouse_id_for_expedition(airway_bill: str, warehouse_id_update: schemas.WarehouseIDUpdate, db: Session = Depends(get_db)
+):
+    updated_expedition = crud.update_warehouse_id_by_airway_bill(db, airway_bill, warehouse_id_update.warehouse_id)
+    
+    if not updated_expedition:
+        raise HTTPException(status_code=404, detail=f"Expedition with AirwayBill {airway_bill} not found")
+    
+    return updated_expedition
+    
 # @secured_router.get("/expeditions", response_model=List[schemas.Expedition])
 # def get_expeditions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 #     expeditions = crud.get_expeditions(db, skip=skip, limit=limit)
