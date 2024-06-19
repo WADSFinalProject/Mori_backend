@@ -14,7 +14,7 @@ from sqlalchemy import func, and_
 from datetime import datetime
 from collections import defaultdict
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from logging import error
 
@@ -678,6 +678,23 @@ def create_pickup(db: Session, pickup: schemas.PickupCreate):
     db.commit()
     db.refresh(db_pickup)
     return db_pickup
+
+def create_pickup_by_airwaybill(db: Session, airwaybill: str, pickup: schemas.PickupCreateAirway):
+    expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == airwaybill).first()
+
+    if not expedition:
+        raise Exception(f"No expedition found with AirwayBill {airwaybill}")
+
+    new_pickup = models.Pickup(
+        expeditionID=expedition.ExpeditionID,
+        warehouseid=pickup.warehouseid,
+        pickup_time=pickup.pickup_time
+    )
+
+    db.add(new_pickup)
+    db.commit()
+    db.refresh(new_pickup)
+    return new_pickup
 
 def update_pickup(db: Session, pickup_id: int, pickup: schemas.PickupBase):
     db_pickup = db.query(models.Pickup).filter(models.Pickup.id == pickup_id).first()

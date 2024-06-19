@@ -322,12 +322,10 @@ class Pickup(Base):
     __tablename__ = 'pickup'
 
     id = Column(Integer, primary_key=True, index=True, nullable=True, autoincrement=True)
-    xyzID = Column(Integer, ForeignKey('XYZuser.id'))
     expeditionID = Column(Integer, ForeignKey('Expedition.ExpeditionID'))
     warehouseid = Column(Integer, ForeignKey('warehouses.id'))
     pickup_time = Column(Time)
     expedition = relationship("Expedition", back_populates="pickup")
-    xyz = relationship("XYZuser", back_populates="pickup")
     
     warehouse = relationship("Warehouse", back_populates="pickup")
     # receipt = relationship("PackageReceipt", back_populates="pickuppackage")
@@ -404,7 +402,6 @@ class XYZuser(Base):
 
     warehouse = relationship("Warehouse", back_populates="xyzuser")
     user = relationship("User", back_populates="xyz")
-    pickup = relationship("Pickup", back_populates="xyz")
     # receipt = relationship("PackageReceipt", back_populates="xyz")
 class Admin(Base):
     __tablename__ = 'admins'
