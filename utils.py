@@ -11,7 +11,7 @@ def create_access_token(db: Session, user_id: int, role: str, name: str) -> str:
         "sub": str(user_id),
         "name": name,
         "role": role,
-        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=1)
+        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=20)
     }
     
     if role == "Centra":
