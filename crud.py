@@ -702,7 +702,7 @@ def create_pickup_by_airwaybill(db: Session, airwaybill: str, pickup: schemas.Pi
     expedition = db.query(models.Expedition).filter(models.Expedition.AirwayBill == airwaybill).first()
 
     if not expedition:
-        raise Exception(f"No expedition found with AirwayBill {airwaybill}")
+        raise HTTPException(status_code=404, detail=f"No expedition found with AirwayBill {airwaybill}")
 
     new_pickup = models.Pickup(
         expeditionID=expedition.ExpeditionID,
