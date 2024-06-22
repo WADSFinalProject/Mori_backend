@@ -140,10 +140,7 @@ async def logout():
     response.delete_cookie(key="refresh_token")
     return response
 
-app.include_router(secured_router, prefix="/secured")
-
-
-@app.post("/users", response_model=schemas.User)
+@app.post("/usersNo", response_model=schemas.User)
 def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.create_user(db=db, user=new_user)
     if db_user is None:
@@ -151,3 +148,7 @@ def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db)):
     else:
         SMTP.send_setPassEmail(db_user,db)
         return db_user
+
+app.include_router(secured_router, prefix="/secured")
+
+
