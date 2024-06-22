@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Correct database URL with 'postgresql' dialect
-SQLALCHEMY_DATABASE_URL = "postgresql://default:RO4jlz3FguJt@ep-lingering-forest-a1hakwzf.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
+SQLALCHEMY_DATABASE_URL = "postgresql://default:a4yDuE7WvjMp@ep-damp-night-a1h9jqr0.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
 
 # Create the SQLAlchemy engine
 engine = create_engine(

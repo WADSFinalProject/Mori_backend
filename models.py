@@ -82,7 +82,7 @@ class DryingMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
-    Load=Column(Float)
+    Load=Column(Float, default=0)
     Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', 'finished', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
