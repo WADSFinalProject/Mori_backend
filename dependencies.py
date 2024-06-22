@@ -20,7 +20,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         name: str = payload.get("name")
         if name is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        
         token_data = {"id": user_id, "role": role, "name": name}
+        
+        # Add centra_id if the user role is "Centra"
+        if role == "Centra":
+            centra_id = payload.get("centralID")
+            if centra_id is not None:
+                token_data["centralID"] = centra_id
+        
         return token_data
     except JWTError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
