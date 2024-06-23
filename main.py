@@ -98,35 +98,25 @@ async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification,  db: Session = Depends(get_db)):
-    
-    db_user = crud.get_user_by_email(db,verification.Email)
+async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, verification.Email)
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        access_token = create_access_token(db, db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
-        refresh_token = create_refresh_token(db,db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
-        response = JSONResponse(content={"access_token": access_token})
-        response = JSONResponse(content={"access_token": access_token})
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=False,
-            max_age=720,  
-            secure=False
-        )
-
-        response.headers["Set-cookie"] += "; SameSite=None"
-        return response
+        access_token = create_access_token(db, db_user.UserID, db_user.Role, db_user.FirstName + ' ' + db_user.LastName)
+        refresh_token = create_refresh_token(db, db_user.UserID, db_user.Role, db_user.FirstName + ' ' + db_user.LastName)
         
+        response = JSONResponse(content={"access_token": access_token, "refresh_token": refresh_token})
+        return response
+
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/token/refresh")
-async def refresh_token(refresh_token: str = Cookie(None)):
-    if refresh_token is None:
-        return HTTPException(status_code=401, detail="No refresh token found")
+async def refresh_token(refresh_token: str , db: Session = Depends(get_db)):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token found")
     try:
         payload = verify_token(refresh_token)
-        new_access_token = create_access_token(payload["sub"],payload["role"],payload["name"])
+        new_access_token = create_access_token(db, payload["sub"], payload["role"], payload["name"])
         return {"access_token": new_access_token}
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
