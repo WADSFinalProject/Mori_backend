@@ -493,10 +493,10 @@ def add_new_flouring_machine(db: Session, flouring_machine: schemas.FlouringMach
     db.refresh(db_flouring_machine)
     return db_flouring_machine
 
-def get_all_flouring_machines(db: Session, central_id: int = None, skip: int = 0, limit: int = 100):
+def get_all_flouring_machines(db: Session, centra_id: int = None, skip: int = 0, limit: int = 100):
     query = db.query(models.FlouringMachine)
-    if central_id is not None:
-        query = query.filter(models.FlouringMachine.CentraID == central_id)
+    if centra_id is not None:
+        query = query.filter(models.FlouringMachine.CentraID == centra_id)
     return query.offset(skip).limit(limit).all()
 
 def get_flouring_machine_status(db: Session, machine_id: str):
@@ -938,15 +938,20 @@ def get_all_harbor_guards(db: Session, skip: int = 0, limit: int = 100):
     
 # WAREHOUSE LOCATION
 def create_warehouse(db: Session, warehouse_data: schemas.WarehouseCreate):
+    # Ensure created_at is set to the current date if it's not provided
+    if warehouse_data.created_at is None:
+        warehouse_data.created_at = datetime.utcnow().date()
+
+    # Create the Warehouse instance
     db_warehouse = models.Warehouse(
-        # warehouseName=warehouse_data.warehouseName,
         email=warehouse_data.email,
         phone=warehouse_data.phone,
         TotalStock=warehouse_data.TotalStock,
-        Capacity=warehouse_data.Capacity,
+        Capacity=500,  # Set capacity to a fixed value of 500
         location=warehouse_data.location,
         created_at=warehouse_data.created_at
     )
+
     db.add(db_warehouse)
     db.commit()
     db.refresh(db_warehouse)

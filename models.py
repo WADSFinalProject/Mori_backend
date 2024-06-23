@@ -5,6 +5,8 @@ from database import Base
 from typing import Optional
 from datetime import datetime
 from sqlalchemy.event import listen
+from sqlalchemy.schema import DefaultClause
+
 
 from database import engine, Base, SessionLocal
 
@@ -258,7 +260,7 @@ class Expedition(Base):
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
-    WarehouseID = Column(Integer, ForeignKey('warehouses.id'), default=0)
+    WarehouseID = Column(Integer, ForeignKey('warehouses.id'), nullable=False, server_default=DefaultClause('0'))
 
     warehouse = relationship("Warehouse", back_populates="expedition")
     pickup = relationship("Pickup", back_populates="expedition")
