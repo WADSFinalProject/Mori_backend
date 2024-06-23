@@ -1,13 +1,13 @@
 from fastapi import Depends, HTTPException, Request
-from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from utils import verify_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    if not token:
+def get_current_user(request: Request):
+    authorization: str = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = authorization.split(" ")[1]
     
     try:
         payload = verify_token(token)
@@ -30,7 +30,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
                 token_data["centralID"] = centra_id
         
         return token_data
-    except JWTError as e:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def centra_user(user: dict = Depends(get_current_user)):
