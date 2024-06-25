@@ -243,7 +243,7 @@ class UserCentraWithUser(BaseModel):
 class DryingMachineBase(BaseModel):
     CentraID: int
     Capacity: str
-    Load: float
+    # Load: float
     Status: str
     Duration: Optional[timedelta]
 
@@ -689,7 +689,7 @@ class WarehouseBase(BaseModel):
     TotalStock: int
     Capacity: int
     location: Optional[str] = None
-    created_at: Optional[date] = None
+    created_at: date
 
 class WarehouseCreate(WarehouseBase):
     pass

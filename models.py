@@ -5,6 +5,8 @@ from database import Base
 from typing import Optional
 from datetime import datetime
 from sqlalchemy.event import listen
+from sqlalchemy.schema import DefaultClause
+
 
 from database import engine, Base, SessionLocal
 
@@ -82,7 +84,7 @@ class DryingMachine(Base):
     MachineID = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     CentraID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=True)
     Capacity = Column(String(100))
-    Load=Column(Float)
+    Load=Column(Float, default=0)
     Duration = Column(Interval)
     Status = Column(Enum('idle', 'running', 'finished', name='machine_status'), default='idle')
     # creator_id = Column(Integer, ForeignKey("users.UserID"), nullable=True)
@@ -258,7 +260,7 @@ class Expedition(Base):
     ExpeditionDate = Column(DateTime) 
     ExpeditionServiceDetails = Column(String(100))
     CentralID = Column(Integer, ForeignKey('Centra.CentralID'), nullable=False)
-    WarehouseID = Column(Integer, ForeignKey('warehouses.id'), default=0)
+    WarehouseID = Column(Integer, ForeignKey('warehouses.id'), nullable=False, server_default=DefaultClause('0'))
 
     warehouse = relationship("Warehouse", back_populates="expedition")
     pickup = relationship("Pickup", back_populates="expedition")

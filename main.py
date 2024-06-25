@@ -98,28 +98,25 @@ async def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @app.post("/users/verify")
-async def verify_user(verification: schemas.UserVerification,  db: Session = Depends(get_db)):
-    
-    db_user = crud.get_user_by_email(db,verification.Email)
+async def verify_user(verification: schemas.UserVerification, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, verification.Email)
     verified = verify_otp(db_user.secret_key, verification.Code)
     if verified:
-        access_token = create_access_token(db, db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
-        refresh_token = create_refresh_token(db,db_user.UserID,db_user.Role,db_user.FirstName + ' ' + db_user.LastName)
-        response = JSONResponse(content={"access_token": access_token})
-        response.set_cookie(key="refresh_token", max_age= 720, value=refresh_token, httponly=True, secure=False)
-
-        response.headers["Set-cookie"] += "; SameSite=None"
-        return response
+        access_token = create_access_token(db, db_user.UserID, db_user.Role, db_user.FirstName + ' ' + db_user.LastName)
+        refresh_token = create_refresh_token(db, db_user.UserID, db_user.Role, db_user.FirstName + ' ' + db_user.LastName)
         
+        response = JSONResponse(content={"access_token": access_token, "refresh_token": refresh_token})
+        return response
+
     raise HTTPException(status_code=404, detail="Verification failed")
 
 @app.post("/token/refresh")
-async def refresh_token(refresh_token: str = Cookie(None)):
-    if refresh_token is None:
-        return HTTPException(status_code=401, detail="No refresh token found")
+async def refresh_token(refresh_token: str , db: Session = Depends(get_db)):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token found")
     try:
         payload = verify_token(refresh_token)
-        new_access_token = create_access_token(payload["sub"],payload["role"],payload["name"])
+        new_access_token = create_access_token(db, payload["sub"], payload["role"], payload["name"])
         return {"access_token": new_access_token}
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
@@ -140,4 +137,15 @@ async def logout():
     response.delete_cookie(key="refresh_token")
     return response
 
+@app.post("/usersNo", response_model=schemas.User)
+def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.create_user(db=db, user=new_user)
+    if db_user is None:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    else:
+        SMTP.send_setPassEmail(db_user,db)
+        return db_user
+
 app.include_router(secured_router, prefix="/secured")
+
+

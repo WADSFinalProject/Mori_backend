@@ -11,7 +11,7 @@ def create_access_token(db: Session, user_id: int, role: str, name: str) -> str:
         "sub": str(user_id),
         "name": name,
         "role": role,
-        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=20)
+        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=30)
     }
     
     if role == "Centra":
@@ -37,7 +37,7 @@ def create_refresh_token(db: Session, user_id: int, role: str, name: str) -> str
     if role == "Centra":
         centra_id = crud.get_centra_id(db, user_id)
         if centra_id:
-            payload["centra_id"] = centra_id
+            payload["centralID"] = centra_id
     elif role == "XYZ":
         warehouse_id = crud.get_warehouse_id(db, user_id)
         if warehouse_id:
