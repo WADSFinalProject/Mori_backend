@@ -243,7 +243,7 @@ class UserCentraWithUser(BaseModel):
 class DryingMachineBase(BaseModel):
     CentraID: int
     Capacity: str
-    # Load: float
+    Load: float
     Status: str
     Duration: Optional[timedelta]
 
