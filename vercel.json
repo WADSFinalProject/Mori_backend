@@ -15,9 +15,9 @@
       "dest": "main.py"
     }
   ],
-  "functions": {
+  "functions": [
     "main.py": {
       "maxDuration": 60
     }
-  }
+  ]
 }
