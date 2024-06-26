@@ -98,7 +98,7 @@ class Admin(AdminBase):
 #     id: int
 
 #     class Config:
-#         orm_mode = True
+#         from_attributes = True
 
 # ProcessedLeaves schemas
 class ProcessedLeavesBase(BaseModel):
@@ -152,7 +152,7 @@ class ProcessedLeaves(ProcessedLeavesBase):
     # shipments: Optional[List[CentraShipment]] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # WetLeavesCollection schemas
 class WetLeavesCollectionBase(BaseModel):
@@ -225,7 +225,7 @@ class UserCentra(UserCentraBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserforCentra(BaseModel):
     FirstName: str
@@ -237,7 +237,7 @@ class UserCentraWithUser(BaseModel):
     user: UserforCentra
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # DryingMachine schemas
 class DryingMachineBase(BaseModel):
@@ -260,7 +260,7 @@ class DryingMachine(DryingMachineBase):
     # creator_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # class MachineStatus(BaseModel):
 #     status: str
@@ -444,7 +444,7 @@ class Notification(NotificationBase):
     read: bool
 
     class Config:
-        orm_mode: True
+        from_attributes: True
 
 Machine = Union[DryingMachine, FlouringMachine]
 
@@ -465,7 +465,7 @@ class ExpeditionNotification(NotificationBase):
     read: bool
 
     class Config:
-        orm_mode: True
+        from_attributes: True
 
 
 #Expedition schemas
@@ -506,7 +506,7 @@ class Expedition(ExpeditionBase):
     ExpeditionID: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         # from_attributes = True  # Enable from_orm support
 
 class Batch(BaseModel):
@@ -551,7 +551,7 @@ class ExpeditionContent(BaseModel):
     BatchID: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #checkpointStatus
@@ -580,7 +580,7 @@ class CheckpointStatus(CheckpointStatusBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # PackageReceipt schemas
 class PackageReceiptBase(BaseModel):
@@ -626,7 +626,7 @@ class Pickup(PickupBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ProductReceipt schemas
 class ProductReceiptBase(BaseModel):
@@ -656,7 +656,7 @@ class HarborGuardBase(BaseModel):
     ClosingHour: time
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class HarborGuardCreate(HarborGuardBase):
     pass
@@ -668,7 +668,7 @@ class HarborGuardInDB(HarborGuardBase):
     HarbourID: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 #warehouse stock
 
@@ -679,7 +679,7 @@ class WarehouseStockHistoryBase(BaseModel):
     change_date: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         from_attributes = True
 
 # WAREHOUSE LOCATION
@@ -706,7 +706,7 @@ class Warehouse(WarehouseBase):
     stock_history: List[WarehouseStockHistoryBase] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         from_attributes = True # This setting is crucial for compatibility with ORMs like SQLAlchemy
 
 #xyzuser
@@ -725,7 +725,7 @@ class XYZuser(XYZuserBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class WetLeaves(BaseModel):
     totalWeight: float
