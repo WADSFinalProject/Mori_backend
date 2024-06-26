@@ -32,7 +32,9 @@ def read_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
         batches = crud.get_all_batches(db=db, skip=skip, limit=limit)
     else:
         # If the user is a Centra user, fetch batches specific to their central_id
-        central_id = user["centralID"]
+        central_id = user.get("centralID")
+        if central_id is None:
+            raise HTTPException(status_code=400, detail="centralID is missing from user data")
         batches = crud.get_all_batches(db=db, central_id=central_id, skip=skip, limit=limit)
     return batches
 
