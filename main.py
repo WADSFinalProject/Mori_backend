@@ -16,7 +16,7 @@ app = FastAPI()
 #Handling CORS
 origins = [
     "http://localhost:5173",
-    "https://mori-frontend.vercel.app"
+    "https://mori-mori.vercel.app"
 ]
 app.add_middleware(
     CORSMiddleware,
